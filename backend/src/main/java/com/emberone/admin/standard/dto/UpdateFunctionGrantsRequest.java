@@ -14,5 +14,5 @@ import lombok.Data;
 @Data
 public class UpdateFunctionGrantsRequest {
 
-    @NotNull @Valid private List<FunctionGrantRequest> grants;
+    @NotNull private List<@Valid FunctionGrantRequest> grants;
 }

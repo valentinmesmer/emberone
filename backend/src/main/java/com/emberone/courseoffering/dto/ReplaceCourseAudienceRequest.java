@@ -14,5 +14,5 @@ import lombok.Data;
 @Data
 public class ReplaceCourseAudienceRequest {
 
-    @NotNull @Valid private List<CourseAudienceEntryRequest> entries;
+    @NotNull private List<@Valid CourseAudienceEntryRequest> entries;
 }

@@ -54,7 +54,7 @@ todo_items (+ todo_excluded_users)  ──► Self-API, Realtime, Notifications
 4. **Manuell complete** - Self-API, wenn Type `allowsManualComplete()` (aktuell alle Types)
 5. **Visibility gained** - Nutzer tritt Approver-Gruppe bei oder Assignee-Gruppe am offenen Todo wechselt → gezieltes Notify/Realtime (kein neues Todo); ausgeschlossene User bleiben außen vor
 
-**Exclusion-Fall:** Gruppen-Claim (`WORKFLOW_START_REQUESTED`) bei blockiertem Self-Approve → Opener (`openedByUserId`) landet in `excludedUserIds`, damit er das Gruppen-Todo nicht sieht/bekommt (siehe [Workflow-Engine](workflow-engine.md) / `selfApproveAllowed`). Die meisten systemgetriebenen Todos haben keine Exclusions.
+**Exclusion-Fall:** Gruppen-Claim (`WORKFLOW_START_REQUESTED`) bei für diesen Slot blockiertem Self-Approve → Opener (`openedByUserId`) landet in `excludedUserIds`, damit er das Gruppen-Todo nicht sieht/bekommt (siehe [Workflow-Engine](workflow-engine.md) / `selfApproveAllowed`). Die meisten systemgetriebenen Todos haben keine Exclusions.
 
 Treiber: `WorkflowTodoAdapter` (Lifecycle-Events), `CertificationReminderService` / Scheduler, `TodoAssigneeVisibilityListener` (Membership / Gruppen-Remap).
 

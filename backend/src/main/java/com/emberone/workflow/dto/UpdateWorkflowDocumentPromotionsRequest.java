@@ -21,5 +21,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateWorkflowDocumentPromotionsRequest {
 
-    @NotNull(message = "selections is required") @Valid @Size(max = 32, message = "At most 32 document promotions are allowed") private List<WorkflowDocumentPromotionSelection> selections;
+    @NotNull(message = "selections is required") @Size(max = 32, message = "At most 32 document promotions are allowed") private List<@Valid WorkflowDocumentPromotionSelection> selections;
 }

@@ -38,7 +38,7 @@ public class DrivingLicenseRecordWorkflowPayload {
 
     @NotBlank @Size(max = 512) private String issuingAuthority;
 
-    @NotEmpty @Valid private List<DrivingLicenseClassPayload> classes;
+    @NotEmpty private List<@Valid DrivingLicenseClassPayload> classes;
 
     @Size(max = 2048) private String notes;
 

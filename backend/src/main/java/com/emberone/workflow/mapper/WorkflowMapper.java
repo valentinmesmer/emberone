@@ -23,7 +23,6 @@ public interface WorkflowMapper {
 
     @Mapping(target = "openConcurrencyKeys", ignore = true)
     @Mapping(target = "openedByDisplayName", ignore = true)
-    @Mapping(target = "selfApproveAllowed", ignore = true)
     @Mapping(target = "canEditInput", ignore = true)
     @Mapping(target = "canRequestInputChange", ignore = true)
     @Mapping(target = "canWithdrawInputChange", ignore = true)
@@ -31,6 +30,7 @@ public interface WorkflowMapper {
     @Mapping(target = "activeInputChange", ignore = true)
     WorkflowDto toDto(Workflow workflow);
 
+    @Mapping(target = "selfApproveAllowed", ignore = true)
     @Mapping(target = "organizationDisplayName", ignore = true)
     @Mapping(target = "principalDisplayName", ignore = true)
     @Mapping(target = "claimedByDisplayName", ignore = true)

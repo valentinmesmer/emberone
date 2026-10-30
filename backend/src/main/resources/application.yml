@@ -90,6 +90,10 @@ management:
     web:
       exposure:
         include: health,prometheus
+  metrics:
+    web:
+      server:
+        max-uri-tags: 1000
   endpoint:
     health:
       probes:

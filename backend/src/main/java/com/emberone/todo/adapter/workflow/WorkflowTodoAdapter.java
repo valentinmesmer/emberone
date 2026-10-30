@@ -140,9 +140,7 @@ public class WorkflowTodoAdapter implements WorkflowEventListener {
                 TodoType.WORKFLOW_APPROVAL_REQUIRED,
                 participant.getId(),
                 previousClaimerUserId);
-        Long openerId = workflow.getOpenedByUserId();
-        boolean blocksSelfApprove = openerId != null && !selfApproveService.isAllowed(workflow);
-        openGroupClaimTodo(workflow, participant, blocksSelfApprove);
+        openGroupClaimTodo(workflow, participant, blocksSelfApprove(workflow, participant));
     }
 
     private void onDecision(
@@ -237,7 +235,6 @@ public class WorkflowTodoAdapter implements WorkflowEventListener {
             return;
         }
         Long openerId = workflow.getOpenedByUserId();
-        boolean blocksSelfApprove = openerId != null && !selfApproveService.isAllowed(workflow);
         for (WorkflowParticipant participant : workflow.getParticipants()) {
             if (!participant.isApprover()
                     || participant.getSlotStatus() != ParticipantSlotStatus.PENDING) {
@@ -245,7 +242,8 @@ public class WorkflowTodoAdapter implements WorkflowEventListener {
             }
             if (participant.getPrincipalType() == PrincipalType.ORGANIZATION_GROUP) {
                 if (participant.getClaimedByUserId() == null) {
-                    openGroupClaimTodo(workflow, participant, blocksSelfApprove);
+                    openGroupClaimTodo(
+                            workflow, participant, blocksSelfApprove(workflow, participant));
                 } else {
                     openApprovalTodo(workflow, participant, participant.getClaimedByUserId(), true);
                 }
@@ -253,12 +251,18 @@ public class WorkflowTodoAdapter implements WorkflowEventListener {
             }
             if (participant.getPrincipalType() == PrincipalType.USER
                     && participant.getPrincipalId() != null) {
-                if (blocksSelfApprove && participant.getPrincipalId().equals(openerId)) {
+                if (participant.getPrincipalId().equals(openerId)
+                        && blocksSelfApprove(workflow, participant)) {
                     continue;
                 }
                 openApprovalTodo(workflow, participant, participant.getPrincipalId(), false);
             }
         }
+    }
+
+    private boolean blocksSelfApprove(Workflow workflow, WorkflowParticipant participant) {
+        return workflow.getOpenedByUserId() != null
+                && !selfApproveService.isAllowed(workflow, participant.getOrganizationId());
     }
 
     private void openGroupClaimTodo(

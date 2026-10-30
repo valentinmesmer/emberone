@@ -595,6 +595,41 @@ class UserServiceTest {
     }
 
     @Test
+    void updateUserKeepsUsernameWhenNameIsUnchanged() {
+        Organization organization = Organization.builder().id(10L).tenantId(7L).build();
+        User user =
+                User.builder()
+                        .id(1L)
+                        .tenantId(7L)
+                        .username("ada.lovelace.fw")
+                        .firstName("Ada")
+                        .lastName("Lovelace")
+                        .contactInformation(
+                                UserContactInformation.builder()
+                                        .privateEmail("ada@example.com")
+                                        .build())
+                        .build();
+        user.getOrganizationMemberships()
+                .add(
+                        UserOrganizationMembership.builder()
+                                .user(user)
+                                .organization(organization)
+                                .main(true)
+                                .startDate(Instant.now())
+                                .build());
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(organizationMembershipRepository.existsActiveByUser_IdAndOrganization_Id(
+                        eq(1L), eq(10L), any(Instant.class)))
+                .thenReturn(true);
+        when(userRepository.save(user)).thenReturn(user);
+
+        service.updateUserData(1L, 10L, new UpdateUserDataRequest());
+
+        assertThat(user.getUsername()).isEqualTo("ada.lovelace.fw");
+        verify(usernameService, never()).generateUniqueUsername(anyLong(), any(), any());
+    }
+
+    @Test
     void missingUserFailsWithoutSideEffects() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 

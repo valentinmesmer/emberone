@@ -22,7 +22,10 @@ export interface WorkspaceOrganization {
   code: string | null;
   main: boolean;
   source: OrganizationSource;
-  /** Open activation that grants access; set only for `management`. */
+  /**
+   * Open activation covering the organization. Always set for `management`; a member of the
+   * organization carries it too while one is open, since it can grant additional rights.
+   */
   activation: ManagementActivationDto | null;
 }
 
@@ -59,6 +62,7 @@ export function buildWorkspaceOrganizations(
   activations: readonly ManagementActivationDto[],
   nowMs: number,
 ): WorkspaceOrganization[] {
+  const openActivations = openActivationsByTarget(activations, nowMs);
   const membershipEntries: WorkspaceOrganization[] = [];
   const memberOf = new Set<number>();
   for (const membership of memberships) {
@@ -70,12 +74,12 @@ export function buildWorkspaceOrganizations(
       code: membership.organization.organizationCode,
       main: membership.main,
       source: 'membership',
-      activation: null,
+      activation: openActivations.get(membership.organization.id) ?? null,
     });
   }
 
   const managedEntries: WorkspaceOrganization[] = [];
-  for (const [targetId, activation] of openActivationsByTarget(activations, nowMs)) {
+  for (const [targetId, activation] of openActivations) {
     if (memberOf.has(targetId)) continue;
     managedEntries.push({
       id: targetId,

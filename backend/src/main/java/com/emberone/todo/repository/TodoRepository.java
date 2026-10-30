@@ -12,6 +12,7 @@ import com.emberone.todo.domain.TodoType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.hibernate.Hibernate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -22,6 +23,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional(readOnly = true)
 public interface TodoRepository extends JpaRepository<Todo, Long>, JpaSpecificationExecutor<Todo> {
+
+    /**
+     * Loads a todo with {@code assigneeGroups} and {@code excludedUsers} initialized (both are
+     * bags, so they cannot be join-fetched together). For callers outside a transaction, e.g.
+     * after-commit realtime callbacks.
+     */
+    default Optional<Todo> findByIdWithRecipients(Long id) {
+        return findById(id)
+                .map(
+                        todo -> {
+                            Hibernate.initialize(todo.getAssigneeGroups());
+                            Hibernate.initialize(todo.getExcludedUsers());
+                            return todo;
+                        });
+    }
 
     @Query(
             """

@@ -34,6 +34,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +77,9 @@ public class OnboardingInvitationService {
     /**
      * Creates the onboarding invitation for admission: empty {@code APPROVED} when all configured
      * steps are live-fulfilled (including no steps configured), otherwise {@code OPEN}. Matches
-     * join-workflow direct admission semantics.
+     * join-workflow direct admission semantics. A former member keeps their invitation: {@code
+     * APPROVED} is reopened when steps are no longer fulfilled, and an invitation still in flight
+     * stays as it is.
      *
      * @return {@code true} when live-fulfilled (direct admission invitation); {@code false} when
      *     onboarding must be completed
@@ -84,14 +87,33 @@ public class OnboardingInvitationService {
     @Transactional
     public boolean recordInvitationForAdmission(
             long tenantId, long userId, long targetOrganizationId, Long invitedByUserId) {
-        if (onboardingInvitationReadinessService.areAllStepsLiveFulfilled(
-                tenantId, userId, targetOrganizationId)) {
+        boolean liveFulfilled =
+                onboardingInvitationReadinessService.areAllStepsLiveFulfilled(
+                        tenantId, userId, targetOrganizationId);
+        Optional<OnboardingInvitation> existing =
+                onboardingInvitationRepository.findByUserIdAndTargetOrganizationId(
+                        userId, targetOrganizationId);
+        if (existing.isPresent()) {
+            return readmit(existing.get(), liveFulfilled);
+        }
+        if (liveFulfilled) {
             createSucceededEmptyForExistingUser(
                     tenantId, userId, targetOrganizationId, invitedByUserId);
             return true;
         }
         createForExistingUser(tenantId, userId, targetOrganizationId, invitedByUserId);
         return false;
+    }
+
+    private boolean readmit(OnboardingInvitation invitation, boolean liveFulfilled) {
+        if (invitation.getStatus() != OnboardingInvitationStatus.APPROVED) {
+            return false;
+        }
+        if (!liveFulfilled) {
+            invitation.setStatus(OnboardingInvitationStatus.OPEN);
+            onboardingInvitationRepository.save(invitation);
+        }
+        return liveFulfilled;
     }
 
     /**

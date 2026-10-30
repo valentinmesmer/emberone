@@ -46,6 +46,8 @@ public class TodoRealtimeListener {
     }
 
     private Todo requireTodo(Long todoId) {
-        return todoRepository.findById(todoId).orElseThrow(() -> new TodoNotFoundException(todoId));
+        return todoRepository
+                .findByIdWithRecipients(todoId)
+                .orElseThrow(() -> new TodoNotFoundException(todoId));
     }
 }

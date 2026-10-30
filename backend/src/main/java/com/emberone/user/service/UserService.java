@@ -44,6 +44,7 @@ import com.emberone.user.list.OrganizationMemberListSpecs;
 import com.emberone.user.mapper.UserMapper;
 import com.emberone.user.repository.UserContactInformationRepository;
 import com.emberone.user.repository.UserRepository;
+import com.emberone.user.util.UsernamePartNormalizer;
 import com.emberone.userorganizationgroupmembership.dto.CreateUserOrganizationGroupMembershipRequest;
 import com.emberone.userorganizationgroupmembership.dto.UserOrganizationGroupMembershipDto;
 import com.emberone.userorganizationgroupmembership.service.UserOrganizationGroupMembershipService;
@@ -1063,11 +1064,11 @@ public class UserService {
         if (!user.getTenantId().equals(tenantId)) {
             throw new IllegalArgumentException("User does not belong to the tenant");
         }
+        String previousFirstName = user.getFirstName();
+        String previousLastName = user.getLastName();
         user.setFirstName(firstName.trim());
         user.setLastName(lastName.trim());
-        user.setUsername(
-                usernameService.generateUniqueUsername(
-                        user.getTenantId(), user.getFirstName(), user.getLastName()));
+        regenerateUsernameIfNameChanged(user, previousFirstName, previousLastName);
 
         User saved = userRepository.save(user);
         log.info("Applied workflow-approved name change for user {}", userId);
@@ -1138,6 +1139,23 @@ public class UserService {
         }
     }
 
+    /**
+     * Keeps the username stable unless the name behind it changed: regenerating it for an unchanged
+     * name would collide with the user's own current username and append a numeric suffix.
+     */
+    private void regenerateUsernameIfNameChanged(
+            User user, String previousFirstName, String previousLastName) {
+        if (UsernamePartNormalizer.normalize(previousFirstName)
+                        .equals(UsernamePartNormalizer.normalize(user.getFirstName()))
+                && UsernamePartNormalizer.normalize(previousLastName)
+                        .equals(UsernamePartNormalizer.normalize(user.getLastName()))) {
+            return;
+        }
+        user.setUsername(
+                usernameService.generateUniqueUsername(
+                        user.getTenantId(), user.getFirstName(), user.getLastName()));
+    }
+
     @Transactional
     public UserDto updateUserData(Long userId, Long organizationId, UpdateUserDataRequest request) {
         assertUserBelongsToOrganization(userId, organizationId);
@@ -1149,10 +1167,10 @@ public class UserService {
             throw new UserAlreadyDeactivatedException(userId);
         }
 
+        String previousFirstName = user.getFirstName();
+        String previousLastName = user.getLastName();
         mapper.updateFromRequest(request, user);
-        user.setUsername(
-                usernameService.generateUniqueUsername(
-                        user.getTenantId(), user.getFirstName(), user.getLastName()));
+        regenerateUsernameIfNameChanged(user, previousFirstName, previousLastName);
 
         User saved = userRepository.save(user);
         log.info("Updated personal data for user {} by organization {}", userId, organizationId);

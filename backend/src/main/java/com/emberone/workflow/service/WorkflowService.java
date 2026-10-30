@@ -295,10 +295,6 @@ public class WorkflowService {
                 ordered.stream()
                         .filter(
                                 workflow ->
-                                        !userId.equals(workflow.getOpenedByUserId())
-                                                || selfApproveService.isAllowed(workflow))
-                        .filter(
-                                workflow ->
                                         workflowInstanceAccess.requiresParticipantAction(
                                                 workflow, userId))
                         .toList();
@@ -339,12 +335,9 @@ public class WorkflowService {
             List<Workflow> participations =
                     workflowRepository.findWithDetailsByIdIn(participationIds);
             for (Workflow workflow : participations) {
-                if (!userId.equals(workflow.getOpenedByUserId())
-                        || selfApproveService.isAllowed(workflow)) {
-                    if (workflowInstanceAccess.requiresParticipantAction(workflow, userId)
-                            && workflow.getStatus() == WorkflowStatus.OPEN) {
-                        pendingIds.add(workflow.getId());
-                    }
+                if (workflowInstanceAccess.requiresParticipantAction(workflow, userId)
+                        && workflow.getStatus() == WorkflowStatus.OPEN) {
+                    pendingIds.add(workflow.getId());
                 }
             }
         }
@@ -806,8 +799,7 @@ public class WorkflowService {
     }
 
     private void assertMayRequestInputChange(Workflow workflow, Long userId) {
-        if (userId.equals(workflow.getOpenedByUserId())
-                && !selfApproveService.isAllowed(workflow)) {
+        if (selfApproveService.blocksInputChangeRequest(workflow, userId)) {
             throw new WorkflowAccessDeniedException(
                     "Self-approve is not allowed for this workflow");
         }
@@ -1064,7 +1056,7 @@ public class WorkflowService {
         WorkflowDto dto = mapper.toDto(workflow);
         dto.setOpenConcurrencyKeys(
                 openConcurrencyService.deserializeKeys(workflow.getOpenConcurrencyKeys()));
-        dto.setSelfApproveAllowed(selfApproveService.isAllowed(workflow));
+        enrichSelfApprove(dto, workflow);
         Long currentUserId = tokenService.getUserId();
         WorkflowHandler<?> handler = handlerRegistry.require(workflow.getWorkflowTypeId());
         dto.setCanEditInput(canEditInput(workflow, currentUserId));
@@ -1089,7 +1081,7 @@ public class WorkflowService {
             WorkflowHandler<?> handler = handlerRegistry.require(workflow.getWorkflowTypeId());
             dto.setOpenConcurrencyKeys(
                     openConcurrencyService.deserializeKeys(workflow.getOpenConcurrencyKeys()));
-            dto.setSelfApproveAllowed(selfApproveService.isAllowed(workflow));
+            enrichSelfApprove(dto, workflow);
             dto.setCanEditInput(canEditInput(workflow, currentUserId));
             dto.setCanRequestInputChange(canRequestInputChange(workflow, currentUserId));
             dto.setCanWithdrawInputChange(
@@ -1123,6 +1115,16 @@ public class WorkflowService {
             if (opener != null) {
                 dto.setOpenedByDisplayName(formatUserDisplayName(opener));
             }
+        }
+    }
+
+    private void enrichSelfApprove(WorkflowDto dto, Workflow workflow) {
+        if (dto.getParticipants() == null) {
+            return;
+        }
+        for (WorkflowParticipantDto participant : dto.getParticipants()) {
+            participant.setSelfApproveAllowed(
+                    selfApproveService.isAllowed(workflow, participant.getOrganizationId()));
         }
     }
 
@@ -1405,12 +1407,7 @@ public class WorkflowService {
         if (!WorkflowInputChangeRules.canRequestInputChange(workflow, currentUserId)) {
             return false;
         }
-        if (currentUserId != null
-                && currentUserId.equals(workflow.getOpenedByUserId())
-                && !selfApproveService.isAllowed(workflow)) {
-            return false;
-        }
-        return true;
+        return !selfApproveService.blocksInputChangeRequest(workflow, currentUserId);
     }
 
     private void cancelOpenInputChanges(Workflow workflow, Instant at) {

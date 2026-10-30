@@ -41,6 +41,9 @@ Abgrenzung: Katalog-Selections (Nachweise, Lehrgänge, …) filtern, welche Mand
 |----------|--------|-------|
 | Org-Invite / Join-Workflow (Aufnahme mit Onboarding) | `OPEN` | Drafts leer oder editierbar |
 | Join-Workflow (Direktaufnahme) | `APPROVED` | leere Einladung; Membership + `ALL_MEMBERS` sofort |
+| Join-Workflow (Wiedereintritt, Steps erfüllt) | `APPROVED` | vorhandene Einladung bleibt; Membership + `ALL_MEMBERS` sofort |
+| Join-Workflow (Wiedereintritt, Steps offen) | `APPROVED` → `OPEN` | vorhandene Einladung wird neu geöffnet; Drafts bleiben editierbar |
+| Join-Workflow (Einladung läuft noch) | `OPEN` / `SUBMITTED` | unverändert; keine Membership |
 | Wizard Complete → Workflow open | `SUBMITTED` | Drafts unverändert |
 | Workflow Approve | `APPROVED` | Org-Mitgliedschaft + `ALL_MEMBERS` + `promote` aller Steps |
 | Admin `recordCompletedOnboarding` | `APPROVED` | nur `promote` (Membership besteht bereits, z. B. Leiter); kein Workflow |

@@ -96,7 +96,7 @@ class WorkflowTodoAdapterTest {
     @Test
     void onOpenedCreatesGroupTodoForUnclaimedOrgGroupSlot() {
         Workflow workflow = workflowWithParticipants(orgGroupParticipant(5L, null));
-        when(selfApproveService.isAllowed(workflow)).thenReturn(true);
+        when(selfApproveService.isAllowed(eq(workflow), any())).thenReturn(true);
 
         adapter.onEvent(workflow, WorkflowLifecycleEvent.OPENED, WorkflowEventContext.empty());
 
@@ -111,7 +111,7 @@ class WorkflowTodoAdapterTest {
     @Test
     void onOpenedExcludesOpenerFromGroupTodoWhenSelfApproveBlocked() {
         Workflow workflow = workflowWithParticipants(orgGroupParticipant(5L, null));
-        when(selfApproveService.isAllowed(workflow)).thenReturn(false);
+        when(selfApproveService.isAllowed(eq(workflow), any())).thenReturn(false);
 
         adapter.onEvent(workflow, WorkflowLifecycleEvent.OPENED, WorkflowEventContext.empty());
 
@@ -121,9 +121,32 @@ class WorkflowTodoAdapterTest {
     }
 
     @Test
+    void onOpenedExcludesOpenerOnlyFromSlotsThatBlockSelfApprove() {
+        WorkflowParticipant allowed = orgGroupParticipant(5L, null);
+        allowed.setOrganizationId(10L);
+        WorkflowParticipant blocked = orgGroupParticipant(6L, null);
+        blocked.setOrganizationId(20L);
+        Workflow workflow = workflowWithParticipants(allowed, blocked);
+        when(selfApproveService.isAllowed(workflow, 10L)).thenReturn(true);
+        when(selfApproveService.isAllowed(workflow, 20L)).thenReturn(false);
+
+        adapter.onEvent(workflow, WorkflowLifecycleEvent.OPENED, WorkflowEventContext.empty());
+
+        ArgumentCaptor<TodoOpenRequest> captor = ArgumentCaptor.forClass(TodoOpenRequest.class);
+        verify(todoService, times(2)).reopenGroupClaimTodo(captor.capture());
+        assertThat(captor.getAllValues())
+                .filteredOn(request -> request.organizationGroupIds().contains(5L))
+                .singleElement()
+                .satisfies(request -> assertThat(request.excludedUserIds()).isEmpty());
+        assertThat(captor.getAllValues())
+                .filteredOn(request -> request.organizationGroupIds().contains(6L))
+                .singleElement()
+                .satisfies(request -> assertThat(request.excludedUserIds()).containsExactly(2L));
+    }
+
+    @Test
     void onOpenedCreatesUserTodoForUserPrincipal() {
         Workflow workflow = workflowWithParticipants(userParticipant(12L));
-        when(selfApproveService.isAllowed(workflow)).thenReturn(true);
 
         adapter.onEvent(workflow, WorkflowLifecycleEvent.OPENED, WorkflowEventContext.empty());
 
@@ -259,7 +282,6 @@ class WorkflowTodoAdapterTest {
         WorkflowParticipant pendingClaimed = orgGroupParticipant(30L, 99L);
         Workflow workflow = workflowWithParticipants(pendingClaimed);
         workflow.setStatus(WorkflowStatus.OPEN);
-        when(selfApproveService.isAllowed(workflow)).thenReturn(true);
 
         adapter.onEvent(
                 workflow, WorkflowLifecycleEvent.INPUT_UPDATED, WorkflowEventContext.empty());
@@ -278,7 +300,6 @@ class WorkflowTodoAdapterTest {
         WorkflowParticipant pendingClaimed = orgGroupParticipant(30L, 99L);
         Workflow workflow = workflowWithParticipants(pendingClaimed);
         workflow.setStatus(WorkflowStatus.OPEN);
-        when(selfApproveService.isAllowed(workflow)).thenReturn(true);
 
         adapter.onEvent(
                 workflow,

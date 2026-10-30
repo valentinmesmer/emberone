@@ -251,7 +251,7 @@ Welche **Organisationsgruppe** für einen Typ in einer Org entscheidet, plus `au
 
 ### 2. Per-Org Definition - `WorkflowDefinition` (`wf_definitions`)
 
-`enabled`, `staticApproversExclusive`, `selfApproveAllowed`, statische Approver-Orgs. Beim Open via `WorkflowDefinitionService.resolveEffectiveDefinition(typeId, contextOrgId)`. Self-Approve wird **live** gegen aktuelle Definition geprüft (`WorkflowSelfApproveService`), nicht Open-Time-Snapshot. Ist Self-Approve blockiert, setzt `WorkflowTodoAdapter` den Opener bei Gruppen-Claim-Todos als `TodoExcludedUser` (siehe [Todo](todo.md)).
+`enabled`, `staticApproversExclusive`, `selfApproveAllowed`, statische Approver-Orgs. Beim Open via `WorkflowDefinitionService.resolveEffectiveDefinition(typeId, contextOrgId)`. Self-Approve wird **pro Freigabe-Slot** und **live** gegen die aktuelle Definition der Slot-Organisation geprüft (`WorkflowSelfApproveService`), nicht Open-Time-Snapshot: Bei mehreren Freigabe-Orgs entscheidet jede Org nur über ihren eigenen Slot, die API liefert das Ergebnis als `selfApproveAllowed` je Participant. Für Input-Change-Requests braucht der Opener einen übernommenen Slot, dessen Org Self-Approve erlaubt. Ist Self-Approve für einen Slot blockiert, setzt `WorkflowTodoAdapter` den Opener beim Gruppen-Claim-Todo dieses Slots als `TodoExcludedUser` (siehe [Todo](todo.md)).
 
 ### 3. Mandantenweite Defaults - `TenantWorkflowDefinition`
 

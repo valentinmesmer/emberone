@@ -23,6 +23,7 @@ import {
 import { SourceFooter } from '@/components/legal/SourceFooter';
 import {
   MainOrgIndicator,
+  ManagedOrgIndicator,
   ORG_SWITCHER_THRESHOLD,
   OrganizationNavSwitcher,
 } from '@/components/navigation/OrganizationNavSwitcher';
@@ -30,9 +31,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { useMounted } from '@/hooks/useMounted';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWorkspaceOrganizations } from '@/hooks/useWorkspaceOrganizations';
+import { formatManagementUntil } from '@/lib/management/workspaceOrganizations';
 import { MY_AREA_BASE_PATH } from '@/lib/my-area/myAreaSections';
 import { isWorkspaceHubLandingPath } from '@/lib/navigation/workspaceHubLanding';
-import { useMyOrganizations, useUIStore } from '@/lib/store';
+import { useUIStore } from '@/lib/store';
 import { getOrganizationOverviewPath, getOrganizationWorkspaceEntryPath } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 
@@ -210,7 +213,7 @@ function NavButton({
   );
 }
 
-type Org = { id: number; name: string; main?: boolean };
+type Org = { id: number; name: string; main?: boolean; managedUntil?: string };
 /** Sub-headings inside workspace: sentence case, calmer than stacked submenu labels + all-caps hub labels. */
 const workspaceGroupHeadingClass =
   'mb-1.5 px-0.5 text-xs font-medium text-[var(--text-secondary)] sm:text-[13px]';
@@ -232,21 +235,18 @@ export function NavigationMenu({
   const { canAccessAdministration, logout } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const themeMounted = useMounted();
-  const { data: myOrganizations = [] } = useMyOrganizations();
+  const { organizations: workspaceOrganizations } = useWorkspaceOrganizations();
 
+  // Memberships first, then organizations opened through an active management session.
   const organizations = useMemo<Org[]>(
     () =>
-      myOrganizations.flatMap((entry) => {
-        if (!entry.organization) return [];
-        return [
-          {
-            id: entry.organization.id,
-            name: entry.organization.name,
-            main: entry.main,
-          },
-        ];
-      }),
-    [myOrganizations],
+      workspaceOrganizations.map(({ id, name, main, activation }) => ({
+        id,
+        name,
+        main,
+        ...(activation ? { managedUntil: formatManagementUntil(activation.validUntil) } : {}),
+      })),
+    [workspaceOrganizations],
   );
 
   const mainOrg = useMemo(
@@ -522,6 +522,9 @@ export function NavigationMenu({
                       />
                       <span className="min-w-0 flex-1 truncate text-left">{org.name}</span>
                       {org.main ? <MainOrgIndicator /> : null}
+                      {org.managedUntil != null ? (
+                        <ManagedOrgIndicator until={org.managedUntil} />
+                      ) : null}
                       {badge != null && badge > 0 ? (
                         <span
                           className={cn(

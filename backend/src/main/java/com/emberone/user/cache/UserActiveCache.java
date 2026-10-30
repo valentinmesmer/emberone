@@ -19,7 +19,7 @@ public class UserActiveCache {
 
     private final UserRepository userRepository;
 
-    @Cacheable(cacheNames = CacheNames.USER_ACTIVE, key = "#userId")
+    @Cacheable(cacheNames = CacheNames.USER_ACTIVE, key = "#userId", unless = "!#result.active()")
     public UserActiveCacheValue loadCached(Long userId) {
         return new UserActiveCacheValue(userRepository.existsByIdAndDeactivatedAtIsNull(userId));
     }

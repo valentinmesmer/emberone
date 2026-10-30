@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -210,6 +212,52 @@ class OnboardingInvitationServiceTest {
                 .thenReturn(invitation(9L, 20L, OnboardingInvitationStatus.APPROVED));
 
         assertThat(service.recordInvitationForAdmission(7L, 20L, 10L, null)).isTrue();
+    }
+
+    @Test
+    void recordInvitationForAdmissionKeepsApprovedInvitationOnReadmission() {
+        OnboardingInvitation existing = invitation(9L, 20L, OnboardingInvitationStatus.APPROVED);
+        when(onboardingInvitationReadinessService.areAllStepsLiveFulfilled(7L, 20L, 10L))
+                .thenReturn(true);
+        when(onboardingInvitationRepository.findByUserIdAndTargetOrganizationId(20L, 10L))
+                .thenReturn(Optional.of(existing));
+
+        assertThat(service.recordInvitationForAdmission(7L, 20L, 10L, null)).isTrue();
+
+        assertThat(existing.getStatus()).isEqualTo(OnboardingInvitationStatus.APPROVED);
+        verify(onboardingInvitationRepository, never()).save(any());
+    }
+
+    @Test
+    void recordInvitationForAdmissionReopensApprovedInvitationWhenStepsNoLongerFulfilled() {
+        OnboardingInvitation existing = invitation(9L, 20L, OnboardingInvitationStatus.APPROVED);
+        when(onboardingInvitationReadinessService.areAllStepsLiveFulfilled(7L, 20L, 10L))
+                .thenReturn(false);
+        when(onboardingInvitationRepository.findByUserIdAndTargetOrganizationId(20L, 10L))
+                .thenReturn(Optional.of(existing));
+
+        assertThat(service.recordInvitationForAdmission(7L, 20L, 10L, null)).isFalse();
+
+        assertThat(existing.getStatus()).isEqualTo(OnboardingInvitationStatus.OPEN);
+        verify(onboardingInvitationRepository).save(existing);
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = OnboardingInvitationStatus.class,
+            names = {"OPEN", "SUBMITTED"})
+    void recordInvitationForAdmissionLeavesInvitationInFlightUntouched(
+            OnboardingInvitationStatus status) {
+        OnboardingInvitation existing = invitation(9L, 20L, status);
+        when(onboardingInvitationReadinessService.areAllStepsLiveFulfilled(7L, 20L, 10L))
+                .thenReturn(true);
+        when(onboardingInvitationRepository.findByUserIdAndTargetOrganizationId(20L, 10L))
+                .thenReturn(Optional.of(existing));
+
+        assertThat(service.recordInvitationForAdmission(7L, 20L, 10L, null)).isFalse();
+
+        assertThat(existing.getStatus()).isEqualTo(status);
+        verify(onboardingInvitationRepository, never()).save(any());
     }
 
     @Test

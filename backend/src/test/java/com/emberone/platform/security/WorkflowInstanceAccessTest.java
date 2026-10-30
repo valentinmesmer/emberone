@@ -189,7 +189,7 @@ class WorkflowInstanceAccessTest {
 
         participant.setClaimedByUserId(USER_ID);
         workflow.setOpenedByUserId(USER_ID);
-        when(selfApproveService.isAllowed(workflow)).thenReturn(false);
+        when(selfApproveService.isAllowed(workflow, ORGANIZATION_ID)).thenReturn(false);
         assertThat(access.canDecide(WORKFLOW_ID, PARTICIPANT_ID, USER_ID)).isFalse();
     }
 
@@ -216,8 +216,57 @@ class WorkflowInstanceAccessTest {
 
         participant.setClaimedByUserId(null);
         workflow.setOpenedByUserId(USER_ID);
-        when(selfApproveService.isAllowed(workflow)).thenReturn(false);
+        when(selfApproveService.isAllowed(workflow, ORGANIZATION_ID)).thenReturn(false);
         assertThat(access.canClaim(WORKFLOW_ID, PARTICIPANT_ID, USER_ID)).isFalse();
+    }
+
+    @Test
+    void selfApproveIsDecidedBySlotOrganization_notByOtherSlots() {
+        Long otherOrganizationId = 55L;
+        Long otherParticipantId = 56L;
+        Long otherGroupId = 57L;
+        WorkflowParticipant allowed =
+                participant(
+                        ParticipantRole.APPROVER,
+                        PrincipalType.ORGANIZATION_GROUP,
+                        GROUP_ID,
+                        null,
+                        ParticipantSlotStatus.PENDING);
+        WorkflowParticipant blocked =
+                WorkflowParticipant.builder()
+                        .id(otherParticipantId)
+                        .role(ParticipantRole.APPROVER)
+                        .principalType(PrincipalType.ORGANIZATION_GROUP)
+                        .principalId(otherGroupId)
+                        .organizationId(otherOrganizationId)
+                        .slotStatus(ParticipantSlotStatus.PENDING)
+                        .build();
+        Workflow workflow = workflow(WorkflowStatus.OPEN, USER_ID, allowed, blocked);
+        when(workflowRepository.findWithDetailsById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
+        when(selfApproveService.isAllowed(workflow, ORGANIZATION_ID)).thenReturn(true);
+        when(selfApproveService.isAllowed(workflow, otherOrganizationId)).thenReturn(false);
+        when(membershipRepository.findActiveGroupIdsForUserInOrganization(
+                        org.mockito.ArgumentMatchers.eq(USER_ID),
+                        org.mockito.ArgumentMatchers.eq(ORGANIZATION_ID),
+                        any(Instant.class)))
+                .thenReturn(List.of(GROUP_ID));
+        when(membershipRepository.findActiveGroupIdsForUserInOrganization(
+                        org.mockito.ArgumentMatchers.eq(USER_ID),
+                        org.mockito.ArgumentMatchers.eq(otherOrganizationId),
+                        any(Instant.class)))
+                .thenReturn(List.of(otherGroupId));
+
+        assertThat(access.canClaim(WORKFLOW_ID, PARTICIPANT_ID, USER_ID)).isTrue();
+        assertThat(access.canClaim(WORKFLOW_ID, otherParticipantId, USER_ID)).isFalse();
+        assertThat(access.canUpdateDocumentPromotions(WORKFLOW_ID, USER_ID)).isTrue();
+        assertThat(access.requiresParticipantAction(workflow, USER_ID)).isTrue();
+
+        allowed.setClaimedByUserId(USER_ID);
+        blocked.setClaimedByUserId(USER_ID);
+        assertThat(access.canDecide(WORKFLOW_ID, PARTICIPANT_ID, USER_ID)).isTrue();
+        assertThat(access.canDecide(WORKFLOW_ID, otherParticipantId, USER_ID)).isFalse();
+        assertThat(access.canUnclaim(WORKFLOW_ID, PARTICIPANT_ID, USER_ID)).isTrue();
+        assertThat(access.canUnclaim(WORKFLOW_ID, otherParticipantId, USER_ID)).isFalse();
     }
 
     @Test
@@ -333,7 +382,6 @@ class WorkflowInstanceAccessTest {
                 participant(ParticipantRole.VIEWER, PrincipalType.USER, USER_ID, null, null);
         Workflow workflow = workflow(WorkflowStatus.OPEN, USER_ID, viewer);
         when(workflowRepository.findWithDetailsById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
-        when(selfApproveService.isAllowed(workflow)).thenReturn(false);
 
         assertThat(access.canUpdateDocumentPromotions(WORKFLOW_ID, USER_ID)).isFalse();
         assertThat(access.requiresParticipantAction(workflow, USER_ID)).isFalse();

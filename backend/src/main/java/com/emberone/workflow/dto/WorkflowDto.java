@@ -28,9 +28,6 @@ public class WorkflowDto {
     /** Resolved from {@link #openedByUserId} for list and detail responses. */
     private String openedByDisplayName;
 
-    /** Resolved from the current admin workflow definition (not stored on the instance). */
-    private boolean selfApproveAllowed;
-
     private String payload;
 
     /** Parsed from {@link com.emberone.workflow.domain.Workflow#getOpenConcurrencyKeys()}. */

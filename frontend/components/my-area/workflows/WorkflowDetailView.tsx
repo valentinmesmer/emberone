@@ -97,7 +97,7 @@ function isApproverParticipant(
   groupMemberships: UserOrganizationGroupMembershipDto[] | undefined,
 ): boolean {
   const st = normalizeWorkflowStatus(wf.status);
-  if (st !== 'OPEN' || blocksSelfApprove(wf, userId)) return false;
+  if (st !== 'OPEN' || blocksSelfApprove(p, wf, userId)) return false;
   if (p.role !== 'APPROVER') return false;
   if (p.principalType === 'ORGANIZATION_GROUP') {
     return isActiveMemberOfOrganizationGroup(groupMemberships, p.principalId);

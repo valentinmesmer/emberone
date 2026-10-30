@@ -39,5 +39,5 @@ public class UpdateCourseOfferingRequest {
      * change in one step. All entries must be listed (missing ones lose their quota; an empty list
      * removes all quotas). Null leaves the quotas as they are. Not allowed when creating.
      */
-    @Valid private List<CourseAudienceQuotaRequest> audienceQuotas;
+    private List<@Valid CourseAudienceQuotaRequest> audienceQuotas;
 }

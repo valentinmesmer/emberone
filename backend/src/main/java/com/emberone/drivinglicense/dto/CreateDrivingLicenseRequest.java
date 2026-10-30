@@ -25,7 +25,7 @@ public class CreateDrivingLicenseRequest {
 
     @NotBlank(message = "issuingAuthority is required") private String issuingAuthority;
 
-    @NotEmpty(message = "At least one class is required") @Valid private List<DrivingLicenseClassInput> classes;
+    @NotEmpty(message = "At least one class is required") private List<@Valid DrivingLicenseClassInput> classes;
 
     private List<Long> userDocumentIds;
 

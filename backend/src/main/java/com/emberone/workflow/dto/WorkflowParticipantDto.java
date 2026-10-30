@@ -27,6 +27,9 @@ public class WorkflowParticipantDto {
     private Long principalId;
     private Long organizationId;
 
+    /** Resolved from the slot organization's current workflow definition (not stored). */
+    private boolean selfApproveAllowed;
+
     /** Resolved organization name for org-bound approver slots. */
     private String organizationDisplayName;
 

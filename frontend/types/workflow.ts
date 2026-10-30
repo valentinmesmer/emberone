@@ -279,6 +279,8 @@ export interface WorkflowParticipantDto {
   principalType: WorkflowPrincipalType;
   principalId: number | null;
   organizationId: number | null;
+  /** Resolved from the slot organization's current workflow definition (not stored). */
+  selfApproveAllowed?: boolean;
   organizationDisplayName?: string | null;
   slotStatus: WorkflowParticipantSlotStatus | null;
   claimedByUserId: number | null;
@@ -315,8 +317,6 @@ export interface WorkflowDto {
   openedByUserId: number;
   /** Set on participation lists: opener's display name from the API. */
   openedByDisplayName?: string | null;
-  /** Resolved from the current admin workflow definition (not stored on the instance). */
-  selfApproveAllowed?: boolean;
   payload?: string | null;
   openConcurrencyKeys?: string[] | null;
   decidedAt?: string | null;

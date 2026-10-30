@@ -24,7 +24,7 @@ public class UpdateDrivingLicenseRequest {
 
     @NotBlank(message = "issuingAuthority is required") private String issuingAuthority;
 
-    @NotNull(message = "classes is required") @Valid private List<DrivingLicenseClassInput> classes;
+    @NotNull(message = "classes is required") private List<@Valid DrivingLicenseClassInput> classes;
 
     private List<Long> userDocumentIds;
 

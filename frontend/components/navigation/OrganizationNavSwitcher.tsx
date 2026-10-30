@@ -21,7 +21,13 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { resolvePreferredOrganization } from '@/lib/navigation/preferredOrganization';
 import { cn } from '@/lib/utils/cn';
 
-type OrganizationNavOrg = { id: number; name: string; main?: boolean };
+type OrganizationNavOrg = {
+  id: number;
+  name: string;
+  main?: boolean;
+  /** Clock time until which a management session keeps the organization open; unset for memberships. */
+  managedUntil?: string;
+};
 
 interface OrganizationNavSwitcherProps {
   organizations: OrganizationNavOrg[];
@@ -88,6 +94,21 @@ export function MainOrgIndicator({ className }: { className?: string }) {
         {t('home.navigation.organizations.mainBadge')}
       </span>
     </HoverHint>
+  );
+}
+
+/** Marks an organization that is open through a management session, not a membership. */
+export function ManagedOrgIndicator({ until, className }: { until: string; className?: string }) {
+  const t = useTranslation();
+  return (
+    <span
+      className={cn(
+        'shrink-0 rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide text-[var(--status-warning-accent)] bg-[var(--status-warning-accent)]/15',
+        className,
+      )}
+    >
+      {t('organization.management.switcherBadge', { time: until })}
+    </span>
   );
 }
 
@@ -249,6 +270,9 @@ export function OrganizationNavSwitcher({
                 <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
                   <span className="break-words leading-snug">{org.name}</span>
                   {org.main ? <MainOrgIndicator /> : null}
+                  {org.managedUntil != null ? (
+                    <ManagedOrgIndicator until={org.managedUntil} />
+                  ) : null}
                 </span>
                 <span className="flex shrink-0 items-center gap-1.5">
                   {badge != null && badge > 0 ? (

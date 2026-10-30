@@ -88,7 +88,7 @@ public class WorkflowInstanceAccess {
                     && participant.isApprover()
                     && participant.getSlotStatus() == ParticipantSlotStatus.PENDING
                     && userId.equals(participant.getClaimedByUserId())
-                    && !blocksSelfApprove(workflow, userId);
+                    && !blocksSelfApprove(workflow, participant, userId);
         } catch (Exception e) {
             return false;
         }
@@ -110,7 +110,7 @@ public class WorkflowInstanceAccess {
                     && participant.getPrincipalType() == PrincipalType.ORGANIZATION_GROUP
                     && participant.getSlotStatus() == ParticipantSlotStatus.PENDING
                     && userId.equals(participant.getClaimedByUserId())
-                    && !blocksSelfApprove(workflow, userId);
+                    && !blocksSelfApprove(workflow, participant, userId);
         } catch (Exception e) {
             return false;
         }
@@ -148,16 +148,14 @@ public class WorkflowInstanceAccess {
             if (workflow == null || workflow.getStatus() != WorkflowStatus.OPEN) {
                 return false;
             }
-            if (blocksSelfApprove(workflow, userId)) {
-                return false;
-            }
             WorkflowParticipant participant = findParticipant(workflow, participantId);
             return participant != null
                     && participant.isApprover()
                     && participant.getPrincipalType() == PrincipalType.ORGANIZATION_GROUP
                     && participant.getClaimedByUserId() == null
                     && isActiveGroupMember(
-                            userId, participant.getOrganizationId(), participant.getPrincipalId());
+                            userId, participant.getOrganizationId(), participant.getPrincipalId())
+                    && !blocksSelfApprove(workflow, participant, userId);
         } catch (Exception e) {
             return false;
         }
@@ -173,11 +171,9 @@ public class WorkflowInstanceAccess {
             if (workflow == null || workflow.getStatus() != WorkflowStatus.OPEN) {
                 return false;
             }
-            if (blocksSelfApprove(workflow, userId)) {
-                return false;
-            }
             for (WorkflowParticipant participant : workflow.getParticipants()) {
-                if (relatesToApproverSlot(participant, userId)) {
+                if (relatesToApproverSlot(participant, userId)
+                        && !blocksSelfApprove(workflow, participant, userId)) {
                     return true;
                 }
             }
@@ -239,7 +235,7 @@ public class WorkflowInstanceAccess {
                 return false;
             }
             return WorkflowInputChangeRules.canRequestInputChange(workflow, userId)
-                    && !blocksSelfApprove(workflow, userId);
+                    && !selfApproveService.blocksInputChangeRequest(workflow, userId);
         } catch (Exception e) {
             return false;
         }
@@ -267,12 +263,10 @@ public class WorkflowInstanceAccess {
         if (userId == null || workflow == null || workflow.getStatus() != WorkflowStatus.OPEN) {
             return false;
         }
-        if (blocksSelfApprove(workflow, userId)) {
-            return false;
-        }
         for (WorkflowParticipant participant : workflow.getParticipants()) {
             if (!participant.isApprover()
-                    || participant.getSlotStatus() != ParticipantSlotStatus.PENDING) {
+                    || participant.getSlotStatus() != ParticipantSlotStatus.PENDING
+                    || blocksSelfApprove(workflow, participant, userId)) {
                 continue;
             }
             if (userId.equals(participant.getClaimedByUserId())) {
@@ -318,9 +312,10 @@ public class WorkflowInstanceAccess {
         }
     }
 
-    private boolean blocksSelfApprove(Workflow workflow, Long userId) {
+    private boolean blocksSelfApprove(
+            Workflow workflow, WorkflowParticipant participant, Long userId) {
         return userId.equals(workflow.getOpenedByUserId())
-                && !selfApproveService.isAllowed(workflow);
+                && !selfApproveService.isAllowed(workflow, participant.getOrganizationId());
     }
 
     private boolean relatesToApproverSlot(WorkflowParticipant p, Long userId) {

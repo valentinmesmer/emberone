@@ -594,7 +594,6 @@ class WorkflowServiceTest {
                         any(Boolean.class),
                         any(),
                         any());
-        when(selfApproveService.isAllowed(any())).thenReturn(false);
 
         WorkflowDto result = service.open(5L, Map.of("key", "value"), "user", 99L);
 
@@ -685,7 +684,6 @@ class WorkflowServiceTest {
         Workflow workflow = workflow(1L);
         workflow.setOpenedByUserId(42L);
         when(workflowRepository.findWithDetailsById(1L)).thenReturn(Optional.of(workflow));
-        when(selfApproveService.isAllowed(workflow)).thenReturn(true);
         when(userRepository.findAllById(any()))
                 .thenReturn(
                         List.of(
@@ -706,7 +704,6 @@ class WorkflowServiceTest {
         WorkflowDto result = service.getWorkflow(1L);
 
         assertThat(result.getOpenedByDisplayName()).isEqualTo("Ada Lovelace");
-        assertThat(result.isSelfApproveAllowed()).isTrue();
     }
 
     @Test
@@ -765,7 +762,6 @@ class WorkflowServiceTest {
         when(workflowRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(workflow)));
         when(workflowRepository.findWithDetailsByIdIn(List.of(1L))).thenReturn(List.of(workflow));
-        when(selfApproveService.isAllowed(workflow)).thenReturn(false);
         when(mapper.toDtoList(List.of(workflow)))
                 .thenReturn(
                         List.of(
@@ -785,7 +781,6 @@ class WorkflowServiceTest {
                 .satisfies(
                         dto -> {
                             assertThat(dto.getId()).isEqualTo(1L);
-                            assertThat(dto.isSelfApproveAllowed()).isFalse();
                         });
     }
 
@@ -801,7 +796,7 @@ class WorkflowServiceTest {
                 .thenReturn(List.of(ownWorkflow, otherWorkflow));
         when(workflowRepository.findWithDetailsByIdIn(List.of(1L, 2L)))
                 .thenReturn(List.of(ownWorkflow, otherWorkflow));
-        when(selfApproveService.isAllowed(ownWorkflow)).thenReturn(false);
+        when(workflowInstanceAccess.requiresParticipantAction(ownWorkflow, 42L)).thenReturn(false);
         when(workflowInstanceAccess.requiresParticipantAction(otherWorkflow, 42L)).thenReturn(true);
         when(mapper.toDtoList(List.of(otherWorkflow)))
                 .thenReturn(
@@ -946,7 +941,6 @@ class WorkflowServiceTest {
                             workflow.setId(1L);
                             return workflow;
                         });
-        when(selfApproveService.isAllowed(any())).thenReturn(false);
 
         service.open(5L, null, null, null);
 
@@ -1013,7 +1007,6 @@ class WorkflowServiceTest {
                 .thenReturn(List.of());
         when(documentPromotionService.promoteToUserDocuments(any(), any(), any()))
                 .thenReturn(List.of());
-        when(selfApproveService.isAllowed(any())).thenReturn(false);
 
         service.open(5L, null, null, null);
 
@@ -1075,7 +1068,7 @@ class WorkflowServiceTest {
                         .build();
         WorkflowDecisionDto decisionDto = WorkflowDecisionDto.builder().userId(51L).build();
         when(workflowRepository.findWithDetailsById(1L)).thenReturn(Optional.of(workflow));
-        when(selfApproveService.isAllowed(workflow)).thenReturn(false);
+        when(selfApproveService.isAllowed(workflow, 20L)).thenReturn(true);
         when(mapper.toDto(workflow))
                 .thenReturn(
                         WorkflowDto.builder()
@@ -1125,6 +1118,8 @@ class WorkflowServiceTest {
                 .isEqualTo("Grace Hopper");
         assertThat(result.getParticipants().get(1).getClaimedByDisplayName())
                 .isEqualTo("Alan Turing");
+        assertThat(result.getParticipants().get(0).isSelfApproveAllowed()).isTrue();
+        assertThat(result.getParticipants().get(1).isSelfApproveAllowed()).isFalse();
         assertThat(result.getDecisions().getFirst().getUserDisplayName()).isEqualTo("Alan Turing");
     }
 
@@ -1138,7 +1133,6 @@ class WorkflowServiceTest {
                 .thenReturn(List.of(ownWorkflow));
         when(workflowRepository.findWithDetailsByIdIn(List.of(1L)))
                 .thenReturn(List.of(ownWorkflow));
-        when(selfApproveService.isAllowed(ownWorkflow)).thenReturn(true);
         when(workflowInstanceAccess.requiresParticipantAction(ownWorkflow, 42L)).thenReturn(true);
         when(mapper.toDtoList(List.of(ownWorkflow)))
                 .thenReturn(

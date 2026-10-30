@@ -17,5 +17,5 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class ReplaceOnboardingStepsRequest {
-    @NotNull @Valid List<OnboardingStepDto> steps;
+    @NotNull List<@Valid OnboardingStepDto> steps;
 }

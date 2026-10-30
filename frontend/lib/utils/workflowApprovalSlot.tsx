@@ -36,8 +36,12 @@ export function normalizeWorkflowStatus(status: string | undefined): WorkflowSta
   return status;
 }
 
-export function blocksSelfApprove(wf: WorkflowDto, userId: number): boolean {
-  return wf.openedByUserId === userId && wf.selfApproveAllowed !== true;
+export function blocksSelfApprove(
+  p: WorkflowParticipantDto,
+  wf: WorkflowDto,
+  userId: number,
+): boolean {
+  return wf.openedByUserId === userId && p.selfApproveAllowed !== true;
 }
 
 export function isClaimableApproverSlot(
@@ -48,7 +52,7 @@ export function isClaimableApproverSlot(
 ): boolean {
   const st = normalizeWorkflowStatus(wf.status);
   if (st !== 'OPEN' || userId == null) return false;
-  if (blocksSelfApprove(wf, userId)) return false;
+  if (blocksSelfApprove(p, wf, userId)) return false;
   return (
     p.role === 'APPROVER' &&
     p.slotStatus === 'PENDING' &&
@@ -65,7 +69,7 @@ export function isDecidableApproverSlot(
 ): boolean {
   const st = normalizeWorkflowStatus(wf.status);
   if (st !== 'OPEN') return false;
-  if (blocksSelfApprove(wf, userId)) return false;
+  if (blocksSelfApprove(p, wf, userId)) return false;
   return (
     p.role === 'APPROVER' &&
     p.slotStatus === 'PENDING' &&
@@ -81,7 +85,7 @@ export function isUnclaimableApproverSlot(
 ): boolean {
   const st = normalizeWorkflowStatus(wf.status);
   if (st !== 'OPEN' && st !== 'AWAITING_INPUT_CHANGE') return false;
-  if (blocksSelfApprove(wf, userId)) return false;
+  if (blocksSelfApprove(p, wf, userId)) return false;
   return (
     p.role === 'APPROVER' &&
     p.principalType === 'ORGANIZATION_GROUP' &&
