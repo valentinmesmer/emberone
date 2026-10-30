@@ -1,0 +1,10 @@
+<!--
+  Copyright (C) 2026 Valentin Mesmer
+  This file is part of EmberOne.
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 100">
+  <title>EmberOne wordmark</title>
+  <text x="6" y="65" font-family="Sora, Arial, sans-serif" font-weight="800" font-size="46" letter-spacing="-0.5" fill="#ffffff">Ember<tspan dx="3" fill="#e0463f">One</tspan></text>
+</svg>

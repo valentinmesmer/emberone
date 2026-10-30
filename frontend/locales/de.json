@@ -1,0 +1,3590 @@
+{
+  "common": {
+    "loading": "Wird geladen...",
+    "processing": "Wird verarbeitet...",
+    "wait": "Bitte warte einen Moment …",
+    "logout": "Abmelden",
+    "back": "Zurück",
+    "previous": "Vorheriger Eintrag",
+    "next": "Nächster Eintrag",
+    "listNavigation": "Navigation in der Liste",
+    "notFoundHint": "Der Eintrag existiert nicht mehr oder du hast keinen Zugriff.",
+    "errorHint": "Bitte versuche es später erneut.",
+    "errors": {
+      "requestFailed": "Die Aktion ist fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "archive": "Archivieren",
+    "unarchive": "Entarchivieren",
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "continue": "Weiter",
+    "confirm": "Bestätigen",
+    "save": "Speichern",
+    "yes": "Ja",
+    "no": "Nein",
+    "name": "Name",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "archived": "Archiviert",
+    "optional": "optional",
+    "notAvailable": "-",
+    "formerMember": "Ehemaliges Mitglied",
+    "add": "Hinzufügen",
+    "addCount": "{{count}} hinzufügen",
+    "removeCount": "{{count}} entfernen",
+    "validation": {
+      "invalidPhoneNumber": "Ungültige Telefonnummer",
+      "invalidEmail": "Ungültige E-Mail-Adresse",
+      "required": "Pflichtfeld",
+      "invalidOrganizationCode": "Ungültiger Organisationscode (max. 5 Zeichen: A-Z, 0-9, _)",
+      "endNotBeforeStart": "Das Ende darf nicht vor dem Beginn liegen.",
+      "endAfterStart": "Das Ende muss nach dem Beginn liegen.",
+      "startNotInFuture": "Das Startdatum darf nicht in der Zukunft liegen.",
+      "fillRequired": "Bitte fülle alle Pflichtfelder aus.",
+      "positiveInteger": "Bitte eine positive ganze Zahl eingeben.",
+      "invalidDateOfBirth": "Bitte ein gültiges Geburtsdatum mit vierstelliger Jahreszahl eingeben."
+    },
+    "selectOption": "Option auswählen",
+    "selectNoOptions": "Keine Auswahl verfügbar",
+    "menu": "Menü",
+    "menuOpen": "Menü öffnen",
+    "menuClose": "Menü schließen",
+    "hoverDisabledAction": "Derzeit nicht verfügbar.",
+    "hoverDisabledField": "Dieses Feld ist deaktiviert.",
+    "hoverDisabledSave": "Speichern nicht möglich: Eingaben unvollständig oder ungültig.",
+    "pullToRefresh": {
+      "action": "Aktualisieren",
+      "retry": "Erneut versuchen",
+      "pullMore": "Weiter ziehen zum Aktualisieren",
+      "release": "Loslassen zum Aktualisieren",
+      "refreshing": "Wird aktualisiert …",
+      "success": "Aktualisiert",
+      "offline": "Du bist offline. Bitte versuche es später erneut.",
+      "error": "Aktualisieren fehlgeschlagen."
+    },
+    "hub": {
+      "ungrouped": "Weitere Bereiche",
+      "groups": {
+        "myAreaPersonal": "Profil & Dokumente",
+        "myAreaTimeAttendance": "Zeit & Abwesenheit",
+        "myAreaInbox": "Posteingang",
+        "myAreaAccount": "Konto",
+        "orgDepartment": "Dienstbetrieb",
+        "orgMembersAndAbsences": "Mitglieder"
+      }
+    },
+    "a11y": {
+      "date": "Datum",
+      "time": "Uhrzeit",
+      "openCalendar": "Kalender öffnen",
+      "previousMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat",
+      "selectField": "Auswahlfeld"
+    },
+    "attachments": {
+      "title": "Anhänge",
+      "upload": "Datei hochladen",
+      "chooseFile": "Datei auswählen",
+      "empty": "Keine Anhänge",
+      "download": "Herunterladen",
+      "removeFile": "Datei entfernen"
+    },
+    "request": {
+      "submit": "Antrag absenden",
+      "errorSubmit": "Antrag konnte nicht eingereicht werden.",
+      "successSubmitted": "Antrag wurde eingereicht.",
+      "reasonLabel": "Begründung",
+      "reasonOptional": "optional",
+      "attachmentsLabel": "Anhang",
+      "attachmentsOptional": "optional"
+    },
+    "record": {
+      "documentsTitle": "Dokumente",
+      "noDocuments": "Keine Dokumente vorhanden.",
+      "notesLabel": "Notizen (optional)"
+    }
+  },
+  "appLink": {
+    "actions": {
+      "WORKFLOW": "Zum Antrag",
+      "CERTIFICATION_RECORD": "Zum Nachweis",
+      "TRAINING_COURSE_RECORD": "Zum Lehrgang",
+      "DRIVING_LICENSE_RECORD": "Zum Führerschein",
+      "CERTIFICATION_EVENT_GRANT": "Zum Ereignis",
+      "ONBOARDING_INVITATION": "Zum Eintritt",
+      "COURSE_REGISTRATION": "Zur Lehrgangsanmeldung",
+      "default": "Öffnen"
+    },
+    "types": {
+      "WORKFLOW": "Antrag",
+      "CERTIFICATION_RECORD": "Nachweis einreichen",
+      "TRAINING_COURSE_RECORD": "Lehrgang",
+      "DRIVING_LICENSE_RECORD": "Führerschein",
+      "CERTIFICATION_EVENT_GRANT": "Ereignis",
+      "ONBOARDING_INVITATION": "Eintritt",
+      "COURSE_REGISTRATION": "Lehrgangsanmeldung"
+    }
+  },
+  "setup": {
+    "organization": {
+      "code": "Organisationscode",
+      "codePlaceholder": "FF01",
+      "codeHint": "Nur Großbuchstaben, Zahlen und Unterstriche (max. 5 Zeichen)",
+      "name": "Name",
+      "namePlaceholder": "Feuerwehr Musterstadt",
+      "type": "Typ"
+    },
+    "user": {
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "firstNamePlaceholder": "Max",
+      "lastNamePlaceholder": "Mustermann",
+      "email": "E-Mail",
+      "emailPlaceholder": "max.mustermann@example.com",
+      "dateOfBirth": "Geburtsdatum",
+      "salutation": "Anrede",
+      "salutationMr": "Herr",
+      "salutationMrs": "Frau",
+      "street": "Straße",
+      "streetPlaceholder": "Musterstraße 123",
+      "city": "Stadt",
+      "cityPlaceholder": "Musterstadt",
+      "postalCode": "Postleitzahl",
+      "postalCodePlaceholder": "12345",
+      "country": "Land",
+      "countryPlaceholder": "Deutschland",
+      "addressSuggestions": "Adressvorschläge",
+      "addressSuggestionsLoading": "Adressen werden gesucht …",
+      "addressSuggestionsEmpty": "Keine Adressen gefunden"
+    }
+  },
+  "brand": {
+    "subtitle": "Feuerwehrverwaltung"
+  },
+  "home": {
+    "greeting": "Willkommen zurück",
+    "greetingMorning": "Guten Morgen",
+    "greetingAfternoon": "Guten Tag",
+    "greetingEvening": "Guten Abend",
+    "dashboard": {
+      "quickActionsTitle": "Schnellzugriff",
+      "tasksAndAppointmentsTitle": "Aufgaben & Termine",
+      "stats": {
+        "title": "Übersicht",
+        "missions": {
+          "title": "Alarm-Anwesenheit",
+          "value": "{{current}}/{{total}} ({{percent}}%)",
+          "subtitle": "Teilnahmen bei Alarmierungen"
+        },
+        "qualifications": {
+          "title": "Qualifikationen",
+          "subtitle": "Alle Befähigungen nach Status",
+          "empty": "Keine Qualifikationen erfasst.",
+          "unavailable": "Dein Konto ist noch nicht vollständig eingerichtet.",
+          "more": "+{{count}}",
+          "moreAria": "{{count}} weitere Qualifikationen"
+        },
+        "leadershipHours": {
+          "title": "Dienstleistung",
+          "value": "{{hours}} h",
+          "subtitle": "Summe der Anwesenheiten in Stunden"
+        }
+      },
+      "personalDataHint": "Profil, Zeiten & mehr.",
+      "personalDataNoEmployeeHint": "Dein Konto ist noch nicht vollständig eingerichtet.",
+      "organizationsNoEmployeeHint": "Organisationen werden angezeigt, sobald dein Konto vollständig eingerichtet ist.",
+      "organizationsNoneHint": "Du bist noch keiner Organisation zugeordnet.",
+      "organizationHint": "Du bist in {{count}} Organisationen aktiv.",
+      "todos": {
+        "title": "Meine Aufgaben",
+        "empty": "Keine offenen Aufgaben"
+      },
+      "appointments": {
+        "title": "Anstehende Termine",
+        "empty": "Keine anstehenden Termine"
+      }
+    },
+    "search": {
+      "placeholder": "Bereich oder Organisation suchen …",
+      "hint": "Tippe, um Bereiche und Einstellungen zu finden, die du sehen darfst.",
+      "ariaLabel": "Suche",
+      "resultsAria": "Suchergebnisse",
+      "suggestionsTitle": "Häufig genutzt",
+      "suggestionsAria": "Schnellzugriff",
+      "noResults": "Keine Treffer",
+      "unavailable": "Suche derzeit nicht verfügbar",
+      "category": {
+        "myArea": "Mein Bereich",
+        "organization": "Organisation",
+        "orgSection": "Organisationsbereich",
+        "admin": "Administration"
+      }
+    },
+    "navigation": {
+      "home": {
+        "title": "Startseite"
+      },
+      "personalData": {
+        "title": "Mein Bereich",
+        "button": "Zu meinem Bereich"
+      },
+      "organizations": {
+        "title": "Meine Organisationen",
+        "button": "Zur Hauptorganisation",
+        "mainBadge": "Haupt",
+        "switchMenu": "Organisation wechseln",
+        "switchHint": "{{count}} Organisationen verfügbar",
+        "switchSubtitleMore": "{{count}} weitere Organisationen",
+        "switchSubtitleMoreOne": "1 weitere Organisation"
+      },
+      "administration": {
+        "title": "Administration"
+      },
+      "sections": {
+        "main": "Navigation",
+        "workspace": "Untermenü"
+      },
+      "bottomNav": {
+        "start": "Start",
+        "myArea": "Mein Bereich",
+        "organization": "Organisation"
+      }
+    }
+  },
+  "app": {
+    "title": "EmberOne",
+    "description": "Feuerwehrverwaltung"
+  },
+  "legal": {
+    "source": {
+      "title": "Lizenz und Quellcode",
+      "subtitle": "GNU Affero General Public License v3.0",
+      "version": "Version {{version}}",
+      "unreleased": "Entwicklungsstand (kein Release-Tag)",
+      "agplNotice": "EmberOne steht unter der GNU Affero General Public License v3.0 oder neuer. Wer die Anwendung über ein Netzwerk nutzt, muss den Quellcode genau dieser laufenden Version erhalten können.",
+      "codeLink": "Quellcode dieser Version",
+      "releaseLink": "Release dieser Version auf GitHub",
+      "licenseLink": "Lizenztext (AGPL-3.0)",
+      "footer": "Lizenz und Quellcode",
+      "backToApp": "Zur App",
+      "copyright": "© 2026 Valentin Mesmer"
+    }
+  },
+  "pwa": {
+    "offline": {
+      "title": "Offline",
+      "description": "Keine Verbindung. EmberOne ist lokal vorbereitet. Versuche es erneut, sobald du wieder online bist."
+    },
+    "install": {
+      "title": "Als App hinzufügen",
+      "description": "Schneller Start, auch bei schwachem Netz.",
+      "iosSteps": "Teilen → „Zum Home-Bildschirm“",
+      "action": "Installieren",
+      "dismiss": "Hinweis schließen"
+    }
+  },
+  "onboarding": {
+    "reminder": {
+      "title": "Eintritt noch offen",
+      "messageSingle": "Für {{organization}} fehlen noch Angaben zu deinem Eintritt.",
+      "messageMultiple": "Bei {{count}} Organisationen fehlen noch Angaben zu deinem Eintritt.",
+      "open": "Jetzt erledigen",
+      "later": "Später"
+    },
+    "rank": {
+      "intro": "Du kannst optional einen Wunschdienstgrad angeben. Die Vergabe erfolgt erst nach Freigabe des Eintritts.",
+      "skip": "Keinen Dienstgrad angeben",
+      "select": "Wunschdienstgrad",
+      "proofLabel": "Belegdokument",
+      "proofOptional": "Ein Belegdokument ist optional und kann später ergänzt werden.",
+      "noneDeclaredReview": "Kein Wunschdienstgrad angegeben."
+    }
+  },
+  "admin": {
+    "title": "Verwaltung",
+    "subtitleGlobal": "Globale Administration",
+    "subtitleTenant": "Mandantenadministration",
+    "hub": {
+      "eyebrow": "Administration",
+      "navTitle": "Bereiche"
+    },
+    "accessDenied": "Du hast keine Berechtigung für diese Seite.",
+    "errors": {
+      "tenantsLoadFailed": "Mandanten konnten nicht geladen werden.",
+      "tenantScopeDenied": "Du kannst nur deinen eigenen Mandanten einsehen.",
+      "createTenantFailed": "Mandant konnte nicht angelegt werden.",
+      "tenantLoadFailed": "Mandant konnte nicht geladen werden.",
+      "updateTenantFailed": "Mandant konnte nicht gespeichert werden.",
+      "purgeTenantFailed": "Mandant konnte nicht gelöscht werden.",
+      "rootOrgCreateFailed": "Wurzelorganisation konnte nicht angelegt werden.",
+      "leaderCreateFailed": "Leiter konnte nicht angelegt werden.",
+      "orgUpdateFailed": "Organisation konnte nicht gespeichert werden.",
+      "orgDeactivateFailed": "Organisation konnte nicht deaktiviert werden.",
+      "childOrgCreateFailed": "Unterorganisation konnte nicht angelegt werden.",
+      "orgDetailLoadFailed": "Organisation konnte nicht geladen werden.",
+      "orgTreeLoadFailed": "Die Organisationshierarchie konnte nicht geladen werden.",
+      "retentionLoadFailed": "Löschfristen konnten nicht geladen werden."
+    },
+    "retention": {
+      "title": "Löschfristen",
+      "subtitle": "Wann personenbezogene Daten automatisch gelöscht werden.",
+      "manageLink": "Löschfristen anzeigen",
+      "pageSubtitle": "Nach Ablauf der Frist werden die Daten unwiderruflich gelöscht. Die Frist beginnt am genannten Zeitpunkt.",
+      "profileLabel": "Regelwerk",
+      "profileHint": "Vorgegeben durch das Bundesland des Mandanten.",
+      "periodsLabel": "Löschklassen",
+      "startLabel": "Fristbeginn",
+      "periodLabel": "Löschfrist",
+      "entitiesLabel": "Betroffene Daten",
+      "entitiesEmpty": "Für diese Löschklasse sind keine Entitäten hinterlegt.",
+      "categoryNotFound": "Löschklasse wurde nicht gefunden.",
+      "period": {
+        "immediate": "sofort",
+        "DAYS_one": "1 Tag",
+        "DAYS_other": "{{count}} Tage",
+        "MONTHS_one": "1 Monat",
+        "MONTHS_other": "{{count}} Monate",
+        "YEARS_one": "1 Jahr",
+        "YEARS_other": "{{count}} Jahre"
+      },
+      "profiles": {
+        "BY": "Bayern"
+      },
+      "categories": {
+        "EXIT_IMMEDIATE": {
+          "title": "Sofortlöschung bei Austritt",
+          "start": "nach Austritt"
+        },
+        "EXIT_SETTLEMENT": {
+          "title": "Abwicklung nach Austritt",
+          "start": "nach Austritt"
+        },
+        "DRIVING_LICENSE": {
+          "title": "Führerschein",
+          "start": "nach Austritt"
+        },
+        "EVIDENCE": {
+          "title": "Nachweise",
+          "start": "nach Ablauf der Gültigkeit"
+        },
+        "ABSENCE": {
+          "title": "Abwesenheiten",
+          "start": "nach Ende der Abwesenheit"
+        },
+        "TIME_ENTRY": {
+          "title": "Zeiteinträge",
+          "start": "nach Beginn des Eintrags"
+        },
+        "EVENT": {
+          "title": "Dienste und Einsätze",
+          "start": "nach Beginn"
+        },
+        "APPOINTMENT": {
+          "title": "Termine",
+          "start": "nach Terminende"
+        },
+        "WORKFLOW_STALE": {
+          "title": "Offene Anträge",
+          "start": "nach Eröffnung"
+        },
+        "WORKFLOW": {
+          "title": "Abgeschlossene Anträge",
+          "start": "nach Entscheidung oder Abbruch"
+        },
+        "TODO": {
+          "title": "Erledigte Aufgaben",
+          "start": "nach Archivierung"
+        },
+        "NOTIFICATION": {
+          "title": "Benachrichtigungen",
+          "start": "nach Erstellung"
+        },
+        "ONBOARDING": {
+          "title": "Eintrittsdaten",
+          "start": "nach Austritt"
+        },
+        "AUDIT": {
+          "title": "Änderungsprotokoll",
+          "start": "nach der Änderung"
+        },
+        "USER_MASTER": {
+          "title": "Personenstammdaten",
+          "start": "nach Austritt"
+        }
+      },
+      "tables": {
+        "action_log": "Änderungsprotokoll",
+        "appointment_audience_groups": "Termin-Zielgruppen",
+        "appointment_reads": "Termin-Lesestatus",
+        "appointment_responses": "Termin-Rückmeldungen",
+        "appointment_series": "Terminserien",
+        "appointment_series_audience_groups": "Serien-Zielgruppen",
+        "appointments": "Termine",
+        "cert_event_grant_recipients": "Zertifikatsvergaben (Empfänger)",
+        "cert_event_grants": "Zertifikatsvergaben",
+        "cert_user_assignments": "Zertifikatszuordnungen",
+        "cert_user_record_documents": "Zertifikatsnachweise (Dokumente)",
+        "cert_user_records": "Zertifikatsnachweise",
+        "doc_documents": "Persönliche Dokumente",
+        "doc_user_profile_images": "Profilbilder",
+        "driving_license_classes": "Führerscheinklassen",
+        "driving_license_documents": "Führerscheindokumente",
+        "driving_licenses": "Führerscheine",
+        "event_attendances": "Anwesenheiten",
+        "idm_users": "Identitätskonten",
+        "ntf_deliveries": "Benachrichtigungszustellungen",
+        "ntf_notifications": "Benachrichtigungen",
+        "ntf_user_channel_overrides": "Benachrichtigungskanäle",
+        "onb_document_definitions": "Eintrittsdokument-Vorlagen",
+        "onb_invitation_step_data": "Eintrittsschritt-Daten",
+        "onb_invitations": "Eintrittseinladungen",
+        "onb_org_document_definitions": "Org-Eintrittsdokumente",
+        "operation_events": "Einsätze",
+        "qual_user_org_decisions": "Qualifikationsentscheidungen",
+        "service_events": "Dienste",
+        "todo_excluded_users": "Aufgaben-Ausschlüsse",
+        "todo_items": "Aufgaben",
+        "training_course_user_submission_documents": "Lehrgangsnachweise (Dokumente)",
+        "training_course_user_submissions": "Lehrgangsnachweise",
+        "user_absence_organizations": "Abwesenheits-Organisationen",
+        "user_absences": "Abwesenheiten",
+        "user_contact_information": "Kontaktdaten",
+        "user_emergency_contacts": "Notfallkontakte",
+        "user_organization_group_memberships": "Gruppenmitgliedschaften",
+        "user_organization_memberships": "Organisationsmitgliedschaften",
+        "user_time_entries": "Zeiteinträge",
+        "users": "Personen",
+        "usr_entry_document_fulfillments": "Eintrittsdokument-Erfüllungen",
+        "wf_comments": "Antragskommentare",
+        "wf_decisions": "Antragsentscheidungen",
+        "wf_exclusivity_locks": "Antragssperren",
+        "wf_input_changes": "Antragsänderungen",
+        "wf_instances": "Anträge",
+        "wf_participants": "Antragsteilnehmer"
+      }
+    },
+    "sections": {
+      "globalTenants": "Mandanten",
+      "myTenant": "Mein Mandant",
+      "userManagement": "Nutzerverwaltung",
+      "managementActivations": "Verwaltungsprotokoll"
+    },
+    "tenantIdLabel": "Mandanten-ID",
+    "tenantSetup": {
+      "title": "Einrichtung offen",
+      "allComplete": "Mandant ist eingerichtet",
+      "standardsStep": "Standards klonen und Organisationstyp zuordnen",
+      "standardsDone": "Standards konfiguriert",
+      "orgsStep": "Wurzelorganisation anlegen",
+      "orgsDone": "Organisationsstruktur vorhanden",
+      "leadersStep": "Leiter für alle Organisationen zuweisen",
+      "leadersDone": "Alle Leiter zugewiesen",
+      "leadersMissingCount": "{{count}} Organisation(en) ohne Leiter",
+      "leadersMissingSubtree": "In Unterorganisationen fehlen Leiter",
+      "leadersTreeHint": "{{count}} Organisation(en) ohne Leiter. Bitte auf der Detailseite zuweisen oder anlegen."
+    },
+    "tenantsEmpty": "Noch keine Mandanten angelegt.",
+    "tenantsListTitle": "Alle Mandanten",
+    "tenantsListTitleScoped": "Mein Mandant",
+    "rootOrgGlobalOnlyHint": "Die Einrichtung der Wurzelorganisation und des ersten Leiters ist nur im Admin-Bereich möglich.",
+    "newTenantModalTitle": "Neuer Mandant",
+    "newTenantModalDescription": "Es wird nur ein Mandant ohne Organisation und ohne Benutzer angelegt.",
+    "tenantUpdated": "Mandant wurde gespeichert.",
+    "tenantPurge": {
+      "action": "Mandant löschen",
+      "actionHint": "Löscht den Mandanten mit allen Daten und Anmeldekonten. Nicht rückgängig zu machen.",
+      "modalTitle": "Mandant löschen?",
+      "modalMessage": "Alle Daten dieses Mandanten werden unwiderruflich gelöscht, einschließlich Protokolle.",
+      "modalDetail": "Andere Mandanten bleiben unberührt. Hochgeladene Dateien werden im Hintergrund entfernt.",
+      "confirmationLabel": "Mandantenname „{{name}}“",
+      "confirmMessage": "Mandant „{{name}}“ endgültig löschen?",
+      "confirmButton": "Endgültig löschen",
+      "success": "Mandant wurde gelöscht."
+    },
+    "orgDeactivate": {
+      "action": "Organisation deaktivieren",
+      "actionHint": "Deaktiviert diese Organisation und alle Unterorganisationen. Hauptorg-Mitglieder werden deaktiviert, Neben-Mitgliedschaften enden. Daten folgen den Löschfristen.",
+      "modalTitle": "Organisation deaktivieren?",
+      "modalMessage": "Die Organisation wird nicht gelöscht, sondern deaktiviert - inklusive des gesamten Unterbaums.",
+      "modalDetail": "Unterorganisationen, die erhalten bleiben sollen, vorher verschieben. Hauptorganisationen betroffener Mitglieder vorher ändern, wenn die Konten aktiv bleiben sollen.",
+      "confirmationLabel": "Organisationsname „{{name}}“",
+      "confirmMessage": "Organisation „{{name}}“ und Unterbaum deaktivieren?",
+      "confirmButton": "Deaktivieren",
+      "success": "Organisation wurde deaktiviert.",
+      "deactivatedBadge": "Deaktiviert"
+    },
+    "orgMove": {
+      "action": "Im Baum verschieben",
+      "actionHint": "Übergeordnete Organisation ändern; der Unterbaum bleibt erhalten.",
+      "modalTitle": "Organisation verschieben",
+      "modalMessage": "Neue übergeordnete Organisation für „{{name}}“.",
+      "parentLabel": "Übergeordnete Organisation",
+      "rootOption": "Keine (Wurzelorganisation)",
+      "confirmButton": "Verschieben",
+      "success": "Organisation wurde verschoben."
+    },
+    "editTenant": "Mandant bearbeiten",
+    "rootOrg": {
+      "none": "Noch keine Wurzelorganisation angelegt.",
+      "create": "Wurzelorganisation anlegen",
+      "createModalTitle": "Wurzelorganisation anlegen",
+      "createModalDescription": "Legt die oberste Organisation dieses Mandanten an (ohne übergeordnete Organisation)."
+    },
+    "leader": {
+      "create": "Leiter anlegen",
+      "onboarding": {
+        "askTitle": "Eintritt nachreichen?",
+        "askMessage": "Soll der Eintritt für den neuen Leiter jetzt nachgereicht und direkt abgeschlossen werden?",
+        "askConfirm": "Ja, nachreichen",
+        "askCancel": "Nein, später",
+        "title": "Eintritt nachreichen",
+        "titleCompleted": "Eintritt",
+        "sectionTitle": "Eintritt",
+        "tileInvitedAt": "Eingeladen am {{date}}",
+        "complete": "Erfassung abschließen",
+        "completed": "Eintritt wurde gespeichert.",
+        "completeFailed": "Eintritt konnte nicht abgeschlossen werden.",
+        "startFailed": "Erfassung konnte nicht gestartet werden.",
+        "reviewReady": "Alle Schritte sind ausgefüllt. Mit dem Abschluss werden die Angaben direkt übernommen, ohne Freigabe-Workflow.",
+        "catchUp": "Eintritt nachreichen",
+        "catchUpHint": "Für dieses Mitglied der Leitungsgruppe liegt noch kein Eintritt für diese Organisation vor.",
+        "catchUpTitle": "Eintritt nachreichen?",
+        "catchUpMessage": "Soll der Eintritt jetzt nachgereicht und direkt abgeschlossen werden?",
+        "catchUpConfirm": "Ja, nachreichen",
+        "noStepsTitle": "Eintritt",
+        "noStepsHint": "Für diese Organisation sind keine Eintrittsschritte konfiguriert. Es gibt nichts nachzureichen."
+      }
+    },
+    "tenantForm": {
+      "locale": "Sprache",
+      "localeHint": "Die Sprache wird bei der Mandantenerstellung festgelegt und kann später nicht geändert werden.",
+      "federalState": "Bundesland",
+      "federalStateHint": "Das Bundesland wird bei der Mandantenerstellung festgelegt und kann später nicht geändert werden.",
+      "name": "Name",
+      "abbreviation": "Kürzel",
+      "abbreviationHint": "Eindeutiger Mandantencode (systemweit), unveränderlich nach der Anlegung. Wird im Benutzernamen verwendet: vorname.nachname.kürzel.",
+      "editModalTitle": "Mandant bearbeiten",
+      "editNameModalTitle": "Name bearbeiten"
+    },
+    "tenantCreatedMinimal": "Mandant wurde angelegt.",
+    "usersLoadError": "Benutzerliste konnte nicht geladen werden.",
+    "userManagementListHint": "Tippe auf einen Eintrag für Rolle und Deaktivieren.",
+    "globalUsers": "Benutzer",
+    "globalUsersEmpty": "Keine aktiven Benutzer.",
+    "roleUpdateError": "Rolle konnte nicht gespeichert werden.",
+    "roleUpdated": "Rolle gespeichert.",
+    "userDetail": {
+      "notFound": "Benutzer nicht gefunden.",
+      "currentBadge": "Aktiv",
+      "appRoleSection": "App-Rolle",
+      "actionsSection": "Aktionen",
+      "selectRoleAria": "Rolle {{role}} zuweisen",
+      "noRoleChanges": "Du kannst die App-Rolle für diesen Benutzer nicht ändern.",
+      "confirmRoleTitle": "App-Rolle ändern",
+      "confirmRoleMessage": "{{name}} die App-Rolle „{{role}}“ zuweisen?",
+      "confirmRoleAction": "Rolle speichern",
+      "deactivateAction": "Deaktivieren",
+      "deactivateHint": "Mitgliedschaften enden, Anmeldekonto wird gelöscht.",
+      "deactivateSelfBlocked": "Du kannst dein eigenes Konto hier nicht deaktivieren.",
+      "deactivateUnavailable": "Deaktivieren ist derzeit nicht möglich (keine aktive Organisationszuordnung).",
+      "confirmDeactivateTitle": "Benutzer deaktivieren",
+      "confirmDeactivateMessage": "{{name}} deaktivieren? Alle Mitgliedschaften enden und das Anmeldekonto wird gelöscht.",
+      "confirmDeactivateAction": "Deaktivieren",
+      "deactivateSuccess": "Benutzer wurde deaktiviert.",
+      "deactivateFailed": "Deaktivieren ist fehlgeschlagen."
+    },
+    "table": {
+      "tenant": "Mandant",
+      "organization": "Organisation",
+      "role": "Rolle"
+    },
+    "roles": {
+      "USER": "Benutzer",
+      "TENANT_ADMIN": "Mandantenadmin",
+      "GLOBAL_ADMIN": "Globaler Admin"
+    },
+    "courseOfferingTypes": {
+      "title": "Anbietbare Lehrgänge",
+      "intro": "Welche Lehrgangstypen diese Organisation als Lehrgangsangebote anbieten darf (zusätzlich zum Lehrgangs-Katalog der Org).",
+      "emptyCatalog": "Noch keine Lehrgangstypen im Mandanten-Katalog. Lege sie unter Mandant Einstellungen an.",
+      "loadError": "Anbietbare Lehrgänge konnten nicht geladen werden.",
+      "saveFailed": "Anbietbare Lehrgänge konnten nicht gespeichert werden."
+    },
+    "managementAudience": {
+      "title": "Verwaltung",
+      "intro": "Welche Organisationen diese Organisation verwalten darf und welche Berechtigungen dabei erlaubt sind. Die Zuordnung gewährt noch keinen Zugriff; Mitarbeitende wählen beim Verwalten selbst aus diesen Berechtigungen und die Dauer.",
+      "addEntry": "Eintrag hinzufügen",
+      "addTitle": "Eintrag hinzufügen",
+      "empty": "Noch keine Zuständigkeiten erfasst",
+      "editTitle": "Eintrag bearbeiten",
+      "kindLabel": "Umfang",
+      "kindOrg": "Eine Organisation",
+      "kindOrgSubtree": "Organisation mit Unterorganisationen",
+      "kindOrgType": "Alle Organisationen einer Art",
+      "kindTenant": "Gesamter Mandant",
+      "targetLabel": "Ziel",
+      "targetPlaceholder": "Bitte wählen",
+      "unknownTarget": "Unbekanntes Ziel",
+      "durationValue": "{{minutes}} min",
+      "allowedPermissions": "Erlaubte Berechtigungen",
+      "actionsTitle": "Aktionen",
+      "removeHint": "Den Eintrag entfernen; laufende Verwaltungen verlieren sofort den Zugriff",
+      "notFound": "Eintrag nicht gefunden",
+      "durationLabel": "Höchstdauer (Minuten)",
+      "durationInvalid": "Die Höchstdauer muss mindestens 1 Minute betragen.",
+      "targetRequired": "Bitte ein Ziel wählen.",
+      "duplicate": "Für dieses Ziel gibt es bereits einen Eintrag.",
+      "removeEntry": "Eintrag entfernen",
+      "deleteTitle": "Eintrag entfernen",
+      "deleteMessage": "Der Eintrag wird entfernt. Laufende Verwaltungen über diesen Umfang verlieren den Zugriff sofort.",
+      "deleted": "Eintrag entfernt",
+      "save": "Speichern",
+      "saved": "Verwaltung gespeichert",
+      "saveFailed": "Verwaltung konnte nicht gespeichert werden.",
+      "loadError": "Verwaltung konnte nicht geladen werden",
+      "permissionsLabel": "Erlaubte Berechtigungen",
+      "permissionsRequired": "Mindestens eine Berechtigung auswählen.",
+      "selectAll": "Alle"
+    },
+    "orgTree": {
+      "sectionTitle": "Organisationsstruktur",
+      "orgStructurePageTitle": "Organisationsstruktur",
+      "orgStructureTreePageTitle": "Organisationshierarchie",
+      "orgStructureTreeCardTitle": "Hierarchiebaum",
+      "orgStructureTreeIntro": "Auf einen Eintrag tippen, um zur Detailansicht zu gelangen.",
+      "treeEmpty": "Keine Wurzelorganisationen vorhanden.",
+      "leaderMissingTitle": "Kein Leiter",
+      "leaderMissingInSubtreeTitle": "In einer Unterorganisation fehlt ein Leiter.",
+      "subOrganizationsTitle": "Unterorganisationen",
+      "detailLeaderIntro": "Mitglieder und Rollen der Leitungsgruppe werden hier verwaltet.",
+      "editOrg": "Organisation bearbeiten",
+      "editOrgModalTitle": "Organisation bearbeiten",
+      "createChildModalTitle": "Unterorganisation anlegen",
+      "createChildModalDescription": "Legt eine neue Unterorganisation unterhalb dieser Organisation an.",
+      "noChildren": "Keine Unterorganisationen vorhanden.",
+      "leadershipGroupLabel": "Leitungsgruppe",
+      "organizationOnboardingDocumentsSectionTitle": "Organisations-Eintrittsdokumente",
+      "organizationOnboardingDocumentsSectionHint": "Nur verfügbar, wenn der Standard dieser Organisation den Onboarding-Schritt „Organisations-Eintrittsdokumente“ enthält."
+    },
+    "standards": {
+      "title": "Organisationsstandards",
+      "subtitle": "Vorlagen und Zuordnungen für neue Organisationen in diesem Mandanten.",
+      "bundlesHint": "Enthalten Org-Gruppen, Berechtigungsgruppen und zugehörige Antragstypen. Öffnen zum Bearbeiten, klonen für eigene Varianten.",
+      "manageOrgStandardsLink": "Organisationsstandards verwalten",
+      "setupCompleteTitle": "Einrichtung abgeschlossen",
+      "orgCreationBlockedHint": "Zuerst einen Standard klonen und zuordnen, bevor Organisationen angelegt werden können.",
+      "step1Title": "Schritt 1 · Vorlage klonen",
+      "step2Title": "Schritt 2 · Organisationstyp zuordnen",
+      "empty": "Noch keine Standards vorhanden.",
+      "system": "System",
+      "custom": "Benutzerdefiniert",
+      "systemSectionTitle": "System-Standard",
+      "customSectionTitle": "Eigene Standards",
+      "customEmpty": "Noch keine eigenen Standards. Klone den System-Standard, um zu starten.",
+      "clone": "Klonen & anpassen",
+      "cloneTitle": "Standard klonen",
+      "cloneFrom": "Basis-Standard",
+      "name": "Name",
+      "description": "Beschreibung",
+      "deleteConfirm": "Diesen Standard wirklich löschen?",
+      "editDetails": "Name & Beschreibung bearbeiten",
+      "active": "Aktiv",
+      "assignmentsTitle": "Zuordnung pro Organisationstyp",
+      "assignmentHint": "Nur eigene Standards können zugeordnet werden. Klone zuerst den System-Standard, passe ihn an und wähle ihn hier aus.",
+      "assignmentNeedsClone": "Noch kein eigener Standard vorhanden. Klone den System-Standard oben, um ihn Organisationstypen zuzuordnen.",
+      "notAssigned": "Nicht zugeordnet",
+      "created": "Standard erstellt.",
+      "deleted": "Standard gelöscht.",
+      "assigned": "Zuordnung gespeichert.",
+      "detail": {
+        "readOnlyContent": "Dieser System-Standard ist eine schreibgeschützte Vorlage. Klone ihn über „Klonen & anpassen“, um Inhalte zu bearbeiten und Organisationstypen zuzuordnen.",
+        "empty": "Dieser Bereich enthält keine Einträge.",
+        "loadFailed": "Inhalt konnte nicht geladen werden."
+      },
+      "impact": {
+        "remove": {
+          "none": "Diesen Eintrag wirklich aus dem Standard entfernen?",
+          "historical": "Die Gruppe wird in {{orgCount}} Organisation(en) archiviert und bleibt in der Mitgliedschafts-Historie referenzierbar.",
+          "active": "{{membershipCount}} aktive Mitgliedschaft(en) in {{orgCount}} Organisation(en) werden auf heute beendet; die Gruppen werden archiviert und bleiben referenzierbar."
+        },
+        "switch": {
+          "title": "Standardwechsel bestätigen",
+          "intro": "Beim Wechsel werden folgende Organisationsgruppen aus dem Standard entfernt:",
+          "none": "Standard wirklich zuweisen?",
+          "confirm": "Standardwechsel anwenden"
+        }
+      },
+      "sections": {
+        "certificationsHint": "Welche Einzelnachweise aus dem Mandanten-Katalog dieser Standard nutzt.",
+        "qualificationsHint": "Welche Qualifikationen aus dem Mandanten-Katalog dieser Standard nutzt.",
+        "ranksHint": "Welche Dienstgrade aus dem Mandanten-Katalog dieser Standard für die Organisation vorsieht.",
+        "functionsHint": "Funktionen für diesen Standard aktivieren. Chips zeigen die Vergabe (Pflege unter Organisationsgruppen).",
+        "organizationGroups": "Organisationsgruppen",
+        "permissionGroups": "Berechtigungsgruppen",
+        "workflowTypeMappings": "Antrags-Freigaben",
+        "drivingLicensesHint": "Welche Führerscheinklassen aus dem Mandanten-Katalog dieser Standard nutzt.",
+        "trainingCoursesHint": "Welche Lehrgangstypen aus dem Mandanten-Katalog dieser Standard nutzt."
+      },
+      "onboardingSteps": {
+        "title": "Onboarding-Schritte",
+        "subtitle": "Schritte, die neue Mitglieder nach dem Eintritt in eine Organisation durchlaufen sollen.",
+        "count": "{{count}} Schritte",
+        "empty": "Noch keine Onboarding-Schritte konfiguriert.",
+        "addStep": "Schritt hinzufügen",
+        "addStepLabel": "Schritttyp",
+        "addModalHint": "Wähle den Typ des neuen Schritts.",
+        "editConfig": "Konfiguration bearbeiten",
+        "removeStep": "Schritt entfernen",
+        "deleteConfirmTitle": "Schritt entfernen",
+        "deleteConfirm": "Soll dieser Onboarding-Schritt wirklich entfernt werden?",
+        "deleted": "Onboarding-Schritt entfernt",
+        "dragToReorder": "Ziehen, um die Reihenfolge zu ändern",
+        "dragHint": "Ziehen, um die Reihenfolge zu ändern",
+        "reordered": "Reihenfolge gespeichert",
+        "configSaved": "Konfiguration gespeichert",
+        "added": "Onboarding-Schritt hinzugefügt",
+        "sortOrder": "Schritt {{order}}",
+        "sortOrderLabel": "Reihenfolge",
+        "loadCatalogFailed": "Mandanten-Katalog konnte nicht geladen werden.",
+        "entryDocuments": {
+          "title": "Eintrittsdokumente",
+          "subtitle": "Dokumente aus dem Mandanten-Katalog auswählen.",
+          "emptyCatalog": "Noch keine Eintrittsdokumente im Mandanten-Katalog. Lege sie unter Mandant Einstellungen an.",
+          "noneSelected": "Keine Dokumente ausgewählt",
+          "selectedDocuments": "Ausgewählte Dokumente"
+        },
+        "emergencyContacts": {
+          "title": "Notfallkontakte",
+          "subtitle": "Mindestanzahl an Notfallkontakten.",
+          "minimumCountLabel": "Mindestanzahl"
+        },
+        "trainingCourses": {
+          "title": "Lehrgänge",
+          "subtitle": "Nutzer können vorhandene Lehrgänge erfassen."
+        },
+        "certifications": {
+          "title": "Nachweise",
+          "subtitle": "Nutzer können vorhandene Nachweise erfassen."
+        },
+        "drivingLicense": {
+          "title": "Führerschein",
+          "subtitle": "Nutzer können den Führerschein erfassen."
+        },
+        "rank": {
+          "title": "Dienstgrad",
+          "subtitle": "Optionaler Wunschdienstgrad beim Eintritt."
+        },
+        "organizationEntryDocuments": {
+          "title": "Organisations-Eintrittsdokumente",
+          "subtitle": "Dokumente werden in der Ziel-Organisation konfiguriert."
+        }
+      },
+      "certifications": {
+        "title": "Nachweise",
+        "emptyCatalog": "Noch keine Einzelnachweise im Mandanten-Katalog. Lege sie unter Mandant Einstellungen an.",
+        "loadCatalogFailed": "Mandanten-Katalog konnte nicht geladen werden."
+      },
+      "trainingCourses": {
+        "title": "Lehrgangstypen",
+        "emptyCatalog": "Noch keine Lehrgangstypen im Mandanten-Katalog. Lege sie unter Mandant Einstellungen an.",
+        "loadCatalogFailed": "Mandanten-Katalog konnte nicht geladen werden."
+      },
+      "drivingLicenses": {
+        "title": "Führerscheinklassen",
+        "emptyCatalog": "Noch keine Führerscheinklassen im Mandanten-Katalog. Lege sie unter Mandant Einstellungen an.",
+        "loadCatalogFailed": "Mandanten-Katalog konnte nicht geladen werden."
+      },
+      "qualifications": {
+        "title": "Qualifikationen",
+        "emptyCatalog": "Noch keine Qualifikationen im Mandanten-Katalog. Lege sie unter Mandant Einstellungen an.",
+        "loadCatalogFailed": "Mandanten-Katalog konnte nicht geladen werden."
+      },
+      "ranks": {
+        "title": "Dienstgrade",
+        "emptyCatalog": "Noch keine Dienstgrade im Mandanten-Katalog. Lege sie unter Mandant Einstellungen an.",
+        "loadCatalogFailed": "Mandanten-Katalog konnte nicht geladen werden."
+      },
+      "functions": {
+        "title": "Funktionen",
+        "grantsTitle": "Funktionszuordnung",
+        "grantsSummaryEmpty": "Keine Funktionen zugeordnet.",
+        "grantTargetsUnset": "Noch nicht vergeben",
+        "grantTargetSummary": "{{group}} · {{role}}",
+        "noGrant": "Keine Funktion",
+        "emptyCatalog": "Noch keine Funktionen im Mandanten-Katalog.",
+        "loadCatalogFailed": "Funktionskatalog konnte nicht geladen werden.",
+        "slots": {
+          "LEADER": "Leiter",
+          "DEPUTY_LEADER": "Stellvertreter",
+          "MEMBER": "Mitglied"
+        }
+      },
+      "modules": {
+        "title": "Module",
+        "hint": "Leg fest, welche Funktionsbereiche Organisationen mit diesem Standard nutzen dürfen. Berechtigungen deaktivierter Module können nicht neu vergeben werden.",
+        "saveFailed": "Module konnten nicht gespeichert werden.",
+        "permissionLockedHint": "Dieses Modul ist für den Standard deaktiviert. Aktiviere es oben unter „Module“, um diese Berechtigung zu vergeben.",
+        "moduleDisabledBadge": "Modul deaktiviert",
+        "names": {
+          "SERVICE": "Dienstleistung",
+          "OPERATIONS": "Einsätze",
+          "APPOINTMENTS": "Termine",
+          "COURSE_OFFERINGS": "Lehrgangsangebote",
+          "MANAGEMENT": "Verwaltung"
+        }
+      },
+      "groupTypes": {
+        "LEADERSHIP": "Leitung",
+        "ALL_MEMBERS": "Alle Mitglieder",
+        "CUSTOM": "Benutzerdefiniert"
+      },
+      "systemOrgGroupRequired": "Pflichtgruppe",
+      "systemOrgGroupRequiredHint": "Leitung und Alle Mitglieder sind pro Standard und Organisation verpflichtend und können nicht entfernt werden.",
+      "systemOrgGroupsAlreadyPresent": "Leitung und Alle Mitglieder sind bereits vorhanden. Neue Gruppen können nur als benutzerdefiniert angelegt werden.",
+      "systemPermissionGroupRequired": "Pflichtgruppe",
+      "systemPermissionGroupRequiredHint": "Administration und Standard sind pro Standard verpflichtend und können nicht entfernt werden.",
+      "adminPermissionGroupHint": "Die Administration-Gruppe umfasst immer alle Berechtigungen und kann nicht eingeschränkt werden.",
+      "permissionGroupTypes": {
+        "ADMIN": "Administration",
+        "STANDARD": "Standard",
+        "CUSTOM": "Benutzerdefiniert"
+      },
+      "workflowOpenScope": {
+        "SELF": "Selbstanträge",
+        "ORGANIZATION": "Organisationsanträge"
+      },
+      "workflowTypes": {
+        "NAME_CHANGE": "Namensänderung",
+        "ADDRESS_CHANGE": "Adressänderung",
+        "CERTIFICATION_RECORD": "Nachweis einreichen",
+        "TRAINING_COURSE_RECORD": "Lehrgang einreichen",
+        "DRIVING_LICENSE_RECORD": "Führerschein einreichen",
+        "ORGANIZATION_JOIN_REQUEST": "Eintritt beantragen",
+        "MAIN_ORGANIZATION_CHANGE": "Hauptorganisation wechseln",
+        "ORGANIZATION_LEAVE_REQUEST": "Organisation verlassen",
+        "ORGANIZATION_GROUP_LEAVE_REQUEST": "Gruppe verlassen",
+        "ORGANIZATION_GROUP_JOIN_REQUEST": "Gruppe beitreten",
+        "ONBOARDING_SUBMISSION": "Eintritt einreichen",
+        "ORGANIZATION_MEMBERSHIP_END_REQUEST": "Organisation verlassen",
+        "ORGANIZATION_USER_MAIN_ORGANIZATION_CHANGE": "Hauptorganisation wechseln",
+        "USER_DOCUMENT_SUBMISSION": "Dokument einreichen",
+        "RANK_REQUEST": "Dienstgrad beantragen",
+        "COURSE_OFFERING_REGISTRATION": "Lehrgangsanmeldung",
+        "COURSE_REGISTRATION_CANCELLATION": "Lehrgangsabsage",
+        "unknown": "Workflow"
+      },
+      "permissionsLabel": "Berechtigungen",
+      "noPermissions": "Keine Berechtigungen",
+      "approverLabel": "Genehmigt durch",
+      "approverGroupHint": "Nur Führung oder benutzerdefinierte Gruppen können Anträge genehmigen, nicht „Alle Mitglieder“.",
+      "detailsSaved": "Standard aktualisiert.",
+      "addOrgGroup": "Gruppe hinzufügen",
+      "addPermissionGroup": "Berechtigungsgruppe hinzufügen",
+      "deleteItem": "Entfernen",
+      "deleteItemConfirm": "Diesen Eintrag wirklich aus dem Standard entfernen?",
+      "typeLabel": "Typ",
+      "editWorkflow": "Antrag bearbeiten",
+      "fields": {
+        "autoApprove": "Automatisch genehmigen",
+        "autoApproveHint": "Anträge werden ohne manuelle Freigabe sofort genehmigt.",
+        "enabled": "Aktiviert",
+        "disabled": "Deaktiviert",
+        "enabledHint": "Antrag steht den Mitgliedern zur Verfügung.",
+        "selfApproveAllowed": "Selbstgenehmigung erlaubt",
+        "selfApproveAllowedHint": "Antragsteller dürfen ihren eigenen Antrag genehmigen."
+      },
+      "itemSaved": "Eintrag gespeichert.",
+      "itemDeleted": "Eintrag entfernt.",
+      "workflowSaved": "Antrag gespeichert.",
+      "errors": {
+        "loadFailed": "Standards konnten nicht geladen werden.",
+        "cloneFailed": "Standard konnte nicht geklont werden.",
+        "updateFailed": "Standard konnte nicht aktualisiert werden.",
+        "deleteFailed": "Standard konnte nicht gelöscht werden.",
+        "assignFailed": "Zuordnung konnte nicht gespeichert werden.",
+        "assignSystemFailed": "Der System-Standard kann nicht zugeordnet werden. Bitte zuerst klonen und die eigene Kopie auswählen.",
+        "notConfiguredForOrgCreation": "Organisationen können erst angelegt werden, nachdem ein Standard geklont und zugeordnet wurde.",
+        "saveFailed": "Eintrag konnte nicht gespeichert werden.",
+        "itemDeleteFailed": "Eintrag konnte nicht entfernt werden."
+      },
+      "orgOverride": {
+        "title": "Standard dieser Organisation",
+        "subtitle": "Standardmäßig gilt der Standard des Organisationstyps. Für diese Organisation kann ein eigener Standard festgelegt werden.",
+        "change": "Ändern",
+        "badgeInherited": "Vorgabe des Typs",
+        "badgeOverride": "Abweichender Standard",
+        "noneAssigned": "Kein Standard zugeordnet",
+        "typeDefaultHint": "Vorgabe des Organisationstyps wäre: {name}",
+        "typeDefaultNone": "Für den Organisationstyp ist kein Standard zugeordnet.",
+        "modalTitle": "Standard festlegen",
+        "modalHint": "Wähle den Standard für diese Organisation. \"Vorgabe des Typs\" übernimmt automatisch den dem Organisationstyp zugeordneten Standard.",
+        "selectLabel": "Standard",
+        "inheritOption": "Vorgabe des Typs verwenden",
+        "inheritOptionWithName": "Vorgabe des Typs verwenden ({name})",
+        "noCustomStandards": "Noch keine eigenen Standards vorhanden. Klone zuerst den System-Standard, um ihn hier auswählen zu können.",
+        "saved": "Standard der Organisation gespeichert.",
+        "saveFailed": "Standard der Organisation konnte nicht gespeichert werden.",
+        "loadFailed": "Standard der Organisation konnte nicht geladen werden."
+      },
+      "overridesSection": {
+        "title": "Organisationen mit abweichendem Standard",
+        "hint": "Diese Organisationen verwenden nicht die Vorgabe ihres Organisationstyps, sondern einen eigens festgelegten Standard.",
+        "empty": "Keine Organisationen mit abweichendem Standard. Alle folgen der Vorgabe ihres Typs.",
+        "addTitle": "Organisations-Ausnahme hinzufügen",
+        "addHint": "Wähle eine Organisation und den Standard, der statt der Vorgabe des Organisationstyps gelten soll.",
+        "orgLabel": "Organisation",
+        "orgPlaceholder": "Organisation auswählen …",
+        "noOrgsAvailable": "Alle Organisationen haben bereits einen abweichenden Standard oder es sind keine Organisationen vorhanden.",
+        "loadOrgsFailed": "Organisationen konnten nicht geladen werden."
+      }
+    },
+    "organizationTypes": {
+      "title": "Organisationstypen",
+      "subtitle": "Verwalte die Arten von Organisationen, die in diesem Mandanten angelegt werden können.",
+      "listTitle": "Typen",
+      "add": "Organisationstyp anlegen",
+      "empty": "Noch keine Organisationstypen vorhanden.",
+      "createTitle": "Organisationstyp anlegen",
+      "editTitle": "Organisationstyp bearbeiten",
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Abteilung",
+      "activeLabel": "Aktiv",
+      "activeHint": "Inaktive Typen können nicht mehr für neue Organisationen ausgewählt werden.",
+      "inactive": "Inaktiv",
+      "created": "Organisationstyp angelegt.",
+      "updated": "Organisationstyp aktualisiert.",
+      "deleted": "Organisationstyp gelöscht.",
+      "deleteConfirm": "Diesen Organisationstyp wirklich löschen?",
+      "organizationsTitle": "Organisationen mit diesem Typ",
+      "organizationsEmpty": "Keine Organisationen mit diesem Typ.",
+      "errors": {
+        "loadFailed": "Organisationstypen konnten nicht geladen werden.",
+        "organizationsLoadFailed": "Organisationen konnten nicht geladen werden.",
+        "createFailed": "Organisationstyp konnte nicht angelegt werden.",
+        "updateFailed": "Organisationstyp konnte nicht aktualisiert werden.",
+        "deleteFailed": "Organisationstyp konnte nicht gelöscht werden."
+      }
+    },
+    "tenantStandards": {
+      "title": "Mandant Einstellungen",
+      "subtitle": "Mandantenweite Einstellungen",
+      "manageLink": "Mandant Einstellungen verwalten",
+      "pageSubtitle": "Einstellungen auf Mandantenebene, die nicht an einzelne Organisationen gebunden sind.",
+      "archivedBadge": "Archiviert",
+      "workflowsSectionTitle": "Workflows",
+      "workflowsSectionHint": "Voreinstellungen für Antrags-Workflows, die mandantenweit gelten.",
+      "certificationsSectionTitle": "Nachweise",
+      "certificationsSectionHint": "Einzelnachweise auf Mandantenebene definieren und verwalten.",
+      "certifications": {
+        "listLabel": "Einzelnachweise",
+        "add": "Einzelnachweis anlegen",
+        "createTitle": "Einzelnachweis anlegen",
+        "editTitle": "Einzelnachweis bearbeiten",
+        "archiveTitle": "Einzelnachweis archivieren",
+        "archiveMessage": "\"{{name}}\" wirklich archivieren?",
+        "unarchiveTitle": "Einzelnachweis entarchivieren",
+        "unarchiveMessage": "\"{{name}}\" wirklich entarchivieren?",
+        "deleteTitle": "Einzelnachweis löschen",
+        "deleteMessage": "\"{{name}}\" wirklich löschen?",
+        "saved": "Einzelnachweis gespeichert.",
+        "archived": "Einzelnachweis archiviert.",
+        "unarchived": "Einzelnachweis entarchiviert.",
+        "deleted": "Einzelnachweis gelöscht.",
+        "saveFailed": "Einzelnachweis konnte nicht gespeichert werden.",
+        "archiveFailed": "Einzelnachweis konnte nicht archiviert werden.",
+        "unarchiveFailed": "Einzelnachweis konnte nicht entarchiviert werden.",
+        "deleteFailed": "Einzelnachweis konnte nicht gelöscht werden.",
+        "loadFailed": "Einzelnachweise konnten nicht geladen werden.",
+        "empty": "Noch keine Einzelnachweise definiert.",
+        "abbreviation": "Kürzel: {{key}}",
+        "abbreviationLabel": "Kürzel",
+        "abbreviationPlaceholder": "z. B. ABÜ",
+        "intervalDays": "{{days}} Tage Gültigkeit",
+        "noInterval": "Unbefristet",
+        "intervalDaysLabel": "Gültigkeit (Tage)",
+        "intervalHint": "Leer lassen für unbefristete Nachweise.",
+        "reminderDaysLabel": "Erinnerung vor Ablauf (Tage)",
+        "evidenceTypesLabel": "Beleg-Typen",
+        "evidenceTypesHint": "Keine Auswahl: Einreichung ohne Anhang. Dokument = Anhang Pflicht. Nur Dienstleistung/Einsatz: nur Event-Vergabe.",
+        "evidenceTypesNone": "Selbstbestätigung (ohne Anhang)",
+        "evidenceType": {
+          "DOCUMENT": "Dokument",
+          "SERVICE_EVENT": "Dienstleistung",
+          "OPERATION_EVENT": "Einsatz"
+        }
+      },
+      "trainingCoursesSectionTitle": "Lehrgangstypen",
+      "trainingCoursesSectionHint": "Lehrgangstypen auf Mandantenebene definieren und verwalten.",
+      "onboardingDocumentsSectionTitle": "Eintrittsdokumente",
+      "onboardingDocumentsSectionHint": "Dokumente für den Eintritt in den Mandanten definieren und verwalten.",
+      "onboardingDocuments": {
+        "listLabel": "Eintrittsdokumente",
+        "add": "Eintrittsdokument anlegen",
+        "createTitle": "Eintrittsdokument anlegen",
+        "editTitle": "Eintrittsdokument bearbeiten",
+        "archiveTitle": "Eintrittsdokument archivieren",
+        "archiveMessage": "\"{{name}}\" wirklich archivieren?",
+        "unarchiveTitle": "Eintrittsdokument entarchivieren",
+        "unarchiveMessage": "\"{{name}}\" wirklich entarchivieren?",
+        "deleteTitle": "Eintrittsdokument löschen",
+        "deleteMessage": "\"{{name}}\" wirklich löschen?",
+        "saved": "Eintrittsdokument gespeichert.",
+        "archived": "Eintrittsdokument archiviert.",
+        "unarchived": "Eintrittsdokument entarchiviert.",
+        "deleted": "Eintrittsdokument gelöscht.",
+        "saveFailed": "Eintrittsdokument konnte nicht gespeichert werden.",
+        "archiveFailed": "Eintrittsdokument konnte nicht archiviert werden.",
+        "unarchiveFailed": "Eintrittsdokument konnte nicht entarchiviert werden.",
+        "deleteFailed": "Eintrittsdokument konnte nicht gelöscht werden.",
+        "loadFailed": "Eintrittsdokumente konnten nicht geladen werden.",
+        "empty": "Noch keine Eintrittsdokumente definiert.",
+        "abbreviation": "Kennung: {{key}}",
+        "abbreviationLabel": "Kennung",
+        "abbreviationPlaceholder": "z. B. DSGVO",
+        "descriptionLabel": "Beschreibung",
+        "fulfillmentModeLabel": "Erfüllungsmodus",
+        "mandatoryLabel": "Pflichtdokument",
+        "optionalBadge": "Optional",
+        "fulfillmentMode": {
+          "CONFIRMED": "Bestätigen",
+          "SIGNED_UPLOAD": "Unterschrieben hochladen"
+        },
+        "templateLabel": "Dokumentdatei",
+        "templateDownload": "Datei herunterladen",
+        "templateDeleted": "Dokumentdatei entfernt.",
+        "templateDeleteFailed": "Dokumentdatei konnte nicht entfernt werden.",
+        "templateDownloadFailed": "Dokumentdatei konnte nicht heruntergeladen werden.",
+        "templateRequired": "Eine Dokumentdatei ist erforderlich.",
+        "missingTemplateBadge": "Datei fehlt",
+        "inactiveBadge": "Inaktiv"
+      },
+      "trainingCourses": {
+        "listLabel": "Lehrgangstypen",
+        "add": "Lehrgangstyp anlegen",
+        "createTitle": "Lehrgangstyp anlegen",
+        "editTitle": "Lehrgangstyp bearbeiten",
+        "archiveTitle": "Lehrgangstyp archivieren",
+        "archiveMessage": "\"{{name}}\" wirklich archivieren?",
+        "unarchiveTitle": "Lehrgangstyp entarchivieren",
+        "unarchiveMessage": "\"{{name}}\" wirklich entarchivieren?",
+        "deleteTitle": "Lehrgangstyp löschen",
+        "deleteMessage": "\"{{name}}\" wirklich löschen?",
+        "saved": "Lehrgangstyp gespeichert.",
+        "archived": "Lehrgangstyp archiviert.",
+        "unarchived": "Lehrgangstyp entarchiviert.",
+        "deleted": "Lehrgangstyp gelöscht.",
+        "saveFailed": "Lehrgangstyp konnte nicht gespeichert werden.",
+        "archiveFailed": "Lehrgangstyp konnte nicht archiviert werden.",
+        "unarchiveFailed": "Lehrgangstyp konnte nicht entarchiviert werden.",
+        "deleteFailed": "Lehrgangstyp konnte nicht gelöscht werden.",
+        "loadFailed": "Lehrgangstypen konnten nicht geladen werden.",
+        "empty": "Noch keine Lehrgangstypen definiert.",
+        "abbreviation": "Kürzel: {{key}}",
+        "abbreviationLabel": "Kürzel",
+        "abbreviationPlaceholder": "z. B. GF"
+      },
+      "drivingLicensesSectionTitle": "Führerscheinklassen",
+      "drivingLicensesSectionHint": "Führerscheinklassen auf Mandantenebene definieren und verwalten.",
+      "drivingLicenses": {
+        "listLabel": "Führerscheinklassen",
+        "add": "Führerscheinklasse anlegen",
+        "createTitle": "Führerscheinklasse anlegen",
+        "editTitle": "Führerscheinklasse bearbeiten",
+        "archiveTitle": "Führerscheinklasse archivieren",
+        "archiveMessage": "\"{{name}}\" wirklich archivieren?",
+        "unarchiveTitle": "Führerscheinklasse entarchivieren",
+        "unarchiveMessage": "\"{{name}}\" wirklich entarchivieren?",
+        "deleteTitle": "Führerscheinklasse löschen",
+        "deleteMessage": "\"{{name}}\" wirklich löschen?",
+        "saved": "Führerscheinklasse gespeichert.",
+        "archived": "Führerscheinklasse archiviert.",
+        "unarchived": "Führerscheinklasse entarchiviert.",
+        "deleted": "Führerscheinklasse gelöscht.",
+        "saveFailed": "Führerscheinklasse konnte nicht gespeichert werden.",
+        "archiveFailed": "Führerscheinklasse konnte nicht archiviert werden.",
+        "unarchiveFailed": "Führerscheinklasse konnte nicht entarchiviert werden.",
+        "deleteFailed": "Führerscheinklasse konnte nicht gelöscht werden.",
+        "loadFailed": "Führerscheinklassen konnten nicht geladen werden.",
+        "empty": "Noch keine Führerscheinklassen definiert.",
+        "abbreviation": "Kürzel: {{key}}",
+        "abbreviationLabel": "Kürzel",
+        "abbreviationPlaceholder": "z. B. B"
+      },
+      "ranks": {
+        "title": "Dienstgrade",
+        "subtitle": "Dienstgrade und Kategorien auf Mandantenebene pflegen.",
+        "add": "Dienstgrad anlegen",
+        "createTitle": "Dienstgrad anlegen",
+        "editTitle": "Dienstgrad bearbeiten",
+        "saved": "Dienstgrad gespeichert.",
+        "saveFailed": "Dienstgrad konnte nicht gespeichert werden.",
+        "loadFailed": "Dienstgrade konnten nicht geladen werden.",
+        "empty": "Noch keine Dienstgrade definiert.",
+        "configKey": "Schlüssel",
+        "abbreviation": "Abkürzung",
+        "sortOrder": "Reihenfolge",
+        "archiveConfirm": "Dienstgrad wirklich archivieren?",
+        "unarchiveConfirm": "Dienstgrad wirklich entarchivieren?",
+        "archived": "Dienstgrad archiviert.",
+        "unarchived": "Dienstgrad entarchiviert.",
+        "archiveFailed": "Archivieren fehlgeschlagen.",
+        "unarchiveFailed": "Entarchivieren fehlgeschlagen."
+      },
+      "functions": {
+        "title": "Funktionen",
+        "subtitle": "Benannte Ämter und Funktionen auf Mandantenebene.",
+        "add": "Funktion anlegen",
+        "createTitle": "Funktion anlegen",
+        "editTitle": "Funktion bearbeiten",
+        "saved": "Funktion gespeichert.",
+        "saveFailed": "Funktion konnte nicht gespeichert werden.",
+        "loadFailed": "Funktionen konnten nicht geladen werden.",
+        "empty": "Noch keine Funktionen definiert.",
+        "configKey": "Schlüssel",
+        "abbreviation": "Abkürzung",
+        "sortOrder": "Reihenfolge",
+        "archiveConfirm": "Funktion wirklich archivieren?",
+        "unarchiveConfirm": "Funktion wirklich entarchivieren?",
+        "archived": "Funktion archiviert.",
+        "unarchived": "Funktion entarchiviert.",
+        "archiveFailed": "Archivieren fehlgeschlagen.",
+        "unarchiveFailed": "Entarchivieren fehlgeschlagen."
+      },
+      "qualifications": {
+        "title": "Qualifikationen",
+        "subtitle": "Zusammengesetzte Anforderungen aus Lehrgängen, Nachweisen und optionaler Organisationsentscheidung.",
+        "create": "Qualifikation anlegen",
+        "createTitle": "Qualifikation anlegen",
+        "editTitle": "Qualifikation bearbeiten",
+        "archiveTitle": "Qualifikation archivieren",
+        "archiveMessage": "Diese Qualifikation wirklich archivieren?",
+        "unarchiveTitle": "Qualifikation entarchivieren",
+        "unarchiveMessage": "\"{{name}}\" wirklich entarchivieren?",
+        "deleteTitle": "Qualifikation löschen",
+        "deleteMessage": "Diese Qualifikation wirklich löschen?",
+        "saved": "Qualifikation gespeichert.",
+        "archived": "Qualifikation archiviert.",
+        "unarchived": "Qualifikation entarchiviert.",
+        "deleted": "Qualifikation gelöscht.",
+        "saveFailed": "Qualifikation konnte nicht gespeichert werden.",
+        "archiveFailed": "Qualifikation konnte nicht archiviert werden.",
+        "unarchiveFailed": "Qualifikation konnte nicht entarchiviert werden.",
+        "deleteFailed": "Qualifikation konnte nicht gelöscht werden.",
+        "loadFailed": "Qualifikationen konnten nicht geladen werden.",
+        "empty": "Noch keine Qualifikationen definiert.",
+        "listLabel": "Qualifikationen",
+        "abbreviationLabel": "Kürzel",
+        "requiresOrgDecision": "Organisationsentscheidung erforderlich",
+        "trainingCourses": "Lehrgänge",
+        "certifications": "Nachweisprofile",
+        "drivingLicenses": "Führerschein",
+        "modeAll": "Alle erforderlich (UND)",
+        "modeAny": "Mindestens einer (ODER)",
+        "requirementsHint": "Mindestens ein Lehrgang, Führerschein, Nachweisprofil oder Organisationsentscheidung erforderlich."
+      }
+    },
+    "workflowDefinitions": {
+      "tenantTitle": "Workflows",
+      "tenantSubtitle": "Mandantenweite Voreinstellungen für Antrags-Workflows",
+      "loadFailed": "Workflow-Einstellungen konnten nicht geladen werden.",
+      "empty": "Keine Workflow-Typen verfügbar.",
+      "tenantDefaultDisabled": "Deaktiviert",
+      "tenantDefaultNoStaticOrgs": "Keine Freigabe-Orgs",
+      "staticOrgsTitle": "Zusätzliche Freigabe-Orgs",
+      "noStaticOrgs": "Noch keine Freigabe-Org hinzugefügt.",
+      "addStaticOrg": "Freigabe-Org hinzufügen",
+      "removeStaticOrg": "{name} entfernen",
+      "selectStaticOrg": "Organisation wählen",
+      "selectStaticOrgPlaceholder": "Organisation wählen …",
+      "staticExclusive": "Nur Freigabe durch diese Orgs",
+      "staticExclusiveHint": "Durch Auswahl zählen nur die Approves der statischen Organisationen.",
+      "badgeTenantDefault": "Mandant Einstellung",
+      "badgeOrgExceptionActive": "Ausnahme aktiv",
+      "badgeStaticOrgs": "{{count}} Freigabe-Org(s)",
+      "badgeExclusive": "Exklusiv",
+      "badgeCustomized": "Angepasst",
+      "restore": "Standard wiederherstellen",
+      "restoreTitle": "Standard wiederherstellen",
+      "restoreMessage": "Workflow-Einstellungen auf die System-Vorgabe zurücksetzen?",
+      "restored": "System-Vorgabe wiederhergestellt.",
+      "restoreFailed": "Standard konnte nicht wiederhergestellt werden.",
+      "errors": {
+        "saveFailed": "Workflow-Einstellungen konnten nicht gespeichert werden."
+      },
+      "success": {
+        "tenantDefaultSaved": "Workflow-Einstellungen gespeichert."
+      }
+    },
+    "users": {
+      "list": {
+        "sort": {
+          "lastNameAsc": "Nachname A-Z",
+          "lastNameDesc": "Nachname Z-A",
+          "firstNameAsc": "Vorname A-Z",
+          "firstNameDesc": "Vorname Z-A"
+        }
+      }
+    },
+    "managementActivations": {
+      "title": "Verwaltungsprotokoll",
+      "subtitle": "Wer wann in welcher Organisation mit welcher Begründung aktiv war.",
+      "empty": "Keine Aktivierungen gefunden.",
+      "loadFailed": "Das Verwaltungsprotokoll konnte nicht geladen werden.",
+      "listLabel": "Aktivierungen",
+      "formerMember": "Ehemaliges Mitglied",
+      "endedBy": {
+        "USER": "durch die Person",
+        "SYSTEM": "durch das System"
+      },
+      "status": {
+        "ACTIVE": "Aktiv",
+        "EXPIRED": "Abgelaufen",
+        "ENDED": "Beendet"
+      },
+      "detail": {
+        "notFound": "Die Aktivierung wurde nicht gefunden.",
+        "tenant": "Mandant",
+        "managingOrganization": "Verwaltende Organisation",
+        "targetOrganization": "Ziel-Organisation",
+        "status": "Status",
+        "validFrom": "Gültig ab",
+        "validUntil": "Gültig bis",
+        "endedAt": "Beendet am",
+        "endedBy": "Beendet durch",
+        "reason": "Anlass",
+        "permissions": "Berechtigungen"
+      },
+      "filter": {
+        "tenant": "Mandant",
+        "status": "Status"
+      },
+      "sort": {
+        "activatedAtDesc": "Zuletzt aktiviert",
+        "activatedAtAsc": "Zuerst aktiviert",
+        "validUntilDesc": "Gültig bis, neueste zuerst",
+        "validUntilAsc": "Gültig bis, älteste zuerst",
+        "personAsc": "Person A-Z",
+        "personDesc": "Person Z-A",
+        "managingAsc": "Verwaltende Organisation A-Z",
+        "managingDesc": "Verwaltende Organisation Z-A",
+        "targetAsc": "Ziel-Organisation A-Z",
+        "targetDesc": "Ziel-Organisation Z-A"
+      }
+    },
+    "tenants": {
+      "list": {
+        "sort": {
+          "nameAsc": "Name A-Z",
+          "nameDesc": "Name Z-A"
+        }
+      }
+    }
+  },
+  "ranks": {
+    "overview": {
+      "title": "Dienstgrade und Funktionen",
+      "loadFailed": "Mitgliederliste konnte nicht geladen werden.",
+      "emptyMembers": "Keine aktiven Mitglieder.",
+      "emptyFunctions": "In dieser Organisation sind aktuell keine Funktionen vergeben.",
+      "noMembersInGroup": "Noch keine Mitglieder mit diesem Dienstgrad.",
+      "noRank": "Kein Dienstgrad",
+      "setRank": "Dienstgrad setzen",
+      "changeRank": "Dienstgrad ändern",
+      "functionsSection": "Funktionen",
+      "ranksSection": "Dienstgrade",
+      "noMembersInFunction": "Noch keine Person in dieser Funktion.",
+      "list": {
+        "sort": {
+          "lastNameAsc": "Nachname A-Z",
+          "lastNameDesc": "Nachname Z-A",
+          "firstNameAsc": "Vorname A-Z",
+          "firstNameDesc": "Vorname Z-A"
+        }
+      }
+    },
+    "setRank": {
+      "title": "Dienstgrad für {{name}}",
+      "rank": "Dienstgrad",
+      "startDate": "Datum",
+      "reason": "Begründung",
+      "success": "Dienstgrad gespeichert.",
+      "failed": "Dienstgrad konnte nicht gespeichert werden."
+    },
+    "userSection": {
+      "loadFailed": "Dienstgrad konnte nicht geladen werden.",
+      "present": "heute",
+      "unknownRank": "Unbekannter Dienstgrad",
+      "emptyCombined": "Kein Dienstgrad und keine Funktionen in dieser Organisation."
+    },
+    "myArea": {
+      "loadFailed": "Daten konnten nicht geladen werden.",
+      "subtitle": "Dein Dienstgrad und deine Funktionen in deinen Organisationen.",
+      "rankSection": "Dienstgrad",
+      "emptyCombined": "Du hast noch keinen Dienstgrad und keine Funktionen.",
+      "since": "Seit {{date}}",
+      "functions": "Funktionen",
+      "requestRank": "Dienstgrad beantragen",
+      "tag": {
+        "application": "Antrag"
+      }
+    },
+    "request": {
+      "title": "Dienstgrad beantragen",
+      "editTitle": "Dienstgrad-Antrag bearbeiten",
+      "rank": "Dienstgrad",
+      "proofOptional": "Beleg (optional)",
+      "success": "Antrag eingereicht.",
+      "failed": "Antrag konnte nicht eingereicht werden."
+    }
+  },
+  "myArea": {
+    "title": "Mein Bereich",
+    "subtitle": "Profil, Abwesenheiten, Notfallkontakt, Zeiten, Anträge & Benachrichtigungen.",
+    "layout": {
+      "backToHome": "Zurück zur Startseite"
+    },
+    "hub": {
+      "eyebrow": "Mein Bereich"
+    },
+    "menu": {
+      "masterData": "Stammdaten",
+      "absence": "Abwesenheiten",
+      "emergencyContact": "Notfallkontakt",
+      "documents": "Meine Dokumente",
+      "certifications": "Nachweise",
+      "qualifications": "Qualifikationen",
+      "rank": "Dienstgrad & Funktionen",
+      "trainingCourses": "Lehrgänge",
+      "courseRegistrations": "Lehrgangsanmeldung",
+      "drivingLicenses": "Führerschein",
+      "timeEntries": "Zeiterfassung",
+      "workflowsInbox": "Anträge",
+      "notifications": "Benachrichtigungen",
+      "todos": "Meine Aufgaben",
+      "onboarding": "Eintritt",
+      "settings": "Einstellungen"
+    },
+    "courseRegistrations": {
+      "subtitle": "Veröffentlichte Lehrgangsangebote deiner Organisationen ansehen und Anmeldungen verwalten.",
+      "offerings": {
+        "empty": "Aktuell sind keine passenden Lehrgangsangebote verfügbar.",
+        "listLabel": "Kursangebote",
+        "alreadyHeld": "Bereits besucht",
+        "prerequisitesMissing": "Voraussetzungen fehlen",
+        "full": "Ausgebucht - Warteliste",
+        "registrationClosed": "Anmeldung geschlossen"
+      },
+      "registrations": {
+        "waitlistPosition": "Warteliste {{position}}",
+        "cancellationPending": "Absage läuft",
+        "openRegistrationWorkflow": "Antrag Anmeldung",
+        "openRegistrationWorkflowHint": "Stand und Verlauf deines Antrags ansehen",
+        "openCancellationWorkflow": "Antrag Absage",
+        "openCancellationWorkflowHint": "Stand und Verlauf deiner Absage ansehen",
+        "cancel": "Teilnahme absagen",
+        "cancelHint": "Du verlierst nach Freigabe deinen Platz",
+        "withdrawWaitlist": "Von Warteliste zurückziehen",
+        "withdrawWaitlistHint": "Dein Wartelistenplatz wird sofort frei",
+        "registeredAt": "Angemeldet {{date}}",
+        "cancelConfirmTitle": "Teilnahme absagen?",
+        "cancelConfirmMessage": "Es wird ein Antrag auf Absage deiner Teilnahme gestellt. Nach Freigabe verlierst du deinen Platz.",
+        "cancelSuccess": "Absage-Antrag wurde gestellt.",
+        "cancelFailed": "Absage-Antrag konnte nicht gestellt werden.",
+        "withdrawConfirmTitle": "Warteliste verlassen?",
+        "withdrawConfirmMessage": "Dein Wartelistenplatz wird sofort freigegeben.",
+        "withdrawSuccess": "Du wurdest von der Warteliste entfernt.",
+        "withdrawFailed": "Zurückziehen von der Warteliste ist fehlgeschlagen."
+      },
+      "detail": {
+        "notFound": "Dieser Lehrgang wurde nicht gefunden oder du hast keinen Zugriff.",
+        "registrationOpen": "Anmeldung offen",
+        "registrationPeriod": "Anmeldezeitraum",
+        "coursePeriod": "Lehrgangszeitraum",
+        "periodRange": "{{start}} - {{end}}",
+        "maxParticipants": "Max. Teilnehmer",
+        "hasExam": "Prüfung",
+        "homeOrgApproval": "Freigabe Hauptorg",
+        "notes": "Hinweise",
+        "content": "Lehrgangsinhalt",
+        "myRegistration": "Deine Anmeldung",
+        "endReason": "Begründung",
+        "registrationTitle": "Anmeldung",
+        "registrationUntil": "Anmeldung möglich bis {{date}}",
+        "waitlistHint": "Ausgebucht. Nach Freigabe kommst du auf die Warteliste.",
+        "prerequisitesMissingHint": "Dir fehlen Voraussetzungen für diesen Lehrgang.",
+        "registrationClosedHint": "Die Anmeldung ist derzeit nicht möglich.",
+        "cancellationPendingHint": "Dein Antrag auf Absage wird bearbeitet.",
+        "status": {
+          "PENDING": "Dein Antrag wird geprüft.",
+          "PARTICIPANT": "Du bist für diesen Lehrgang angemeldet.",
+          "WAITLIST": "Du stehst auf der Warteliste. Wird ein Platz frei, rückst du nach.",
+          "REJECTED": "Deine Anmeldung wurde abgelehnt.",
+          "CANCELLED": "Deine Anmeldung wurde beendet."
+        }
+      },
+      "register": {
+        "title": "Für Lehrgang anmelden",
+        "message": "Möchtest du dich für „{{name}}“ anmelden?",
+        "action": "Anmelden",
+        "success": "Anmelde-Antrag wurde gestellt.",
+        "failed": "Anmeldung konnte nicht gestartet werden."
+      }
+    },
+    "onboarding": {
+      "title": "Eintritt",
+      "subtitle": "Hier erfasst du die Unterlagen für deinen Eintritt in eine Organisation.",
+      "count": "{{count}} Eintritte",
+      "listLabel": "Eintritte",
+      "empty": "Aktuell gibt es nichts zu erledigen.",
+      "invitedAt": "Eingeladen am {{date}}",
+      "status": {
+        "OPEN": "In Bearbeitung",
+        "SUBMITTED": "Eingereicht",
+        "APPROVED": "Abgeschlossen"
+      },
+      "wizard": {
+        "notFound": "Dieser Eintritt wurde nicht gefunden.",
+        "progress": "Schritt {{current}} von {{total}}",
+        "reviewProgress": "Zusammenfassung",
+        "stepsLabel": "Schritte",
+        "next": "Weiter",
+        "saved": "Gespeichert",
+        "noSteps": "Für diese Organisation sind derzeit keine Schritte vorhanden.",
+        "reviewTitle": "Zusammenfassung",
+        "reviewReady": "Alles erledigt. Du kannst deinen Antrag einreichen.",
+        "reviewMissing": "Es fehlen noch Angaben. Geh zurück und ergänze die markierten Schritte.",
+        "fulfilled": "Erledigt",
+        "unfulfilled": "Noch offen",
+        "complete": "Antrag einreichen",
+        "submitted": "Dein Eintritt wurde zur Prüfung eingereicht.",
+        "stepTitles": {
+          "entryDocuments": "Eintrittsdokumente",
+          "organizationEntryDocuments": "Organisations-Eintrittsdokumente",
+          "emergencyContacts": "Notfallkontakte",
+          "trainingCourses": "Lehrgänge",
+          "certifications": "Nachweise",
+          "drivingLicense": "Führerschein",
+          "rank": "Dienstgrad"
+        },
+        "emergencyContacts": {
+          "hint": "Trage mindestens {{count}} Notfallkontakte ein.",
+          "empty": "Noch keine Notfallkontakte erfasst."
+        },
+        "entryDocuments": {
+          "hint": "So gehst du vor: Dokument öffnen, dann akzeptieren oder die unterschriebene Datei hochladen.",
+          "empty": "Keine Dokumente vorhanden.",
+          "progressOpen": "Noch {{count}} offen",
+          "progressDone": "Alle erledigt",
+          "openDocument": "Dokument öffnen",
+          "downloadTemplate": "Vorlage herunterladen",
+          "readStep": "1. Dokument öffnen",
+          "confirmStep": "2. Akzeptieren",
+          "uploadStep": "2. Unterschriebene Datei hochladen",
+          "confirmTask": "Lies das Dokument und akzeptiere es.",
+          "uploadTask": "Unterschreibe die Vorlage und lade sie hoch.",
+          "uploadHint": "PDF oder Bild",
+          "replaceFile": "Ändern",
+          "confirmLabel": "Ich habe das Dokument gelesen und akzeptiere es.",
+          "confirmationProof": "Ich bestätige, dass ich das Dokument „{{name}}“ (Vorlagenversion {{version}}, hochgeladen am {{uploadedAt}}) gelesen habe und akzeptiere.",
+          "confirmationProofFallback": "Ich bestätige, dass ich das Dokument „{{name}}“ gelesen habe und akzeptiere.",
+          "openBeforeConfirm": "Bitte zuerst das Dokument öffnen.",
+          "adminRecordReasonLabel": "Begründung der Erfassung",
+          "adminRecordReasonHint": "Kurz begründen, warum die Angaben adminseitig erfasst werden (Nachweis).",
+          "adminRecordReasonRequired": "Bitte eine Begründung angeben.",
+          "agreed": "Gelesen und akzeptiert",
+          "changeAgreement": "Bestätigung ändern",
+          "changeDecision": "Entscheidung ändern",
+          "uploaded": "Datei hochgeladen",
+          "alreadyFulfilled": "Bereits bei einem anderen Eintritt erledigt",
+          "declined": "Nicht zugestimmt",
+          "decline": "Nicht zustimmen",
+          "declineHint": "Du musst dieses freiwillige Dokument nicht akzeptieren.",
+          "withdrawDecline": "Nicht-Zustimmung zurücknehmen",
+          "withdrawDeclineHint": "Danach kannst du das Dokument lesen und erneut entscheiden."
+        },
+        "trainingCourses": {
+          "hint": "Trage deine vorhandenen Lehrgänge ein oder bestätige, dass du keine hast.",
+          "empty": "Noch keine Lehrgänge erfasst.",
+          "noneDeclared": "Ich habe keine Lehrgänge",
+          "noneDeclaredReview": "Keine Lehrgänge angegeben."
+        },
+        "certifications": {
+          "hint": "Trage deine vorhandenen Nachweise ein oder bestätige, dass du keine hast.",
+          "empty": "Noch keine Nachweise erfasst.",
+          "noneDeclared": "Ich habe keine Nachweise",
+          "noneDeclaredReview": "Keine Nachweise angegeben."
+        },
+        "drivingLicense": {
+          "hint": "Trage deinen Führerschein ein oder gib an, dass du keinen hast.",
+          "noLicense": "Ich habe keinen Führerschein",
+          "noneDeclaredReview": "Kein Führerschein angegeben.",
+          "empty": "Kein Führerschein erfasst."
+        }
+      },
+      "detail": {
+        "organization": "Organisation",
+        "invitedAt": "Eingeladen am",
+        "documentsTitle": "Dokumente",
+        "noDocuments": "Keine Dokumente vorhanden.",
+        "alreadyFulfilledStepsTitle": "Bereits erfüllt",
+        "alreadyFulfilledStepsHint": "Diese Schritte waren schon erledigt und wurden in diesem Eintritt nicht erneut erfasst."
+      }
+    },
+    "settings": {
+      "hub": {
+        "eyebrow": "Mein Bereich",
+        "title": "Einstellungen",
+        "subtitle": "Persönliche Präferenzen für deinen Bereich.",
+        "groupTitle": "Allgemein"
+      },
+      "menu": {
+        "notifications": "Benachrichtigungen",
+        "notificationsDescription": "Kanäle pro Benachrichtigungstyp festlegen",
+        "password": "Passwort",
+        "passwordDescription": "Anmelde-Passwort für EmberOne ändern"
+      },
+      "notifications": {
+        "title": "Benachrichtigungen",
+        "subtitle": "Tippe auf einen Typ, um die Kanäle festzulegen.",
+        "editChannelsFor": "Kanäle für {{type}} bearbeiten",
+        "resetToDefault": "Standard wiederherstellen",
+        "error": {
+          "loadFailed": "Einstellungen konnten nicht geladen werden.",
+          "saveFailed": "Einstellung konnte nicht gespeichert werden."
+        },
+        "channelsSummary": {
+          "none": "Aus"
+        },
+        "channels": {
+          "inApp": {
+            "label": "In der App",
+            "description": "Benachrichtigung im Benachrichtigungsbereich"
+          },
+          "email": {
+            "label": "E-Mail",
+            "description": "Benachrichtigung per E-Mail"
+          }
+        },
+        "types": {
+          "TODO_ASSIGNED": {
+            "title": "Neue Aufgabe",
+            "description": "Wenn dir eine Aufgabe zugewiesen wird"
+          },
+          "WORKFLOW_APPROVED": {
+            "title": "Antrag genehmigt",
+            "description": "Wenn einer deiner Anträge genehmigt wurde"
+          },
+          "WORKFLOW_REJECTED": {
+            "title": "Antrag abgelehnt",
+            "description": "Wenn einer deiner Anträge abgelehnt wurde"
+          },
+          "WORKFLOW_OPENED": {
+            "title": "Neuer Antrag",
+            "description": "Wenn ein neuer Antrag eingereicht wird"
+          },
+          "WORKFLOW_CANCELLED": {
+            "title": "Antrag abgebrochen",
+            "description": "Wenn einer deiner Anträge abgebrochen wurde"
+          },
+          "WORKFLOW_INPUT_CHANGE_REQUESTED": {
+            "title": "Anpassung angefordert",
+            "description": "Wenn eine Änderung an deinen Antragsdaten angefordert wird"
+          },
+          "USERNAME_CHANGED": {
+            "title": "Benutzername geändert",
+            "description": "Wenn dein Benutzername geändert wurde"
+          },
+          "COURSE_REGISTRATION_REMOVED": {
+            "title": "Lehrgangsanmeldung beendet",
+            "description": "Wenn eine Organisation deine Lehrgangsanmeldung beendet hat"
+          },
+          "COURSE_OFFERING_CANCELLED": {
+            "title": "Lehrgang abgesagt",
+            "description": "Wenn ein Lehrgang, für den du angemeldet bist, abgesagt wurde"
+          },
+          "COURSE_OFFERING_SESSIONS_CHANGED": {
+            "title": "Lehrgangstermine geändert",
+            "description": "Wenn sich Termine oder Orte eines Lehrgangs ändern, für den du angemeldet bist oder auf der Warteliste stehst"
+          },
+          "COURSE_OFFERING_START_REMINDER": {
+            "title": "Lehrgangsbeginn",
+            "description": "Erinnerung kurz vor dem Beginn eines Lehrgangs, für den du angemeldet bist oder auf der Warteliste stehst"
+          }
+        }
+      }
+    },
+    "todos": {
+      "title": "Meine Aufgaben",
+      "subtitle": "Offene Aufgaben, die deine Entscheidung oder Aktion erfordern.",
+      "count": "{{count}} offene Aufgaben",
+      "doneSubtitle": "Erledigte Aufgaben.",
+      "doneCount": "{{count}} erledigte Aufgaben",
+      "allSubtitle": "Alle Aufgaben.",
+      "allCount": "{{count}} Aufgaben",
+      "detail": {
+        "notFound": "Aufgabe nicht gefunden.",
+        "message": "Nachricht",
+        "complete": "Als erledigt markieren",
+        "completeLoading": "Wird gespeichert …",
+        "completeSuccess": "Aufgabe als erledigt markiert."
+      }
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "subtitle": "Alle Meldungen und Hinweise zu deinen Anträgen.",
+      "unreadCount": "{{count}} ungelesen",
+      "readSubtitle": "Bereits gelesene Benachrichtigungen.",
+      "readCount": "{{count}} gelesen",
+      "allSubtitle": "Alle Benachrichtigungen.",
+      "allCount": "{{count}} Benachrichtigungen",
+      "detail": {
+        "notFound": "Benachrichtigung nicht gefunden.",
+        "message": "Nachricht"
+      }
+    },
+    "workflowsInbox": {
+      "title": "Anträge",
+      "subtitle": "Deine eingereichten Anträge und zugewiesene Freigaben.",
+      "count": "{{count}} Einträge"
+    },
+    "workflowsOpened": {
+      "title": "Eingereichte Anträge",
+      "subtitle": "Anträge, die du selbst eingereicht hast.",
+      "empty": "Du hast noch keine Anträge eingereicht.",
+      "pickTypeTitle": "Antrag stellen",
+      "pickTypeIntro": "Wähle den Antragstyp, den du einreichen möchtest."
+    },
+    "workflowsParticipations": {
+      "title": "Freigaben",
+      "subtitle": "Anträge, die du prüfen, freigeben oder einsehen sollst.",
+      "empty": "Dir sind derzeit keine Freigaben zugewiesen."
+    },
+    "workflowDetail": {
+      "loadFailed": "Der Antrag konnte nicht geladen werden",
+      "notFound": "Dieser Antrag wurde nicht gefunden oder du hast keinen Zugriff.",
+      "commentsSectionTitle": "Diskussion",
+      "commentsEmpty": "Noch keine Kommentare.",
+      "commentsClosedHint": "Kommentare sind nur möglich, solange der Antrag aktiv ist.",
+      "commentPlaceholder": "Schreibe einen Kommentar …",
+      "commentSubmit": "Kommentieren",
+      "commentAttachFile": "Datei anhängen",
+      "commentPosted": "Kommentar wurde veröffentlicht.",
+      "commentPostFailed": "Kommentar konnte nicht gesendet werden.",
+      "commentAttachmentUploadFailed": "Datei konnte nicht hochgeladen werden.",
+      "commentAuthorFallback": "Benutzer/in #{{id}}",
+      "commentRole": {
+        "OPENER": "Antragsteller/in",
+        "APPROVER": "Freigeber/in",
+        "VIEWER": "Betrachter/in"
+      },
+      "sectionOverview": "Übersicht",
+      "nameChangeBeforeSection": "Bisher",
+      "nameChangeAfterSection": "Gewünscht",
+      "addressChangeBeforeSection": "Bisher",
+      "addressChangeAfterSection": "Gewünscht",
+      "openedBy": "Antragsteller/in",
+      "decidedAt": "Entschieden am",
+      "mediaSectionTitle": "Nachweise und Medien",
+      "mediaProofsTitle": "Nachweise",
+      "mediaDiscussionTitle": "Medien aus der Diskussion",
+      "viewAttachment": "Anschauen",
+      "attachmentViewFailed": "Nachweis konnte nicht geöffnet werden.",
+      "attachmentViewPopupBlocked": "Der Nachweis konnte nicht geöffnet werden. Bitte Pop-ups für diese Seite erlauben.",
+      "approvalSectionTitle": "Freigaben",
+      "approvalSlotNotFound": "Diese Freigabe wurde nicht gefunden oder du hast keinen Zugriff.",
+      "approvalSlotDetailSection": "Status",
+      "approvalSlotOrganization": "Organisation",
+      "approvalSlotGroup": "Gruppe",
+      "approvalSlotStatus": "Freigabe-Status",
+      "approvalSlotActionsSection": "Aktionen",
+      "approvalTaskClaimTitle": "Freigabe übernehmen",
+      "approvalTaskDecideTitle": "Entscheidung treffen",
+      "claimSlotDockHint": "Übernimm die Freigabe, um zu genehmigen oder abzulehnen.",
+      "reviewWorkflowLinkTitle": "Antrag ansehen",
+      "reviewWorkflowLinkHint": "Antragsdaten, Nachweise und Diskussion prüfen",
+      "approvalStatusHandler": "Bearbeiter/in: {{name}}",
+      "approvalStatusHandlerNone": "Noch nicht übernommen",
+      "approvalStatusDecided": "Entschieden: {{name}} · {{when}}",
+      "approvalStatusAutoApproved": "Automatisch genehmigt",
+      "claimSlotHint": "Diese Freigabe gehört deiner Gruppe. Übernimm sie, um zu entscheiden.",
+      "chooseApprovalSlotHint": "Wähle, welche Freigabe du bearbeiten willst.",
+      "approvalSlotContext": "{{slot}}",
+      "slotOptionClaim": "Übernehmen möglich",
+      "slotOptionDecide": "Entscheidung offen",
+      "claimedByYouHint": "Nimm jetzt eine Entscheidung vor.",
+      "slotStatusPending": "Offen",
+      "slotStatusInProgress": "In Bearbeitung",
+      "slotStatusApproved": "Genehmigt",
+      "slotStatusRejected": "Abgelehnt",
+      "claim": "Übernehmen",
+      "claimSuccess": "Freigabe übernommen.",
+      "unclaim": "Abgeben",
+      "unclaimSuccess": "Freigabe wurde abgegeben.",
+      "withdrawApproval": "Genehmigung zurückziehen",
+      "withdrawApprovalSuccess": "Genehmigung wurde zurückgezogen.",
+      "approve": "Genehmigen",
+      "reject": "Ablehnen",
+      "approveConfirmTitle": "Antrag genehmigen?",
+      "approveConfirmMessage": "Möchtest du diesen Antrag wirklich genehmigen?",
+      "approveDocumentConfirmTitle": "Dokumente in persönlichen Ordner übernehmen?",
+      "approveDocumentConfirmIntroReadOnly": "Bei Genehmigung werden die unten ausgewählten Medien in den Dokumentenordner der/des Antragsteller/in übernommen. Die Auswahl kannst du unter „Nachweise und Medien“ anpassen.",
+      "approveDocumentNoneSelected": "Es werden keine Medien übernommen.",
+      "approveDocumentConfirm": "Genehmigen",
+      "approveDocumentSourceWorkflow": "Aus dem Antrag",
+      "approveDocumentSourceComment": "Aus der Diskussion",
+      "documentPromotionWillUpload": "Wird übernommen",
+      "documentPromotionWillSkip": "Wird nicht übernommen",
+      "documentPromotionSummary": "{{selected}} von {{total}} werden übernommen",
+      "documentPromotionEditHint": "Freigeber/innen legen hier fest, welche Medien nach Genehmigung in den Dokumentenordner der/des Antragsteller/in übernommen werden.",
+      "documentPromotionToggle": "Übernahme für {{name}} umschalten",
+      "approveSuccess": "Antrag wurde genehmigt.",
+      "rejectSuccess": "Antrag wurde abgelehnt.",
+      "rejectModalTitle": "Antrag ablehnen",
+      "rejectModalIntro": "Optional kannst du einen Kommentar für Antragsteller/in hinterlassen.",
+      "rejectCommentPlaceholder": "Kommentar (optional, max. 2000 Zeichen) …",
+      "rejectConfirm": "Ablehnung absenden",
+      "cancelHint": "Solange der Antrag offen ist, kannst du ihn zurückziehen.",
+      "cancelWorkflow": "Antrag zurückziehen",
+      "cancelConfirmTitle": "Antrag zurückziehen?",
+      "cancelConfirmMessage": "Der Antrag wird nicht weiter bearbeitet. Du kannst bei Bedarf später einen neuen Antrag stellen.",
+      "cancelSuccess": "Antrag wurde zurückgezogen.",
+      "awaitingInputChangeTitle": "Bitte Angaben anpassen",
+      "awaitingInputChangeBody": "Die Freigabe wartet, bis du die gewünschten Änderungen vorgenommen hast.",
+      "awaitingInputChangeNoteLabel": "Kommentar",
+      "awaitingInputChangeAction": "Jetzt anpassen",
+      "editInput": "Antrag anpassen",
+      "editInputHint": "Solange der Antrag noch nicht übernommen wurde, kannst du deine Angaben anpassen.",
+      "editInputTitle": "Antrag anpassen",
+      "editInputIntro": "Passe deinen Antrag an und sende die Änderung ab.",
+      "editInputSubmit": "Änderung speichern",
+      "editInputSuccess": "Antrag wurde aktualisiert.",
+      "editInputError": "Antrag konnte nicht aktualisiert werden.",
+      "editInputKeepAttachments": "{{count}} vorhandene Nachweise bleiben erhalten. Optional kannst du weitere Dateien hinzufügen.",
+      "requestInputChange": "Änderung anfordern",
+      "requestInputChangeHint": "Wenn Angaben fehlen oder falsch sind, kannst du eine Anpassung anfordern.",
+      "requestInputChangeTitle": "Anpassung anfordern",
+      "requestInputChangeIntro": "Beschreibe kurz, was der/die Antragsteller/in anpassen soll.",
+      "requestInputChangeMessageLabel": "Kommentar",
+      "requestInputChangePlaceholder": "Was soll angepasst werden? …",
+      "requestInputChangeSubmit": "Änderung anfordern",
+      "requestInputChangeSuccess": "Änderung wurde angefordert.",
+      "withdrawInputChange": "Änderungsanforderung zurückziehen",
+      "withdrawInputChangeHint": "Solange die Anpassung noch aussteht, kannst du deine Änderungsanforderung zurückziehen.",
+      "withdrawInputChangeConfirmTitle": "Änderungsanforderung zurückziehen?",
+      "withdrawInputChangeConfirmAction": "Zurückziehen",
+      "withdrawInputChangeConfirmMessage": "Der Antrag geht wieder in die normale Freigabe über. Du kannst später erneut eine Anpassung anfordern.",
+      "withdrawInputChangeSuccess": "Änderungsanforderung wurde zurückgezogen.",
+      "actorSystem": "System (automatisch)",
+      "actorUser": "Benutzer/in #{{id}}"
+    },
+    "workflows": {
+      "fields": {
+        "openedBy": "Antragsteller/in: {{name}}"
+      },
+      "status": {
+        "OPEN": "In Bearbeitung",
+        "AWAITING_INPUT_CHANGE": "Anpassung ausstehend",
+        "APPROVED": "Genehmigt",
+        "REJECTED": "Abgelehnt",
+        "CANCELLED": "Zurückgezogen"
+      }
+    },
+    "masterData": {
+      "title": "Stammdaten",
+      "subtitle": "Name, Adresse und Benachrichtigungs-E-Mail. Deine Stammdaten pflegen.",
+      "changeRequestsSection": "Änderungen beantragen",
+      "membershipsOverview": "Deine Mitgliedschaften",
+      "membershipsOrganizations": "Organisationen",
+      "membershipsGroups": "Gruppen",
+      "membershipEnded": "Beendet",
+      "openWorkflowsButton": "Anträge öffnen",
+      "organizationRequestsSection": "Mitgliedschaft ändern",
+      "organizationRequestsHint": "Anträge auf Eintritt, Austritt oder Wechsel der Hauptorganisation sowie Beitritt oder Austritt aus Gruppen.",
+      "organizationRequestsOrganizationHeading": "Organisation",
+      "organizationRequestsGroupsHeading": "Gruppen"
+    },
+    "nameChange": {
+      "requestButton": "Namensänderung beantragen",
+      "modalTitle": "Namensänderung beantragen",
+      "modalIntro": "Bitte gewünschten Namen eintragen und mindestens einen Nachweis für die Namensänderung (PDF oder Bild) hochladen. Die Leitung deiner Hauptorganisation muss zustimmen.",
+      "attachmentsLabel": "Nachweis",
+      "attachmentsHint": "Nachweis für die Namensänderung. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
+      "hintNamesUnchanged": "Der neue Name muss sich vom aktuellen Namen unterscheiden.",
+      "blockedOpenRequest": "Es läuft bereits ein Namensänderungsantrag. Warte auf die Entscheidung oder ziehe den offenen Antrag unter „Mein Bereich → Anträge“ zurück, bevor du einen neuen startest.",
+      "errorAlreadyOpen": "Es gibt bereits einen offenen Namensänderungsantrag. Beende oder ziehe ihn zurück, bevor du einen neuen einreichst."
+    },
+    "addressChange": {
+      "requestButton": "Adressänderung beantragen",
+      "modalTitle": "Adressänderung beantragen",
+      "modalIntro": "Bitte die gewünschte Adresse eintragen. Optional kannst du einen Nachweis (PDF oder Bild) hochladen. Die Leitung deiner Hauptorganisation muss zustimmen.",
+      "attachmentsLabel": "Nachweis",
+      "attachmentsHint": "Optionaler Nachweis für die Adressänderung. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
+      "hintAddressUnchanged": "Die neue Adresse muss sich von der aktuellen Adresse unterscheiden.",
+      "blockedOpenRequest": "Es läuft bereits ein Adressänderungsantrag. Warte auf die Entscheidung oder ziehe den offenen Antrag unter „Mein Bereich → Anträge“ zurück, bevor du einen neuen startest.",
+      "errorAlreadyOpen": "Es gibt bereits einen offenen Adressänderungsantrag. Beende oder ziehe ihn zurück, bevor du einen neuen einreichst."
+    },
+    "organizationJoinRequest": {
+      "requestButton": "Eintritt beantragen",
+      "blockedOpenRequest": "Es läuft bereits ein Eintrittsantrag. Warte auf die Entscheidung oder öffne den Antrag unter „Mein Bereich → Anträge“, bevor du einen neuen startest.",
+      "modalTitle": "Eintritt beantragen",
+      "modalIntro": "Wähle die Organisation, in die du eintreten möchtest. Nach der Freigabe erfasst du die Unterlagen für deinen Eintritt. Die Leitung deiner Hauptorganisation und der gewählten Organisation muss zustimmen.",
+      "modalIntroWithoutMainOrganization": "Wähle die Organisation, in die du eintreten möchtest. Nach der Freigabe erfasst du die Unterlagen für deinen Eintritt. Die Leitung der gewählten Organisation muss zustimmen.",
+      "targetOrganizationLabel": "Organisation",
+      "targetOrganizationPlaceholder": "Organisation wählen …",
+      "noJoinableOrganizations": "Derzeit sind keine Organisationen für einen Eintritt verfügbar.",
+      "blockedNoJoinableOrganizations": "Derzeit ist kein Eintritt in eine weitere Organisation möglich.",
+      "attachmentsHint": "Optionaler Nachweis für den Antrag. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
+      "errorAlreadyOpen": "Für diese Organisation gibt es bereits einen offenen Eintrittsantrag."
+    },
+    "mainOrganizationChange": {
+      "requestButton": "Hauptorganisation wechseln",
+      "modalTitle": "Hauptorganisation wechseln",
+      "modalIntro": "Wähle die Organisation, die deine neue Hauptorganisation werden soll. Die Leitung deiner aktuellen und der neuen Hauptorganisation muss zustimmen.",
+      "modalIntroWithoutMainOrganization": "Wähle die Organisation, die deine Hauptorganisation werden soll. Die Leitung der neuen Hauptorganisation muss zustimmen.",
+      "newMainOrganizationLabel": "Neue Hauptorganisation",
+      "newMainOrganizationPlaceholder": "Organisation wählen …",
+      "noTargetOrganizations": "Derzeit ist kein Wechsel der Hauptorganisation möglich.",
+      "blockedNoTargetOrganizations": "Derzeit ist kein Wechsel der Hauptorganisation möglich.",
+      "blockedOpenRequest": "Es läuft bereits ein Antrag auf Hauptorganisationswechsel. Warte auf die Entscheidung oder ziehe den offenen Antrag unter „Mein Bereich → Anträge“ zurück, bevor du einen neuen startest.",
+      "attachmentsHint": "Optionaler Nachweis für den Antrag. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
+      "errorAlreadyOpen": "Für diese Organisation gibt es bereits einen offenen Antrag auf Hauptorganisationswechsel."
+    },
+    "organizationLeaveRequest": {
+      "requestButton": "Austritt beantragen",
+      "blockedNoLeaveTargets": "Derzeit ist kein Austritt aus einer Organisation möglich.",
+      "modalTitle": "Organisationsaustritt beantragen",
+      "modalIntro": "Wähle die Organisation, die du verlassen möchtest. Die Leitung dieser Organisation muss zustimmen. Nach Freigabe tritt der Austritt sofort in Kraft.",
+      "mainOrganizationWarning": "Du beantragst den Austritt aus deiner Hauptorganisation. Wird der Antrag genehmigt, enden alle deine Organisationsmitgliedschaften und dein Zugang zur Anwendung wird deaktiviert.",
+      "mainOrganizationLeaveAlternativeHint": "Du möchtest nur eine andere Organisation verlassen? Dann wechsle zuerst deine Hauptorganisation:",
+      "mainOrganizationLeaveAlternativeHintPlain": "Möchtest du stattdessen nur eine andere Organisation verlassen? Wechsle zuerst deine Hauptorganisation.",
+      "organizationLabel": "Organisation",
+      "organizationPlaceholder": "Organisation wählen …",
+      "noLeaveTargets": "Derzeit ist kein Austritt aus einer Organisation möglich.",
+      "attachmentsHint": "Optionaler Nachweis für den Austrittsantrag. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
+      "errorAlreadyOpen": "Für diese Organisation gibt es bereits einen offenen Austrittsantrag.",
+      "errorExitAlreadyOpen": "Für diese Organisation läuft bereits ein Austrittsantrag (von dir oder über die Benutzerverwaltung). Warte auf die Entscheidung oder ziehe den offenen Antrag zurück.",
+      "errorLeadershipMember": "Du kannst diese Organisation nicht verlassen, solange du Mitglied der Leitungsgruppe bist. Die Leitungsmitgliedschaft muss zuerst durch die Verwaltung deiner Feuerwehr beendet werden."
+    },
+    "organizationGroupLeaveRequest": {
+      "requestButton": "Austritt beantragen",
+      "blockedNoLeaveTargets": "Derzeit ist kein Austritt aus einer Gruppe möglich.",
+      "modalTitle": "Gruppenaustritt beantragen",
+      "modalIntro": "Wähle die Organisation und die Gruppe, die du verlassen möchtest. Die Leitung der gewählten Organisation muss zustimmen.",
+      "organizationLabel": "Organisation",
+      "organizationPlaceholder": "Organisation wählen …",
+      "organizationGroupLabel": "Gruppe",
+      "organizationGroupPlaceholder": "Gruppe wählen …",
+      "noLeaveTargets": "Derzeit ist kein Austritt aus einer Gruppe möglich.",
+      "attachmentsHint": "Optionaler Nachweis für den Austrittsantrag. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
+      "errorAlreadyOpen": "Für diese Gruppe gibt es bereits einen offenen Austrittsantrag.",
+      "errorLeadershipGroup": "Die Leitungsgruppe kann nicht über einen Austrittsantrag verlassen werden. Die Mitgliedschaft muss durch die Verwaltung deiner Feuerwehr beendet werden."
+    },
+    "organizationGroupJoinRequest": {
+      "requestButton": "Beitritt beantragen",
+      "blockedOpenRequest": "Es läuft bereits ein Gruppenbeitrittsantrag. Warte auf die Entscheidung oder öffne den Antrag unter „Mein Bereich → Anträge“, bevor du einen neuen startest.",
+      "modalTitle": "Gruppenbeitritt beantragen",
+      "modalIntro": "Wähle die Organisation und die Gruppe, der du beitreten möchtest. Die Leitung der gewählten Organisation muss zustimmen.",
+      "organizationLabel": "Organisation",
+      "organizationPlaceholder": "Organisation wählen …",
+      "organizationGroupLabel": "Gruppe",
+      "organizationGroupPlaceholder": "Gruppe wählen …",
+      "noJoinTargets": "Derzeit ist kein Beitritt zu einer Gruppe möglich.",
+      "attachmentsHint": "Optionaler Nachweis für den Beitrittsantrag. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
+      "errorAlreadyOpen": "Für diese Gruppe gibt es bereits einen offenen Beitrittsantrag.",
+      "errorLeadershipGroup": "Die Leitungsgruppe kann nicht über einen Beitrittsantrag beantragt werden. Die Mitgliedschaft muss durch die Verwaltung deiner Feuerwehr vergeben werden."
+    },
+    "absence": {
+      "title": "Abwesenheiten",
+      "subtitle": "Abwesenheiten verwalten",
+      "addTitle": "Abwesenheit hinzufügen",
+      "emptyAll": "Noch keine Abwesenheiten erfasst",
+      "editTitle": "Abwesenheit bearbeiten",
+      "delete": "Abwesenheit löschen",
+      "count": "{{count}} Abwesenheiten",
+      "commentPlaceholder": "Optionaler Kommentar …",
+      "commentHealthHint": "Bitte keine Gesundheitsangaben eintragen.",
+      "orgUnknown": "Organisation",
+      "organizationsHint": "Eine oder mehrere Organisationen auswählen.",
+      "noOrganizations": "Du bist keiner Organisation zugeordnet.",
+      "fields": {
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "reason": "Grund",
+        "organizations": "Organisationen",
+        "comment": "Kommentar"
+      },
+      "reason": {
+        "VACATION": "Urlaub",
+        "PERSONAL": "Persönlich",
+        "TRAINING": "Fortbildung / Dienst",
+        "OTHER": "Sonstiges"
+      },
+      "success": {
+        "created": "Abwesenheit erfolgreich hinzugefügt",
+        "updated": "Abwesenheit erfolgreich aktualisiert",
+        "deleted": "Abwesenheit erfolgreich gelöscht"
+      },
+      "deleteConfirmTitle": "Abwesenheit löschen?",
+      "deleteConfirm": "Möchtest du diesen Eintrag wirklich löschen?",
+      "error": {
+        "notFound": "Diese Abwesenheit wurde nicht gefunden."
+      }
+    },
+    "emergencyContact": {
+      "title": "Notfallkontakt",
+      "subtitle": "Notfallkontakt verwalten",
+      "addTitle": "Notfallkontakt hinzufügen",
+      "editTitle": "Notfallkontakt bearbeiten",
+      "delete": "Kontakt löschen",
+      "empty": "Noch keine Notfallkontakte erfasst.",
+      "count": "{{count}} Kontakte",
+      "dragToReorder": "Ziehen, um die Reihenfolge zu ändern",
+      "dragHint": "Ziehen, um die Reihenfolge zu ändern",
+      "priority": "Priorität {{priority}}",
+      "deleteConfirmTitle": "Notfallkontakt löschen",
+      "deleteConfirm": "Möchtest du diesen Notfallkontakt wirklich löschen?",
+      "fields": {
+        "priority": "Priorität",
+        "relationship": "Bezug",
+        "firstName": "Vorname",
+        "lastName": "Nachname",
+        "address": "Adresse",
+        "phone": "Telefon",
+        "email": "E-Mail"
+      },
+      "error": {
+        "notFound": "Dieser Notfallkontakt wurde nicht gefunden."
+      },
+      "relationship": {
+        "SPOUSE": "Ehepartner/in",
+        "PARTNER": "Lebenspartner/in",
+        "PARENT": "Elternteil",
+        "CHILD": "Kind",
+        "SIBLING": "Geschwister",
+        "FRIEND": "Freund/in",
+        "NEIGHBOR": "Nachbar/in",
+        "COLLEAGUE": "Kollege/in",
+        "OTHER": "Sonstiges"
+      },
+      "success": {
+        "created": "Notfallkontakt erfolgreich hinzugefügt",
+        "updated": "Notfallkontakt erfolgreich aktualisiert",
+        "deleted": "Notfallkontakt erfolgreich gelöscht",
+        "reordered": "Priorität erfolgreich aktualisiert"
+      }
+    },
+    "userDocumentSubmission": {
+      "modalTitle": "Dokument einreichen",
+      "modalIntro": "Lade die Datei hoch und gib Titel sowie optionale Tags an. Nach Freigabe wird das Dokument in deinem Archiv gespeichert.",
+      "submit": "Antrag einreichen",
+      "errorAlreadyOpen": "Es gibt bereits einen offenen Antrag dieses Typs.",
+      "attachmentsHint": "Mindestens eine Datei erforderlich."
+    },
+    "documents": {
+      "title": "Meine Dokumente",
+      "subtitle": "Persönliche Dateien mit Tags und Verknüpfungen",
+      "count": "{{count}} Dokumente",
+      "empty": "Noch keine Dokumente hochgeladen.",
+      "emptySubmitAvailable": "Noch keine Dokumente. Du kannst ein Dokument per Antrag einreichen.",
+      "submitRequest": "Dokument einreichen",
+      "upload": "Hochladen",
+      "uploadTitle": "Dokument hochladen",
+      "editTitle": "Dokument bearbeiten",
+      "uploadSuccess": "Dokument wurde hochgeladen.",
+      "uploadFailed": "Dokument konnte nicht hochgeladen werden.",
+      "updateSuccess": "Dokument wurde gespeichert.",
+      "updateFailed": "Dokument konnte nicht gespeichert werden.",
+      "downloadFailed": "Download fehlgeschlagen.",
+      "view": "Ansehen",
+      "filterByTag": "Tag",
+      "markAllRead": "Alle als gelesen markieren",
+      "markAllReadLoading": "Wird markiert …",
+      "fileLabel": "Datei",
+      "titleLabel": "Titel",
+      "descriptionLabel": "Beschreibung",
+      "tagsLabel": "Tags",
+      "tagsPlaceholder": "Tag eingeben …",
+      "tagsAddMore": "Weiteren Tag hinzufügen",
+      "tagsHint": "Enter oder Komma zum Hinzufügen. Backspace entfernt den letzten Tag.",
+      "tagsSuggestions": "Bereits verwendet",
+      "removeTag": "Tag „{{tag}}“ entfernen",
+      "linksLabel": "Verknüpfungen",
+      "error": {
+        "notFound": "Dieses Dokument wurde nicht gefunden."
+      }
+    },
+    "timeEntries": {
+      "title": "Zeiterfassung",
+      "subtitle": "Zeiten erfassen und verwalten",
+      "addTitle": "Zeit erfassen",
+      "editTitle": "Zeiteintrag bearbeiten",
+      "delete": "Zeiteintrag löschen",
+      "empty": "Noch keine Zeiten erfasst.",
+      "count": "{{count}} Zeiteinträge",
+      "running": "Läuft noch",
+      "noGroup": "Keine Gruppe",
+      "mainOrg": "Haupt",
+      "modeManual": "Zeit nachtragen",
+      "modeManualHint": "Start- und Endzeit manuell eingeben",
+      "modeStamp": "Stempeln",
+      "modeStampHint": "Jetzt einstempeln, später ausstempeln",
+      "stampIn": "Einstempeln",
+      "stampOut": "Ausstempeln",
+      "stampOutHint": "Aktuelle Zeit beenden",
+      "addManualTitle": "Zeit nachtragen",
+      "descriptionPlaceholder": "Optionale Beschreibung …",
+      "fields": {
+        "organization": "Organisation",
+        "group": "Organisationsgruppe (optional)",
+        "startTime": "Startzeit",
+        "endTime": "Endzeit (optional)",
+        "duration": "Dauer",
+        "description": "Beschreibung"
+      },
+      "error": {
+        "notFound": "Dieser Zeiteintrag wurde nicht gefunden."
+      },
+      "success": {
+        "created": "Zeiteintrag erfolgreich gespeichert",
+        "updated": "Zeiteintrag erfolgreich aktualisiert",
+        "deleted": "Zeiteintrag erfolgreich gelöscht",
+        "stampedIn": "Erfolgreich eingestempelt",
+        "stampedOut": "Erfolgreich ausgestempelt"
+      },
+      "deleteConfirmTitle": "Zeiteintrag löschen?",
+      "deleteConfirm": "Möchtest du diesen Zeiteintrag wirklich löschen?"
+    },
+    "error": {
+      "loadFailed": "Fehler beim Laden der Benutzerdaten",
+      "noEmployeeId": "Dein Konto ist noch nicht vollständig eingerichtet. Stammdaten können hier nicht geladen werden.",
+      "notificationEmailVerifyFailed": "Die Benachrichtigungs-E-Mail konnte nicht bestätigt werden.",
+      "notificationEmailVerifyMissingToken": "Der Bestätigungslink ist ungültig oder unvollständig."
+    },
+    "success": {
+      "notificationEmailChangeRequested": "Bestätigungsmail wurde an die neue Adresse gesendet",
+      "notificationEmailVerified": "Benachrichtigungs-E-Mail erfolgreich bestätigt",
+      "notificationEmailVerificationResent": "Bestätigungsmail erneut gesendet",
+      "notificationEmailPendingCancelled": "Ausstehende E-Mail-Änderung abgebrochen"
+    },
+    "notificationEmailVerify": {
+      "verifying": "Bestätigung wird geprüft …",
+      "successTitle": "E-Mail bestätigt",
+      "successMessage": "Deine Benachrichtigungs-E-Mail wurde erfolgreich bestätigt.",
+      "successLoginHint": "Melde dich an, um deine Stammdaten zu sehen.",
+      "successContinue": "Zu den Stammdaten",
+      "login": "Anmelden",
+      "errorTitle": "Bestätigung fehlgeschlagen",
+      "backHome": "Zur Startseite"
+    },
+    "sections": {
+      "notificationEmail": "Benachrichtigungs-E-Mail",
+      "organizationsEmpty": "Du bist derzeit keiner Organisation zugeordnet."
+    },
+    "notificationEmail": {
+      "changeHint": "Nach der Änderung erhältst du eine Bestätigungsmail an die neue Adresse. Bis zur Bestätigung bleibt die bisherige E-Mail aktiv.",
+      "pendingMessage": "Bitte bestätige die neue Adresse {{email}}. Bis dahin werden Benachrichtigungen weiterhin an die bisherige E-Mail gesendet.",
+      "resend": "Bestätigung erneut senden",
+      "resending": "Wird gesendet …",
+      "cancelPending": "Änderung abbrechen",
+      "cancelling": "Wird abgebrochen …"
+    },
+    "fields": {
+      "personalNumber": "Personalnummer",
+      "userIdentifier": "Benutzerkennung",
+      "notificationEmail": "Benachrichtigungs-E-Mail",
+      "notificationEmailPlaceholder": "max.mustermann@example.com",
+      "address": "Adresse",
+      "mainOrganization": "Hauptorganisation"
+    },
+    "edit": {
+      "notificationEmail": "Benachrichtigungs-E-Mail ändern",
+      "image": "Profilbild bearbeiten"
+    },
+    "image": {
+      "alt": "Profilbild",
+      "edit": "Bild bearbeiten",
+      "delete": "Bild löschen",
+      "selectImage": "Bild auswählen",
+      "preview": "Vorschau",
+      "fileRequirements": "Akzeptierte Formate: JPG, PNG, GIF. Maximale Dateigröße: 5MB",
+      "confirmDelete": "Möchtest du dein Profilbild wirklich löschen?",
+      "error": {
+        "invalidType": "Datei muss ein Bild sein",
+        "fileTooLarge": "Dateigröße muss weniger als 5MB betragen",
+        "uploadFailed": "Fehler beim Hochladen des Bildes",
+        "deleteFailed": "Fehler beim Löschen des Bildes"
+      },
+      "success": {
+        "uploaded": "Profilbild erfolgreich hochgeladen",
+        "deleted": "Profilbild erfolgreich gelöscht"
+      }
+    }
+  },
+  "organization": {
+    "hub": {
+      "eyebrow": "Organisation",
+      "organizationCode": "Organisationscode",
+      "navigation": {
+        "manageUsers": "Mitgliederverwaltung"
+      },
+      "tileLabels": {
+        "appointments": "Termine",
+        "service": "Dienstleistung",
+        "operation": "Einsatz",
+        "absences": "Abwesenheiten",
+        "certifications": "Nachweise",
+        "qualifications": "Qualifikationen",
+        "ranks": "Dienstgrade und Funktionen",
+        "manageUsers": "Mitglieder",
+        "groups": "Gruppen",
+        "workflows": "Anträge",
+        "courseOfferings": "Lehrgangsangebote",
+        "courseRegistrations": "Lehrgangsanmeldungen",
+        "management": "Verwaltung"
+      },
+      "tiles": {
+        "hintAppointments": "Termine",
+        "hintEventService": "Dienstleistungen (Übungen, Öffentlichkeitsarbeit, Sonderdienste)",
+        "hintEventOperation": "Einsätze",
+        "hintOrgAbsences": "Abwesenheiten",
+        "hintCertifications": "Nachweise",
+        "hintQualifications": "Qualifikationen",
+        "hintRanks": "Dienstgrade und Funktionen",
+        "hintWorkflows": "Anträge",
+        "hintManageUsers": "Mitglieder verwalten",
+        "hintGroups": "Gruppen verwalten",
+        "hintCourseOfferings": "Lehrgangsangebote planen und veröffentlichen",
+        "hintCourseRegistrations": "Lehrgangsanmeldungen der Organisation einsehen",
+        "hintManagement": "Organisationen für die Verwaltung öffnen"
+      },
+      "noAccess": "Du bist Mitglied dieser Organisation, aber aktuell sind keine Module für dich freigeschaltet. Bitte wende dich an die Leitung, wenn du Zugriff benötigst.",
+      "noAccessTitle": "Keine Module verfügbar"
+    },
+    "groups": {
+      "title": "Gruppen",
+      "members": {
+        "list": {
+          "sort": {
+            "lastNameAsc": "Nachname A-Z",
+            "lastNameDesc": "Nachname Z-A",
+            "firstNameAsc": "Vorname A-Z",
+            "firstNameDesc": "Vorname Z-A"
+          }
+        }
+      }
+    },
+    "workflows": {
+      "title": "Anträge",
+      "empty": "Keine offenen Anträge"
+    },
+    "departmentView": {
+      "workspaceEmpty": "Für dich sind hier keine Inhalte freigeschaltet."
+    },
+    "manage": {
+      "noPermission": "Du hast keine Berechtigung, diese Inhalte einzusehen."
+    },
+    "errors": {
+      "notFound": "Organisation nicht gefunden"
+    },
+    "management": {
+      "switcherBadge": "Verwaltung · bis {{time}}"
+    }
+  },
+  "organizationManagement": {
+    "errors": {
+      "noPermission": "Du hast keine Berechtigung, diese Organisation zu verwalten.",
+      "notFound": "Organisation nicht gefunden"
+    },
+    "success": {
+      "organizationUpdated": "Organisation erfolgreich aktualisiert",
+      "childCreated": "Untergeordnete Organisation erfolgreich erstellt"
+    },
+    "permissionGroups": {
+      "noDescription": "Keine Beschreibung"
+    },
+    "organizationGroups": {
+      "noGroups": "Keine Organisationsgruppen verfügbar",
+      "permissionGroups": "Berechtigungsgruppen",
+      "selectAll": "Alle auswählen",
+      "deselectAll": "Alle abwählen",
+      "noPermissionGroups": "Keine Berechtigungsgruppen für diese Organisation verfügbar",
+      "members": "Mitglieder",
+      "noMembers": "Keine Mitglieder in dieser Gruppe",
+      "leadershipReadOnly": "Die Leitungsgruppe wird ausschließlich im Mandanten-Administrationsbereich verwaltet.",
+      "noPermissionGroupsAssigned": "Keine Berechtigungsgruppen zugewiesen"
+    }
+  },
+  "management": {
+    "empty": "Keine Organisationen zur Verwaltung verfügbar.",
+    "row": {
+      "active": "Verwaltung",
+      "inactive": "Nicht aktiv",
+      "activeUntil": "bis {{time}}",
+      "open": "Öffnen",
+      "activate": "Verwalten"
+    },
+    "dialog": {
+      "title": "Verwaltung von {{name}}",
+      "duration": "Dauer in Minuten (max. {{max}})",
+      "permissionsLabel": "Berechtigungen",
+      "permissionsHint": "Nichts ist vorausgewählt. Wähle nur, was du für den Anlass brauchst.",
+      "selectAll": "Alle",
+      "reason": "Anlass",
+      "reasonHint": "Maximal {{max}} Zeichen. Der Anlass wird gespeichert und ist nicht änderbar.",
+      "submit": "Verwaltung starten",
+      "error": "Verwaltung konnte nicht gestartet werden."
+    },
+    "banner": {
+      "badge": "Verwaltung",
+      "until": "bis {{time}}",
+      "end": "Beenden",
+      "endConfirm": "Verwaltung jetzt beenden?"
+    },
+    "page": {
+      "title": "Verwaltung",
+      "description": "Organisationen, die du über diese Organisation verwalten darfst."
+    },
+    "actions": {
+      "title": "Aktionen",
+      "activateHint": "Verwaltung dieser Organisation für einen begrenzten Zeitraum starten",
+      "openHint": "Zur Organisation wechseln und sie verwalten",
+      "endHint": "Die laufende Verwaltung sofort beenden"
+    },
+    "detail": {
+      "activeStatus": "Aktiv",
+      "endsAt": "{{time}} Uhr",
+      "endsLabel": "Ende",
+      "managingLabel": "Verwaltet über",
+      "startedLabel": "Gestartet",
+      "startedAt": "{{time}} Uhr",
+      "reasonLabel": "Anlass",
+      "inactive": "Keine aktive Verwaltung",
+      "notFound": "Organisation nicht gefunden"
+    }
+  },
+  "permissions": {
+    "ORGANIZATION_READ": "Organisation lesen",
+    "ORGANIZATION_GROUP_READ": "Organisationsgruppen lesen",
+    "USER_READ": "Benutzer lesen",
+    "USER_WRITE": "Benutzer bearbeiten",
+    "SERVICE_EVENT_READ": "Dienstleistung lesen",
+    "SERVICE_EVENT_WRITE": "Dienstleistung bearbeiten",
+    "OPERATION_EVENT_READ": "Einsätze lesen",
+    "OPERATION_EVENT_WRITE": "Einsätze bearbeiten",
+    "APPOINTMENT_READ": "Termine lesen",
+    "APPOINTMENT_WRITE": "Termine bearbeiten",
+    "EVENT_ATTENDANCE_READ": "Ereignis-Anwesenheit lesen",
+    "EVENT_ATTENDANCE_WRITE": "Ereignis-Anwesenheit bearbeiten",
+    "EMERGENCY_CONTACT_READ": "Notfallkontakte lesen",
+    "EMERGENCY_CONTACT_WRITE": "Notfallkontakte bearbeiten",
+    "ABSENCE_READ": "Abwesenheiten lesen",
+    "ABSENCE_WRITE": "Abwesenheiten bearbeiten",
+    "DOCUMENT_READ": "Dokumente lesen",
+    "DOCUMENT_WRITE": "Dokumente bearbeiten",
+    "TIME_ENTRY_READ": "Zeiterfassung lesen",
+    "TIME_ENTRY_WRITE": "Zeiterfassung bearbeiten",
+    "WORKFLOW_READ": "Anträge lesen",
+    "CERTIFICATION_READ": "Nachweise lesen",
+    "CERTIFICATION_WRITE": "Nachweise bearbeiten",
+    "TRAINING_COURSE_READ": "Lehrgänge und Anmeldungen lesen",
+    "TRAINING_COURSE_WRITE": "Lehrgänge bearbeiten",
+    "QUALIFICATION_READ": "Qualifikationen lesen",
+    "QUALIFICATION_WRITE": "Qualifikationen bearbeiten",
+    "DRIVING_LICENSE_READ": "Führerschein lesen",
+    "DRIVING_LICENSE_WRITE": "Führerschein bearbeiten",
+    "RANK_READ": "Dienstgrade lesen",
+    "RANK_WRITE": "Dienstgrade bearbeiten",
+    "COURSE_OFFERING_READ": "Lehrgangsangebote lesen",
+    "COURSE_OFFERING_WRITE": "Lehrgangsangebote bearbeiten",
+    "PROFILE_IMAGE_READ": "Profilbilder lesen",
+    "MANAGEMENT_ACCESS": "Verwaltung anderer Organisationen übernehmen"
+  },
+  "userManagement": {
+    "tabs": {
+      "users": "Mitglieder",
+      "absences": "Abwesenheiten",
+      "emergencyContacts": "Notfallkontakte",
+      "timeEntries": "Zeiterfassung"
+    },
+    "sections": {
+      "masterData": "Stammdaten",
+      "memberships": "Mitgliedschaften",
+      "emergencyContacts": "Notfallkontakte",
+      "documents": "Dokumente",
+      "workflows": "Anträge",
+      "absences": "Abwesenheiten",
+      "timeEntries": "Zeiterfassung",
+      "certifications": "Nachweise",
+      "qualifications": "Qualifikationen",
+      "trainingCourses": "Lehrgänge",
+      "courseRegistrations": "Lehrgangsanmeldungen",
+      "drivingLicenses": "Führerschein",
+      "rank": "Dienstgrad & Funktionen",
+      "onboarding": "Eintritt"
+    },
+    "courseRegistrations": {
+      "empty": "Keine Lehrgangsanmeldungen für dieses Mitglied."
+    },
+    "onboarding": {
+      "noSteps": "Für diese Organisation sind keine Eintrittsschritte konfiguriert - ein separater Eintritt ist nicht nötig.",
+      "noEntry": "Für dieses Mitglied wurde noch kein Eintritt angelegt."
+    },
+    "workflows": {
+      "empty": "Für dieses Mitglied sind noch keine Anträge eingereicht."
+    },
+    "absences": {
+      "title": "Aktive Abwesenheiten",
+      "emptyCurrent": "Aktuell ist niemand abwesend",
+      "emptyUpcoming": "Keine anstehenden Abwesenheiten",
+      "emptyPast": "Keine vergangenen Abwesenheiten",
+      "userUnknown": "Mitglied #{{id}}"
+    },
+    "emergencyContacts": {
+      "title": "Notfallkontakte",
+      "empty": "Für diese Organisation sind keine Notfallkontakte hinterlegt.",
+      "userUnknown": "Mitglied #{{id}}",
+      "contactLabel": "Notfallkontakt"
+    },
+    "timeEntries": {
+      "title": "Zeiterfassung",
+      "empty": "Für diese Organisation sind keine Zeiteinträge hinterlegt.",
+      "userUnknown": "Mitglied #{{id}}"
+    },
+    "userLabel": "Mitglied",
+    "selectUser": "Mitglied auswählen",
+    "addUser": "Mitglied hinzufügen",
+    "usernameFormatHint": "Der Benutzername wird automatisch aus Vorname, Nachname und dem Mandanten-Kürzel gebildet (z. B. max.mustermann.fw).",
+    "editUser": "Mitglied bearbeiten",
+    "noUsers": "Noch keine Mitglieder",
+    "listFilter": {
+      "invited": "Eingeladene",
+      "active": "Aktive",
+      "audience": {
+        "label": "Anzeige"
+      }
+    },
+    "invitations": {
+      "empty": "Keine offenen Einladungen"
+    },
+    "userIdentifier": "Benutzerkennung",
+    "personalId": "Personalnummer",
+    "error": {
+      "loadFailed": "Eintrittsdaten konnten nicht geladen werden."
+    },
+    "success": {
+      "userCreated": "Einladung erstellt",
+      "userUpdated": "Mitglied erfolgreich aktualisiert"
+    },
+    "errors": {
+      "createFailed": "Fehler beim Erstellen der Einladung",
+      "updateFailed": "Fehler beim Aktualisieren des Mitglieds",
+      "notFound": "Mitglied nicht gefunden"
+    },
+    "groupMembership": {
+      "assignToGroup": "Mitglied zu Gruppe zuweisen",
+      "updateMembership": "Gruppenmitgliedschaft bearbeiten",
+      "typeChangeHint": "Bei einer Rollenänderung endet die bisherige Mitgliedschaft jetzt und die neue beginnt jetzt. Die bisherige Rolle bleibt in der Historie.",
+      "detailTitle": "Gruppenmitgliedschaft",
+      "end": "Beenden",
+      "endActionHint": "Mitgliedschaft in dieser Gruppe mit dem aktuellen Zeitpunkt beenden.",
+      "noActiveMembership": "Keine aktive Mitgliedschaft in dieser Gruppe",
+      "organizationGroup": "Organisationsgruppe",
+      "archivedBadge": "Archiviert",
+      "selectGroup": "Gruppe auswählen",
+      "membershipType": "Mitgliedschaftstyp",
+      "startDate": "Startdatum",
+      "endDate": "Enddatum",
+      "types": {
+        "LEADER": "Leiter",
+        "DEPUTY_LEADER": "Stellvertreter",
+        "MEMBER": "Mitglied"
+      },
+      "confirmEndTitle": "Gruppenmitgliedschaft beenden",
+      "confirmEndMessage": "Möchtest du die Mitgliedschaft in der Gruppe \"{{groupName}}\" wirklich beenden?",
+      "success": {
+        "assigned": "Mitglied erfolgreich zur Gruppe hinzugefügt",
+        "updated": "Gruppenmitgliedschaft erfolgreich aktualisiert",
+        "ended": "Gruppenmitgliedschaft erfolgreich beendet"
+      },
+      "errors": {
+        "assignFailed": "Fehler beim Zuweisen des Mitglieds zur Gruppe",
+        "updateFailed": "Fehler beim Aktualisieren der Gruppenmitgliedschaft",
+        "endFailed": "Fehler beim Beenden der Gruppenmitgliedschaft",
+        "alreadyEnded": "Diese Gruppenmitgliedschaft ist bereits beendet",
+        "groupMustHaveLeader": "Eine Gruppe muss mindestens einen Leiter haben, wenn sie Mitglieder hat",
+        "cannotRemoveLastLeadershipMember": "Das letzte Mitglied kann nicht aus einer Führungsgruppe entfernt werden",
+        "leaderAlreadyExists": "Für diese Gruppe ist bereits ein Leiter hinterlegt.",
+        "alreadyMember": "Das Mitglied hat bereits eine aktive Mitgliedschaft in dieser Gruppe für den angegebenen Zeitraum"
+      }
+    },
+    "memberships": {
+      "historyTitle": "Verlauf",
+      "historicalTag": "Historisch",
+      "ongoing": "-",
+      "groupsTitle": "Gruppen",
+      "noGroups": "Keine Gruppenmitgliedschaften",
+      "noMemberships": "Keine Mitgliedschaften in dieser Organisation"
+    },
+    "userDeactivationWorkflow": {
+      "memberLabel": "Mitglied"
+    },
+    "mainOrganizationChange": {
+      "action": "Hauptorganisation wechseln",
+      "modalTitle": "Hauptorganisation wechseln",
+      "introMainContext": "Wähle die neue Hauptorganisation für dieses Mitglied. Die bisherige und die neue Hauptorganisation müssen den Antrag freigeben.",
+      "targetLabel": "Neue Hauptorganisation",
+      "targetPlaceholder": "Organisation auswählen",
+      "reasonLabel": "Begründung",
+      "reasonOptional": "optional",
+      "submit": "Antrag stellen",
+      "workflowOpened": "Antrag zum Wechsel der Hauptorganisation wurde gestellt.",
+      "failed": "Antrag konnte nicht gestellt werden.",
+      "errorAlreadyOpen": "Für dieses Mitglied läuft bereits ein Antrag auf Hauptorganisationswechsel (selbst gestellt oder über die Benutzerverwaltung)."
+    },
+    "organizationMembershipEndWorkflow": {
+      "memberLabel": "Mitglied",
+      "organizationLabel": "Organisation",
+      "reasonLabel": "Begründung",
+      "submit": "Einreichen"
+    },
+    "organizationMembership": {
+      "title": "Organisationsmitgliedschaft",
+      "updateMembership": "Organisationsmitgliedschaft bearbeiten",
+      "requestEnd": "Austritt beantragen",
+      "accountNotSustainable": "Dieser Austritt würde das Konto ohne Organisationsanker lassen. Stattdessen über die Hauptorganisation austreten.",
+      "userAlreadyDeactivated": "Das Konto ist bereits deaktiviert.",
+      "mainOrganizationWarning": "Es handelt sich um die Hauptorganisation. Nach Genehmigung des Antrags enden alle Organisationsmitgliedschaften dieser Person und der Zugang wird deaktiviert. Soll nur eine andere Organisation gemeint sein, muss zuerst die Hauptorganisation gewechselt werden.",
+      "startDate": "Startdatum",
+      "endDate": "Enddatum",
+      "confirmEndTitle": "Austritt beantragen",
+      "confirmEndMessage": "Austritt aus \"{{organizationName}}\" beantragen?",
+      "confirmEndHint": "Nach Freigabe wird die Organisationsmitgliedschaft beendet; Gruppenmitgliedschaften in dieser Organisation enden mit.",
+      "blockedByLeadershipHint": "Diese Person ist Mitglied der Leitungsgruppe. Die Organisationsmitgliedschaft kann erst bearbeitet oder beendet werden, nachdem die Leitungsmitgliedschaft im Mandanten-Administrationsbereich beendet wurde.",
+      "success": {
+        "updated": "Organisationsmitgliedschaft erfolgreich aktualisiert",
+        "endWorkflowOpened": "Austrittsantrag wurde gestellt."
+      },
+      "errors": {
+        "updateFailed": "Fehler beim Aktualisieren der Organisationsmitgliedschaft",
+        "endFailed": "Fehler beim Beenden der Organisationsmitgliedschaft",
+        "exitWorkflowAlreadyOpen": "Für diese Person läuft bereits ein Austrittsantrag für diese Organisation (selbst gestellt oder über die Benutzerverwaltung).",
+        "alreadyEnded": "Diese Organisationsmitgliedschaft ist bereits beendet",
+        "blockedByLeadership": "Die Organisationsmitgliedschaft kann nicht geändert oder beendet werden, solange die Person Mitglied der Leitungsgruppe ist",
+        "endingNotSupported": "Organisationsmitgliedschaften können derzeit nicht beendet werden",
+        "alreadyMember": "Das Mitglied hat bereits eine Organisationsmitgliedschaft für den angegebenen Zeitraum"
+      }
+    },
+    "list": {
+      "sort": {
+        "lastNameAsc": "Nachname A-Z",
+        "lastNameDesc": "Nachname Z-A",
+        "firstNameAsc": "Vorname A-Z",
+        "firstNameDesc": "Vorname Z-A"
+      }
+    }
+  },
+  "auth": {
+    "unavailable": "Anmeldung derzeit nicht verfügbar."
+  },
+  "theme": {
+    "switchTheme": "Theme wechseln",
+    "switchToDark": "Zu Dark Mode wechseln",
+    "switchToLight": "Zu Light Mode wechseln"
+  },
+  "locale": {
+    "deutsch": "Deutsch"
+  },
+  "federalState": {
+    "BADEN_WUERTTEMBERG": "Baden-Württemberg",
+    "BAYERN": "Bayern",
+    "BERLIN": "Berlin",
+    "BRANDENBURG": "Brandenburg",
+    "BREMEN": "Bremen",
+    "HAMBURG": "Hamburg",
+    "HESSEN": "Hessen",
+    "MECKLENBURG_VORPOMMERN": "Mecklenburg-Vorpommern",
+    "NIEDERSACHSEN": "Niedersachsen",
+    "NORDRHEIN_WESTFALEN": "Nordrhein-Westfalen",
+    "RHEINLAND_PFALZ": "Rheinland-Pfalz",
+    "SAARLAND": "Saarland",
+    "SACHSEN": "Sachsen",
+    "SACHSEN_ANHALT": "Sachsen-Anhalt",
+    "SCHLESWIG_HOLSTEIN": "Schleswig-Holstein",
+    "THUERINGEN": "Thüringen"
+  },
+  "events": {
+    "menu": {
+      "service": "Dienstleistung",
+      "operation": "Einsatz"
+    },
+    "fields": {
+      "start": "Start",
+      "end": "Ende",
+      "location": "Ort",
+      "locationPlaceholder": "z. B. Gerätehaus, Adresse oder Wegbeschreibung",
+      "description": "Beschreibung",
+      "topic": "Thema",
+      "number": "Nummer",
+      "keyword": "Stichwort",
+      "tag": "Schlagwort",
+      "specialSignal": "Sondersignal",
+      "leader": "Leiter",
+      "duration": "Dauer",
+      "message": "Meldung"
+    },
+    "hints": {
+      "topic": "Thema des Ereignisses",
+      "number": "Einsatznummer",
+      "keyword": "Stichwort des Einsatzes",
+      "tag": "Schlagwort des Einsatzes"
+    },
+    "noEvents": "Keine Ereignisse gefunden",
+    "list": {
+      "year": {
+        "label": "Kalenderjahr"
+      },
+      "attendance": {
+        "label": "Teilnahme",
+        "attending": "Teilgenommen",
+        "notAttending": "Nicht teilgenommen"
+      },
+      "sort": {
+        "startAtAsc": "Datum aufsteigend",
+        "startAtDesc": "Datum absteigend"
+      }
+    },
+    "create": {
+      "title": "Ereignis erstellen",
+      "service": "Dienstleistung erstellen",
+      "operation": "Einsatz erstellen"
+    },
+    "edit": {
+      "title": "Ereignis bearbeiten",
+      "service": "Dienstleistung bearbeiten",
+      "operation": "Einsatz bearbeiten"
+    },
+    "success": {
+      "created": "Ereignis erfolgreich erstellt",
+      "updated": "Ereignis erfolgreich aktualisiert",
+      "deleted": "Ereignis erfolgreich gelöscht"
+    },
+    "confirm": {
+      "delete": "Möchtest du dieses Ereignis wirklich löschen?",
+      "deleteTitle": "Ereignis löschen",
+      "deleteCertDetail": "Verknüpfte Nachweise für dieses Ereignis werden dabei entfernt.",
+      "removeAttendanceTitle": "Teilnahme entfernen?",
+      "removeAttendanceMessage": "{{name}} wird als nicht anwesend geführt.",
+      "removeAttendanceMessageAnonymous": "Die Teilnahme wird entfernt.",
+      "removeAttendanceBulkTitle": "Teilnahme entfernen?",
+      "removeAttendanceBulkMessage": "{{count}} Personen werden als nicht anwesend geführt.",
+      "removeAttendanceCertDetail": "Zugehörige Nachweise aus der Ereignis-Vergabe werden dabei entfernt."
+    },
+    "detail": {
+      "notFound": "Ereignis nicht gefunden"
+    },
+    "fromAppointment": {
+      "importResponsesTitle": "Rückmeldungen übernehmen?",
+      "importResponsesMessage": "Alle „Ja“-Rückmeldungen dieses Termins als anwesend im neuen Ereignis eintragen?",
+      "importResponsesConfirm": "Übernehmen",
+      "importResponsesSkip": "Nein",
+      "importFromAppointment": "Aus Termin importieren",
+      "importFromAppointmentHint": "Kein eindeutiger passender Termin (Datum, Uhrzeit, Ende und Art müssen übereinstimmen).",
+      "confirmMatchingTitle": "Termin-Rückmeldungen importieren",
+      "confirmMatchingMessage": "Termin „{{name}}“ ({{when}}): „Ja“-Rückmeldungen als Anwesenheit übernehmen?"
+    },
+    "attendance": {
+      "loadFailed": "Anwesenheit konnte nicht geladen werden.",
+      "title": "Anwesenheit",
+      "edit": "Anwesenheit bearbeiten",
+      "record": "Anwesenheit erfassen",
+      "countLabel": "{{count}} Personen erfasst",
+      "emptySection": "Noch niemand als anwesend erfasst.",
+      "addFailed": "Teilnehmer konnte nicht hinzugefügt werden",
+      "removeFailed": "Eintrag konnte nicht entfernt werden",
+      "listSummary": "{{present}} von {{total}} anwesend",
+      "searchMembers": "Nach Namen filtern …",
+      "noMembers": "Keine Mitglieder für diese Organisation geladen.",
+      "readOnlyBadge": "Nur Ansicht",
+      "bulkAdded": "{{count}} Personen hinzugefügt",
+      "bulkRemoved": "{{count}} Einträge entfernt",
+      "importFromAppointmentSuccess": "{{count}} Person(en) aus Termin-Rückmeldungen übernommen",
+      "importFromAppointmentNone": "Keine neuen „Ja“-Rückmeldungen zum Übernehmen.",
+      "noSearchHits": "Keine Treffer für die Suche."
+    },
+    "certificationGrant": {
+      "sectionTitle": "Nachweis",
+      "add": "Nachweis vergeben",
+      "empty": "Für dieses Ereignis wurde noch kein Nachweis vergeben.",
+      "createTitle": "Nachweis vergeben",
+      "editTitle": "Nachweis bearbeiten",
+      "definitionLabel": "Nachweistyp",
+      "recipientModeLabel": "Empfänger",
+      "allAttendees": "Alle Teilnehmer",
+      "specificAttendees": "Bestimmte Teilnehmer",
+      "selectRecipients": "Teilnehmer auswählen",
+      "noAttendees": "Noch keine Teilnehmer erfasst.",
+      "notesLabel": "Notizen (optional)",
+      "completedDateLabel": "Abschlussdatum",
+      "notFound": "Nachweis-Vergabe nicht gefunden.",
+      "saveSuccess": "Nachweis-Vergabe gespeichert.",
+      "saveError": "Nachweis-Vergabe konnte nicht gespeichert werden.",
+      "remove": "Entfernen",
+      "removeTitle": "Nachweis-Vergabe entfernen?",
+      "removeConfirm": "Die Vergabe für „{{name}}“ entfernen? Zugehörige Nachweise aus der Ereignis-Vergabe werden dabei entfernt.",
+      "removeSuccess": "Nachweis-Vergabe entfernt.",
+      "removeError": "Nachweis-Vergabe konnte nicht entfernt werden."
+    },
+    "errors": {
+      "loadFailed": "Fehler beim Laden der Ereignisse",
+      "createFailed": "Fehler beim Erstellen des Ereignisses",
+      "updateFailed": "Fehler beim Aktualisieren des Ereignisses",
+      "deleteFailed": "Fehler beim Löschen des Ereignisses"
+    }
+  },
+  "appointments": {
+    "title": "Termine",
+    "unread": "Ungelesen",
+    "emptyUpcoming": "Keine anstehenden Termine",
+    "emptyPast": "Keine vergangenen Termine",
+    "list": {
+      "period": {
+        "label": "Zeitraum",
+        "upcoming": "Anstehend",
+        "past": "Vergangen"
+      },
+      "year": {
+        "label": "Kalenderjahr"
+      },
+      "response": {
+        "label": "Rückmeldung",
+        "yes": "Zugesagt",
+        "no": "Abgesagt",
+        "uncertain": "Unsicher",
+        "noResponse": "Keine Rückmeldung"
+      },
+      "viewed": {
+        "label": "Gelesen",
+        "read": "Gelesen",
+        "unread": "Ungelesen"
+      },
+      "sort": {
+        "startAsc": "Datum aufsteigend",
+        "startDesc": "Datum absteigend",
+        "nameAsc": "Name A-Z",
+        "nameDesc": "Name Z-A"
+      }
+    },
+    "markAllRead": "Alle als gelesen markieren",
+    "markAllReadLoading": "Wird markiert …",
+    "create": {
+      "title": "Termin anlegen"
+    },
+    "promoteToEvent": "Als Ereignis erstellen",
+    "promoteToEventAfterStart": "Erst ab Beginn des Termins möglich",
+    "archived": {
+      "badge": "Archiviert"
+    },
+    "edit": {
+      "title": "Termin bearbeiten"
+    },
+    "form": {
+      "sectionAudience": "Zielgruppe",
+      "sectionResponseDeadline": "Bis wann Rückmeldung möglich?",
+      "sectionSeries": "Serie"
+    },
+    "validation": {
+      "endMustBeFuture": "Das Ende muss in der Zukunft liegen (laufende Termine sind möglich).",
+      "startMustRemainFuture": "Ein zukünftiger Termin darf nicht in die Vergangenheit gelegt werden."
+    },
+    "fields": {
+      "name": "Name",
+      "start": "Beginn",
+      "end": "Ende",
+      "location": "Ort",
+      "locationPlaceholder": "z. B. Gerätehaus, Adresse oder Wegbeschreibung",
+      "description": "Beschreibung",
+      "responseMode": "Rückmeldung",
+      "responseDeadlineHint": "Bei 0 können Teilnehmende bis zum Terminbeginn zurückmelden.",
+      "responseDeadlineBefore": "Rückmeldung endet vor Terminbeginn",
+      "responseDeadlineAmount": "Anzahl",
+      "responseDeadlineUnit": "Zeiteinheit",
+      "responseDeadlineUnitMinutes": "Minuten",
+      "responseDeadlineUnitHours": "Stunden",
+      "responseDeadlineUnitDays": "Tage",
+      "audienceRestricted": "Zielgruppe einschränken",
+      "audienceGroups": "Organisationsgruppen"
+    },
+    "responseModes": {
+      "NONE": "Keine Rückmeldung",
+      "YES_NO": "Ja / Nein",
+      "YES_NO_UNCERTAIN": "Ja / Nein / Unsicher",
+      "YES_NO_WITH_COMMENT": "Ja / Nein mit Kommentar",
+      "YES_NO_UNCERTAIN_WITH_COMMENT": "Ja / Nein / Unsicher mit Kommentar"
+    },
+    "audience": {
+      "SELECTED_GROUPS": "Nur ausgewählte Gruppen",
+      "noGroups": "Keine Organisationsgruppen verfügbar."
+    },
+    "recurrence": {
+      "enable": "Serie erstellen",
+      "frequency": "Wiederholung",
+      "interval": "Intervall",
+      "ends": "Serie endet",
+      "endsAt": "Enddatum",
+      "weekdays": "Wochentage",
+      "monthlyType": "Monatlich am",
+      "monthlyDayOfMonth": "Gleichen Kalendertag",
+      "monthlyNthWeekday": "Bestimmten Wochentag",
+      "monthlyWeekday": "Wochentage",
+      "monthlyPositions": "Welche Woche(n) im Monat",
+      "daily": "Täglich",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich",
+      "weekday": {
+        "MO": "Mo",
+        "TU": "Di",
+        "WE": "Mi",
+        "TH": "Do",
+        "FR": "Fr",
+        "SA": "Sa",
+        "SU": "So"
+      },
+      "position": {
+        "1": "1.",
+        "2": "2.",
+        "3": "3.",
+        "4": "4."
+      }
+    },
+    "series": {
+      "editTitle": "Serie bearbeiten",
+      "deleteTitle": "Serie löschen",
+      "description": "Was möchtest du ändern?",
+      "thisOccurrence": "Nur dieser Termin",
+      "entireSeries": "Gesamte Serie"
+    },
+    "detail": {
+      "deadlinePassed": "Die Rückmeldefrist ist abgelaufen."
+    },
+    "response": {
+      "title": "Deine Rückmeldung",
+      "uncertain": "Unsicher",
+      "comment": "Kommentar"
+    },
+    "participation": {
+      "attendance": "Teilnahme",
+      "detailModalTitle": "Rückmeldungen",
+      "sectionEmpty": "Keine Einträge.",
+      "noResponsesYet": "Noch keine Rückmeldungen."
+    },
+    "attachments": {
+      "uploadRetryHint": "Termin erstellt, aber einige Anhänge konnten nicht hochgeladen werden. Bitte versuche es erneut."
+    },
+    "success": {
+      "created": "Termin erfolgreich erstellt",
+      "updated": "Termin erfolgreich aktualisiert",
+      "deleted": "Termin erfolgreich gelöscht",
+      "responseSubmitted": "Rückmeldung gespeichert"
+    },
+    "confirm": {
+      "deleteTitle": "Termin löschen",
+      "delete": "Möchtest du diesen Termin wirklich löschen?"
+    },
+    "errors": {
+      "noAccess": "Keine Berechtigung für Termine",
+      "notFound": "Termin nicht gefunden",
+      "listLoadFailed": "Termine konnten nicht geladen werden.",
+      "loadFailed": "Fehler beim Laden des Termins",
+      "createFailed": "Fehler beim Erstellen des Termins",
+      "uploadFailed": "Fehler beim Hochladen der Anhänge",
+      "updateFailed": "Fehler beim Aktualisieren des Termins",
+      "deleteFailed": "Fehler beim Löschen des Termins",
+      "responseFailed": "Rückmeldung konnte nicht gespeichert werden"
+    }
+  },
+  "workflows": {
+    "inputChange": {
+      "updateSuccess": "Antrag wurde aktualisiert."
+    },
+    "list": {
+      "status": {
+        "label": "Status"
+      },
+      "type": {
+        "label": "Antragstyp"
+      },
+      "sort": {
+        "openedAtDesc": "Zuletzt eröffnet",
+        "openedAtAsc": "Zuerst eröffnet"
+      }
+    }
+  },
+  "userDocument": {
+    "list": {
+      "viewed": {
+        "label": "Gelesen",
+        "unread": "Ungelesen",
+        "read": "Gelesen"
+      },
+      "contentType": {
+        "label": "Dateityp"
+      },
+      "sort": {
+        "createdAtAsc": "Älteste zuerst",
+        "createdAtDesc": "Neueste zuerst",
+        "titleAsc": "Titel A-Z",
+        "titleDesc": "Titel Z-A"
+      }
+    }
+  },
+  "notification": {
+    "list": {
+      "status": {
+        "label": "Status",
+        "unread": "Ungelesen",
+        "read": "Gelesen"
+      },
+      "type": {
+        "label": "Typ"
+      }
+    }
+  },
+  "courseOfferings": {
+    "title": "Lehrgangsangebote",
+    "status": {
+      "TEMPLATE": "Vorlage",
+      "DRAFT": "Entwurf",
+      "PUBLISHED": "Veröffentlicht",
+      "COMPLETED": "Abgeschlossen",
+      "CANCELLED": "Abgesagt"
+    },
+    "list": {
+      "empty": "Noch keine Lehrgangsangebote.",
+      "loadFailed": "Lehrgangsangebote konnten nicht geladen werden.",
+      "filters": {
+        "status": "Status",
+        "trainingCourseType": "Lehrgang"
+      },
+      "sort": {
+        "startAsc": "Kursbeginn aufsteigend",
+        "startDesc": "Kursbeginn absteigend",
+        "trainingCourseTypeAsc": "Lehrgang A-Z",
+        "trainingCourseTypeDesc": "Lehrgang Z-A"
+      }
+    },
+    "fields": {
+      "trainingCourseType": "Lehrgang",
+      "content": "Lehrgangsinhalt",
+      "templateName": "Vorlagenname",
+      "notes": "Hinweise",
+      "maxParticipants": "Maximale Teilnehmerzahl",
+      "hasExam": "Mit Prüfung",
+      "requiresHomeOrgApproval": "Freigabe der Hauptorg erforderlich",
+      "registrationStart": "Anmeldebeginn",
+      "registrationEnd": "Anmeldeschluss",
+      "courseStart": "Kursbeginn"
+    },
+    "create": {
+      "draftTitle": "Lehrgangsangebot anlegen",
+      "noOfferableTypes": "Für diese Organisation sind keine Lehrgangstypen am Standard ausgewählt oder im Katalog verfügbar.",
+      "success": "Lehrgangsangebot angelegt."
+    },
+    "actions": {
+      "title": "Aktionen",
+      "publish": "Veröffentlichen",
+      "publishHint": "Angebot für Anmeldungen freigeben.",
+      "publishBlocked": {
+        "registrationPeriod": "Anmeldezeitraum fehlt.",
+        "sessions": "Mindestens ein Termin ist erforderlich.",
+        "registrationBeforeFirstSession": "Anmeldung muss vor dem ersten Termin enden.",
+        "examSession": "Bei Prüfung ist ein Prüfungstermin erforderlich.",
+        "quotasIncomplete": "Kontingente müssen für alle Gruppen gesetzt sein - oder für keine.",
+        "quotasSum": "Kontingente dürfen die maximale Teilnehmerzahl nicht überschreiten.",
+        "ownOrgQuota": "Nur eigene Organisation kann kein Kontingent haben."
+      },
+      "publishTitle": "Angebot veröffentlichen?",
+      "publishConfirm": "Das Angebot wird veröffentlicht und kann Anmeldungen annehmen.",
+      "delete": "Löschen",
+      "deleteHint": "Nur Entwürfe und Vorlagen. Kann nicht rückgängig gemacht werden.",
+      "deleteTitle": "Angebot löschen?",
+      "deleteConfirm": "Das Angebot wird unwiderruflich gelöscht. Nur Entwürfe und Vorlagen können gelöscht werden."
+    },
+    "self": {
+      "filters": {
+        "includeHeld": "Bereits besuchte Lehrgänge",
+        "includeUnfulfilled": "Mit fehlenden Voraussetzungen",
+        "statusOpen": "Anmeldung offen",
+        "statusRequested": "Teilnahme beantragt",
+        "registration": "Verfügbarkeit",
+        "participation": "Meine Anmeldung"
+      }
+    },
+    "sessions": {
+      "title": "Termine",
+      "subtitle": "Theorie-, Praxis- und Prüfungstermine.",
+      "empty": "Noch keine Termine.",
+      "type": "Art",
+      "schedule": "Zeitraum",
+      "start": "Beginn",
+      "end": "Ende",
+      "location": "Ort",
+      "notes": "Hinweise",
+      "createTitle": "Termin hinzufügen",
+      "editTitle": "Termin bearbeiten",
+      "saved": "Termin gespeichert.",
+      "saveFailed": "Termin konnte nicht gespeichert werden.",
+      "deleteTitle": "Termin löschen?",
+      "deleteConfirm": "Der Termin wird entfernt.",
+      "deleteAction": "Termin löschen",
+      "deleted": "Termin gelöscht.",
+      "deleteFailed": "Termin konnte nicht gelöscht werden.",
+      "notFound": "Termin nicht gefunden.",
+      "types": {
+        "THEORY": "Theorie",
+        "PRACTICE": "Praxis",
+        "EXAM": "Prüfung"
+      }
+    },
+    "audience": {
+      "title": "Zielgruppe",
+      "subtitle": "Wer darf sich auf dieses Angebot anmelden?",
+      "modeLabel": "Zielgruppe",
+      "modeEveryone": "Alle im Mandanten",
+      "modeOwnOrg": "Nur eigene Organisation",
+      "modeGroups": "Bestimmte Gruppen",
+      "descriptionEveryone": "Alle aktiven Mitglieder im Mandanten.",
+      "descriptionOwnOrg": "Nur aktive Mitglieder der anbietenden Organisation.",
+      "descriptionGroups": "Nur aktive Mitglieder der gewählten Gruppen.",
+      "groupsTitle": "Gruppen",
+      "addGroup": "Gruppe hinzufügen",
+      "groupHint": "Mitglieder einer der Gruppen dürfen sich anmelden.",
+      "kind": "Art",
+      "organization": "Organisation",
+      "orgType": "Organisationstyp",
+      "quotaButton": "Kontingente",
+      "quotaTitle": "Kontingente festlegen",
+      "quotaHint": "Plätze pro Gruppe. Entweder alle Gruppen mit einem Kontingent, deren Summe der maximalen Teilnehmerzahl ({{max}}) entspricht, oder alle leer lassen.",
+      "quotaSum": "Summe: {{sum}} von {{max}} Plätzen",
+      "quotaIncomplete": "Alle Gruppen brauchen ein Kontingent. Ohne Kontingent bleiben alle Felder leer.",
+      "quotaRemaining": "Noch {{count}} Plätze zu vergeben.",
+      "quotaOver": "{{count}} Plätze zu viel.",
+      "quotaConfirmTitle": "Kontingente speichern?",
+      "quotaConfirmMessage": "{{count}} Plätze sind keinem Kontingent zugeordnet.",
+      "quotaConfirmAction": "Trotzdem speichern",
+      "quotasReset": "Bestehende Kontingente werden zurückgesetzt.",
+      "quota": "{{count}} Plätze",
+      "switchTitle": "Zielgruppe ändern?",
+      "switchConfirm": "Die gewählten Gruppen werden entfernt.",
+      "quotaLabel": "Kontingent",
+      "noQuota": "Kein Kontingent",
+      "notFound": "Gruppe nicht gefunden.",
+      "deleteAction": "Gruppe entfernen",
+      "deleteTitle": "Gruppe entfernen?",
+      "deleteConfirm": "Diese Gruppe wird aus der Zielgruppe entfernt.",
+      "deleted": "Gruppe entfernt.",
+      "nowEveryone": "Angebot gilt wieder für alle im Mandanten.",
+      "deleteFailed": "Gruppe konnte nicht entfernt werden.",
+      "saved": "Zielgruppe gespeichert.",
+      "saveFailed": "Zielgruppe konnte nicht gespeichert werden.",
+      "kinds": {
+        "OWN_ORG": "Nur eigene Organisation",
+        "ORG": "Einzelne Organisation",
+        "ORG_SUBTREE": "Organisations-Teilbaum",
+        "ORG_TYPE": "Organisationstyp"
+      }
+    },
+    "prerequisites": {
+      "title": "Voraussetzungen",
+      "subtitle": "Lehrgänge, Nachweise und Führerscheine für die Anmeldung.",
+      "empty": "Keine ausgewählt",
+      "count": "{{count}} ausgewählt",
+      "notFound": "Voraussetzungsart nicht gefunden.",
+      "trainingCourses": "Lehrgänge",
+      "certifications": "Nachweise",
+      "drivingLicenses": "Führerscheine",
+      "saved": "Voraussetzungen gespeichert.",
+      "saveFailed": "Voraussetzungen konnten nicht gespeichert werden."
+    },
+    "templates": {
+      "title": "Vorlagen",
+      "empty": "Noch keine Vorlagen.",
+      "loadFailed": "Vorlagen konnten nicht geladen werden.",
+      "deleteTitle": "Vorlage löschen?",
+      "deleteConfirm": "Die Vorlage wird gelöscht. Bereits daraus erstellte Angebote bleiben bestehen.",
+      "deleted": "Vorlage gelöscht.",
+      "deleteFailed": "Vorlage konnte nicht gelöscht werden.",
+      "addTitle": "Lehrgangsangebot hinzufügen",
+      "addNew": "Neues Angebot",
+      "addNewHint": "Von Grund auf anlegen.",
+      "addFromTemplate": "Aus Vorlage",
+      "addFromTemplateHint": "Neuen Entwurf mit den Einstellungen einer Vorlage anlegen.",
+      "pickTemplate": "Vorlage auswählen",
+      "saveAsTemplate": "Als Vorlage speichern",
+      "saveAsTemplateHint": "Kopie als Vorlage in derselben Organisation.",
+      "instantiate": "Aus Vorlage erstellen",
+      "instantiateHint": "Neuen Entwurf mit verschobenen Terminen anlegen.",
+      "firstSessionDate": "Datum des ersten Termins",
+      "saved": "Vorlage gespeichert.",
+      "saveFailed": "Vorlage konnte nicht gespeichert werden.",
+      "instantiated": "Entwurf aus Vorlage erstellt.",
+      "instantiateFailed": "Vorlage konnte nicht verwendet werden."
+    },
+    "registrations": {
+      "organizationList": {
+        "title": "Lehrgangsanmeldungen",
+        "empty": "Keine Lehrgangsanmeldungen gefunden.",
+        "loadFailed": "Lehrgangsanmeldungen konnten nicht geladen werden."
+      },
+      "status": {
+        "PENDING": "Teilnahme beantragt",
+        "PARTICIPANT": "Teilnehmer",
+        "WAITLIST": "Warteliste",
+        "REJECTED": "Abgelehnt",
+        "CANCELLED": "Abgesagt"
+      },
+      "sort": {
+        "startAsc": "Kursbeginn aufsteigend",
+        "startDesc": "Kursbeginn absteigend",
+        "registeredAsc": "Anmeldung aufsteigend",
+        "registeredDesc": "Anmeldung absteigend",
+        "nameAsc": "Name A-Z",
+        "nameDesc": "Name Z-A"
+      },
+      "filters": {
+        "status": "Status",
+        "upcoming": "Nur anstehende Termine"
+      },
+      "endedBy": {
+        "USER": "Durch Teilnehmer",
+        "ORGANIZATION": "Durch Organisation"
+      },
+      "fields": {
+        "registeredAt": "Angemeldet am",
+        "approvedAt": "Freigegeben am",
+        "endedAt": "Beendet am",
+        "endReason": "Begründung"
+      },
+      "waitlistPlace": "Warteliste #{{position}}",
+      "registeredAt": "Angemeldet {{date}}",
+      "pendingHint": "Offene Anträge: {{count}}",
+      "notFound": "Diese Anmeldung wurde nicht gefunden.",
+      "promoteHint": "Teilnehmer von der Warteliste auf einen Platz setzen.",
+      "removeHint": "Anmeldung beenden; der Teilnehmer wird informiert.",
+      "summaryTitle": "Belegung",
+      "summaryParticipants": "Teilnehmer",
+      "summaryWaitlist": "Warteliste",
+      "summaryPending": "Offene Anträge",
+      "summaryFreeSeats": "Freie Plätze",
+      "quotaSeats": "{{participants}} / {{quota}}",
+      "quotaWaitlist": "Warteliste {{count}}",
+      "quotasTitle": "Kontingente",
+      "listTitle": "Anmeldungen",
+      "empty": "Noch keine Anmeldungen.",
+      "alreadyHeld": "Lehrgang vorhanden",
+      "promote": "Nachrücken",
+      "promoteSuccess": "Teilnehmer wurde nachgerückt.",
+      "promoteFailed": "Nachrücken ist fehlgeschlagen.",
+      "promoteTitle": "Nachrücken bestätigen",
+      "promoteConfirm": "„{{name}}“ von der Warteliste auf einen freien Platz nachrücken lassen?",
+      "remove": "Entfernen",
+      "removeTitle": "Anmeldung entfernen",
+      "removeReasonLabel": "Begründung",
+      "removeConfirm": "Entfernen",
+      "removeSuccess": "Anmeldung wurde entfernt.",
+      "removeFailed": "Entfernen ist fehlgeschlagen."
+    },
+    "cancel": {
+      "action": "Angebot absagen",
+      "actionHint": "Veröffentlichtes Angebot beenden; Teilnehmer werden informiert.",
+      "bannerTitle": "Dieses Lehrgangsangebot wurde abgesagt.",
+      "cancelledAt": "Abgesagt am {{date}}",
+      "dialogTitle": "Lehrgangsangebot absagen",
+      "dialogDescription": "Veröffentlichte Angebote können nicht wieder geöffnet werden. Teilnehmer werden informiert.",
+      "reasonLabel": "Begründung",
+      "confirm": "Absagen",
+      "success": "Lehrgangsangebot wurde abgesagt.",
+      "failed": "Absage ist fehlgeschlagen."
+    },
+    "completion": {
+      "loadFailed": "Ergebnisse konnten nicht geladen werden.",
+      "listTitle": "Ergebnisse",
+      "empty": "Keine Teilnehmer für die Ergebnisse.",
+      "notFound": "Teilnehmer nicht gefunden.",
+      "undecided": "Offen",
+      "passed": "Bestanden",
+      "failed": "Nicht bestanden",
+      "markPassed": "Bestanden und gutschreiben",
+      "markFailed": "Nicht bestanden",
+      "setResultFailed": "Ergebnis konnte nicht gespeichert werden.",
+      "setResultSuccess": "Ergebnis gespeichert.",
+      "creditSwitch": "Bestanden und Lehrgang gutschreiben",
+      "creditSwitchHint": "Beim Abschluss erhält der Teilnehmer den Lehrgangsnachweis.",
+      "resultsBlockedNotStarted": "Erst ab dem ersten Termintag setzbar.",
+      "completeAction": "Lehrgang abschließen",
+      "completeHint": "Ergebnisse bestätigen und Nachweise für bestandene Teilnehmer erzeugen.",
+      "completeBlockedNotStarted": "Abschluss ist erst ab dem ersten Termintag möglich.",
+      "completeBlockedUndecided": "Für alle Teilnehmer muss ein Ergebnis gesetzt sein.",
+      "completeConfirmTitle": "Lehrgang abschließen?",
+      "completeConfirmMessage": "Der Lehrgang wird abgeschlossen. Teilnehmer mit „Bestanden“ erhalten den Nachweis; offene und nicht bestandene Ergebnisse erhalten keinen.",
+      "completeSuccess": "Lehrgang wurde abgeschlossen.",
+      "completeFailed": "Abschluss ist fehlgeschlagen.",
+      "completedAt": "Abgeschlossen am {{date}}"
+    },
+    "detail": {
+      "maxParticipantsMin": "Mindestens {{min}} (aktuelle Teilnehmer).",
+      "maxParticipantsLockedByQuotas": "Wird über die Kontingente gesteuert. Zuerst Kontingente anpassen.",
+      "notFound": "Lehrgangsangebot nicht gefunden.",
+      "editTitle": "Stammdaten bearbeiten",
+      "saved": "Gespeichert.",
+      "saveFailed": "Speichern fehlgeschlagen.",
+      "deleted": "Angebot gelöscht.",
+      "deleteFailed": "Löschen fehlgeschlagen.",
+      "published": "Angebot veröffentlicht.",
+      "publishFailed": "Veröffentlichen fehlgeschlagen.",
+      "participants": "Teilnehmer",
+      "completion": "Ergebnisse"
+    },
+    "workflow": {
+      "registration": {
+        "courseType": "Lehrgangstyp",
+        "offeringOrganization": "Anbieter",
+        "homeOrganization": "Heimatorganisation",
+        "alreadyHeld": "Der Lehrgang ist dem Antragsteller bereits als Nachweis vorhanden."
+      },
+      "cancellation": {
+        "courseType": "Lehrgangstyp",
+        "firstSession": "Kursbeginn",
+        "offeringOrganization": "Anbieter",
+        "homeOrganization": "Heimatorganisation"
+      }
+    }
+  },
+  "absence": {
+    "list": {
+      "period": {
+        "label": "Zeitraum",
+        "current": "Aktuell",
+        "upcoming": "Anstehend",
+        "past": "Vergangen"
+      },
+      "type": {
+        "label": "Typ"
+      },
+      "organization": {
+        "label": "Organisation"
+      },
+      "year": {
+        "label": "Kalenderjahr"
+      },
+      "sort": {
+        "startDateAsc": "Beginn aufsteigend",
+        "startDateDesc": "Beginn absteigend",
+        "lastNameAsc": "Nachname A-Z",
+        "lastNameDesc": "Nachname Z-A"
+      }
+    }
+  },
+  "timeEntry": {
+    "list": {
+      "startAt": {
+        "label": "Startzeit"
+      },
+      "organization": {
+        "label": "Organisation"
+      },
+      "year": {
+        "label": "Kalenderjahr"
+      },
+      "sort": {
+        "startAtAsc": "Beginn aufsteigend",
+        "startAtDesc": "Beginn absteigend",
+        "lastNameAsc": "Nachname A-Z",
+        "lastNameDesc": "Nachname Z-A"
+      }
+    }
+  },
+  "todo": {
+    "list": {
+      "status": {
+        "label": "Status",
+        "open": "Offen",
+        "done": "Erledigt"
+      },
+      "type": {
+        "label": "Aufgabentyp"
+      }
+    }
+  },
+  "todos": {
+    "empty": "Keine offenen Aufgaben",
+    "emptyDone": "Keine erledigten Aufgaben",
+    "emptyAll": "Keine Aufgaben",
+    "loadError": "Aufgaben konnten nicht geladen werden"
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "bell": {
+      "label": "Benachrichtigungen öffnen",
+      "unread": "{{count}} ungelesen"
+    },
+    "markAllRead": "Alle als gelesen markieren",
+    "markAllReadLoading": "Wird markiert …",
+    "viewAll": "Alle Benachrichtigungen",
+    "emptyUnread": "Alles gelesen",
+    "emptyRead": "Keine gelesenen Benachrichtigungen",
+    "emptyAll": "Keine Benachrichtigungen",
+    "loadError": "Benachrichtigungen konnten nicht geladen werden."
+  },
+  "certifications": {
+    "title": "Nachweise",
+    "subtitle": "Deine wiederkehrenden Prüfungen und Schulungen.",
+    "empty": "Dir sind aktuell keine Nachweise zugewiesen.",
+    "validUntil": "gültig bis {{date}}",
+    "count": "{{count}} Nachweise",
+    "openWorkflowsTitle": "Offene Anträge",
+    "openWorkflowsCount": "{{count}} offene Anträge",
+    "historyTitle": "Verlauf",
+    "historicalTag": "Historisch",
+    "noRecords": "Noch keine Nachweise eingereicht.",
+    "detail": {
+      "notFound": "Nachweistyp nicht gefunden.",
+      "completedDate": "Zuletzt abgelegt",
+      "validUntil": "Gültig bis",
+      "pendingSubmission": "Einreichung in Bearbeitung",
+      "pendingSubmissionHint": "Dein Antrag wird derzeit geprüft.",
+      "pendingSubmissionHintOrg": "Der Antrag wird derzeit geprüft.",
+      "inProgress": "In Bearbeitung",
+      "recordCompleted": "Abgelegt am {{date}}",
+      "recordValidUntil": "Gültig bis {{date}}",
+      "archivedHint": "Dieser Nachweistyp ist archiviert. Bestehende Nachweise bleiben sichtbar; neue Einreichungen sind nicht möglich.",
+      "unassignedHint": "Dieser Nachweis ist dir nicht mehr zugewiesen. Eingereichte Nachweise bleiben im Verlauf sichtbar."
+    },
+    "status": {
+      "VALID": "Gültig",
+      "IN_REVIEW": "In Prüfung",
+      "EXPIRING_SOON": "Läuft bald ab",
+      "EXPIRED": "Abgelaufen",
+      "MISSING": "Fehlt",
+      "ARCHIVED": "Archiviert"
+    },
+    "submit": {
+      "action": "Nachweis einreichen",
+      "title": "Nachweis einreichen",
+      "definitionLabel": "Nachweistyp",
+      "chooseDefinition": "Bitte wählen …",
+      "completedDateLabel": "Datum der Prüfung/Schulung",
+      "notesLabel": "Notizen (optional)",
+      "attachmentsLabel": "Nachweisdokument",
+      "attachmentsOptional": "optional",
+      "attachmentsHint": "Lade das Nachweisdokument hoch.",
+      "attachmentsOptionalHint": "Optional ein Nachweisdokument hochladen.",
+      "success": "Nachweis eingereicht",
+      "error": "Nachweis konnte nicht eingereicht werden.",
+      "errorAlreadyOpen": "Für mindestens einen der gewählten Nachweistypen läuft bereits ein Antrag. Bitte warte auf die Bearbeitung oder brich ihn ab."
+    },
+    "record": {
+      "createAction": "Nachweis hinzufügen",
+      "createTitle": "Nachweis manuell hinzufügen",
+      "createSuccess": "Nachweis wurde hinzugefügt.",
+      "createError": "Nachweis konnte nicht hinzugefügt werden.",
+      "completedDateLabel": "Datum der Prüfung/Schulung",
+      "detailTitle": "Nachweis",
+      "notFound": "Nachweis nicht gefunden.",
+      "acquiredViaLabel": "Erlangt durch",
+      "acquiredVia": {
+        "DOCUMENT": "Dokument",
+        "SERVICE_EVENT": "Dienstleistung",
+        "OPERATION_EVENT": "Einsatz",
+        "ONBOARDING": "Eintritt",
+        "NONE": "Selbstbestätigung"
+      },
+      "sourceTitle": {
+        "DOCUMENT": "Dokumente",
+        "SERVICE_EVENT": "Dienstleistung",
+        "OPERATION_EVENT": "Einsatz",
+        "WORKFLOW": "Antrag",
+        "ONBOARDING": "Eintritt",
+        "NONE": "Beleg"
+      },
+      "sourceLink": {
+        "SERVICE_EVENT": "Zur Dienstleistung",
+        "OPERATION_EVENT": "Zum Einsatz",
+        "WORKFLOW": "Zum Antrag",
+        "ONBOARDING": "Zum Eintritt"
+      }
+    },
+    "statusTitle": "Status",
+    "overview": {
+      "title": "Nachweise mit Handlungsbedarf",
+      "filterLabel": "Statusfilter",
+      "typeLabel": "Nachweistyp",
+      "empty": "Aktuell gibt es keine zugewiesenen Nachweise mit Handlungsbedarf.",
+      "status": {
+        "missing": "Fehlt",
+        "expired": "Abgelaufen",
+        "expiringSoon": "Läuft ab",
+        "valid": "Gültig"
+      },
+      "list": {
+        "sort": {
+          "nameAsc": "Name A-Z",
+          "nameDesc": "Name Z-A",
+          "expiryDateAsc": "Ablaufdatum früheste zuerst",
+          "expiryDateDesc": "Ablaufdatum späteste zuerst"
+        }
+      }
+    },
+    "removeIndividual": "Einzelnachweis entfernen",
+    "removeIndividualConfirm": "Die Einzelzuweisung für diesen Nachweistyp entfernen? Eingereichte Nachweise bleiben erhalten.",
+    "assign": {
+      "title": "Nachweis zuweisen",
+      "action": "Zuweisen",
+      "success": "Nachweis zugewiesen.",
+      "error": "Zuweisung fehlgeschlagen.",
+      "removed": "Zuweisung entfernt.",
+      "remove": "Entfernen",
+      "removeConfirm": "Diese Zuweisung wirklich entfernen?",
+      "empty": "Aktuell sind keine weiteren Nachweistypen zuweisbar.",
+      "definitionBadge": "Einzelnachweis",
+      "definitionLabel": "Nachweistypen",
+      "detail": {
+        "notFound": "Zuweisung nicht gefunden.",
+        "startDate": "Gültig ab",
+        "endDate": "Gültig bis",
+        "responsibleOrg": "Zuständige Organisation",
+        "source": "Herkunft"
+      }
+    }
+  },
+  "qualifications": {
+    "title": "Qualifikationen",
+    "subtitle": "Deine Qualifikationen für den Einsatzdienst.",
+    "empty": "Für dich sind aktuell keine Qualifikationen erfasst.",
+    "status": {
+      "NOT_AVAILABLE": "Nicht verfügbar",
+      "PREREQUISITES_MISSING": "Voraussetzungen fehlen",
+      "ORG_DECISION_DENIED": "Nicht ernannt",
+      "ORG_DECISION_REVOKED": "Entzogen",
+      "CAN_EXERCISE": "Gültig"
+    },
+    "list": {
+      "orgDecisionProgress": "{{approved}}/{{total}} gültig"
+    },
+    "prerequisite": {
+      "trainingCoursesGroup": "Lehrgänge",
+      "certificationsGroup": "Nachweise",
+      "drivingLicensesGroup": "Führerschein",
+      "modeAnyHint": "Mindestens einer",
+      "modeAllHint": "Alle erforderlich",
+      "orSeparator": "oder",
+      "alternativeNotNeeded": "Nicht nötig",
+      "drivingLicenseExpired": "Abgelaufen"
+    },
+    "detail": {
+      "notFound": "Qualifikation nicht gefunden.",
+      "prerequisitesTitle": "Voraussetzungen",
+      "noPrerequisites": "Keine Voraussetzungen erfasst.",
+      "orgDecisionTitle": "Organisationsentscheidungen",
+      "orgDecisionLabel": "Ernennung",
+      "orgDecisionRequired": "Für diese Qualifikation ist eine Ernennung durch die jeweilige Organisation erforderlich."
+    },
+    "orgDecision": {
+      "grant": "Ernennen",
+      "revoke": "Entziehen",
+      "grantModalTitle": "Ernennen",
+      "grantModalDescription": "Zeitraum für {{name}} festlegen.",
+      "revokeModalTitle": "Ernennung beenden",
+      "revokeModalDescription": "Enddatum für {{name}} festlegen. Die Ernennung endet an diesem Tag.",
+      "endDateSaved": "Enddatum gespeichert.",
+      "endDateSaveFailed": "Enddatum konnte nicht gespeichert werden.",
+      "endDateOptionalHint": "Ohne Enddatum gilt die Ernennung unbefristet.",
+      "granted": "Ernennung erteilt.",
+      "grantFailed": "Ernennung konnte nicht erteilt werden.",
+      "startDateLabel": "Gültig ab",
+      "endDateLabel": "Gültig bis",
+      "endDateOpen": "unbefristet",
+      "intervalsTitle": "Zeiträume",
+      "status": {
+        "granted": "Ernannt",
+        "pending": "Nicht ernannt",
+        "revoked": "Entzogen"
+      },
+      "intervalStatus": {
+        "GRANTED": "Aktiv",
+        "REVOKED": "Entzogen"
+      }
+    },
+    "overview": {
+      "memberCount": "{{count}} Mitglieder",
+      "memberCountOne": "1 Mitglied",
+      "memberLabel": "Mitglied",
+      "appointModalTitle": "Person ernennen",
+      "appointModalDescription": "Wähle eine Person für {{name}} und lege den Zeitraum fest.",
+      "noMembers": "Noch keine ernannten Mitglieder.",
+      "noMembersViaPrerequisites": "Noch niemand erfüllt die Voraussetzungen.",
+      "expandGroup": "{{name}} aufklappen",
+      "collapseGroup": "{{name}} zuklappen",
+      "empty": "Für diese Organisation sind aktuell keine Qualifikationen hinterlegt."
+    }
+  },
+  "trainingCourse": {
+    "title": "Lehrgänge",
+    "subtitle": "Deine absolvierten Lehrgänge und Fortbildungen.",
+    "empty": "Noch keine Lehrgänge erfasst.",
+    "count": "{{count}} Lehrgang/Lehrgänge",
+    "archivedTag": "Archiviert",
+    "submit": {
+      "action": "Lehrgang einreichen",
+      "title": "Lehrgang einreichen",
+      "typeLabel": "Lehrgangstyp",
+      "startDateLabel": "Beginn",
+      "endDateLabel": "Ende",
+      "locationLabel": "Ort",
+      "locationPlaceholder": "Musterstadt",
+      "hoursLabel": "Stunden (optional)",
+      "notesLabel": "Notizen (optional)",
+      "attachmentsLabel": "Nachweisdokument",
+      "attachmentsHint": "Lade das Nachweisdokument hoch (Pflicht).",
+      "success": "Lehrgang eingereicht",
+      "error": "Lehrgang konnte nicht eingereicht werden.",
+      "errorAlreadyOpen": "Für mindestens einen der gewählten Lehrgangstypen läuft bereits ein Antrag. Bitte warte auf die Bearbeitung oder brich ihn ab."
+    },
+    "grantedTypes": {
+      "label": "Vergebene Lehrgangstypen",
+      "addAnother": "Weiteren Typ hinzufügen",
+      "remove": "Lehrgangstyp entfernen",
+      "empty": "Keine Lehrgangstypen verfügbar."
+    },
+    "submissionName": {
+      "label": "Bezeichnung des Lehrgangs",
+      "placeholder": "Grundausbildung BF",
+      "hint": "Gib dem Lehrgang einen Namen, unter dem er in der Übersicht erscheint."
+    },
+    "record": {
+      "createAction": "Lehrgang hinzufügen",
+      "createTitle": "Lehrgang manuell hinzufügen",
+      "createSuccess": "Lehrgang wurde hinzugefügt.",
+      "createError": "Lehrgang konnte nicht hinzugefügt werden.",
+      "chooseType": "Bitte wählen …",
+      "startDateLabel": "Beginn",
+      "endDateLabel": "Ende",
+      "locationLabel": "Ort",
+      "locationPlaceholder": "Musterstadt",
+      "hoursLabel": "Stunden (optional)",
+      "attachmentsLabel": "Dokumente (optional)",
+      "attachmentsHint": "Optional Nachweisdokumente hochladen.",
+      "hours": "{{hours}} Std.",
+      "detailTitle": "Lehrgang",
+      "editTitle": "Lehrgang bearbeiten",
+      "editSuccess": "Lehrgang wurde aktualisiert.",
+      "editError": "Lehrgang konnte nicht aktualisiert werden.",
+      "deleteSuccess": "Lehrgang wurde gelöscht.",
+      "deleteError": "Lehrgang konnte nicht gelöscht werden.",
+      "confirmDeleteTitle": "Lehrgang löschen?",
+      "confirmDeleteMessage": "Möchtest du den Lehrgang „{{name}}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "notFound": "Lehrgang nicht gefunden."
+    }
+  },
+  "drivingLicense": {
+    "title": "Führerschein",
+    "subtitle": "Dein Führerschein-Dokument und die vergebenen Klassen.",
+    "empty": "Noch kein Führerschein erfasst.",
+    "documentExpired": "Karte abgelaufen",
+    "classExpired": "Klasse abgelaufen",
+    "classes": {
+      "label": "Führerscheinklassen",
+      "grantDateLabel": "Erteilungsdatum",
+      "expirationDateLabel": "Ablaufdatum der Klasse",
+      "archiveHint": "Abgewählte Klassen werden als nicht mehr gültig markiert und in der Übersicht ausgeblendet."
+    },
+    "update": {
+      "action": "Führerschein ersetzen",
+      "title": "Führerschein ersetzen",
+      "hint": "Der bisherige Führerschein wird archiviert und durch den neuen Eintrag ersetzt. Bitte alle Daten und ein neues Nachweisdokument erfassen.",
+      "success": "Führerschein zum Ersetzen eingereicht"
+    },
+    "submit": {
+      "action": "Führerschein einreichen",
+      "title": "Führerschein einreichen",
+      "editTitle": "Führerschein-Antrag bearbeiten",
+      "attachmentsLabel": "Nachweisdokument",
+      "attachmentsHint": "Lade das Nachweisdokument hoch (Pflicht).",
+      "success": "Führerschein eingereicht",
+      "error": "Führerschein konnte nicht eingereicht werden.",
+      "alreadyOpen": "Es läuft bereits ein Führerschein-Antrag. Bitte warte auf die Bearbeitung oder brich ihn ab."
+    },
+    "grantedClasses": {
+      "empty": "Keine Führerscheinklassen verfügbar."
+    },
+    "record": {
+      "createAction": "Führerschein hinzufügen",
+      "createTitle": "Führerschein hinzufügen",
+      "renewAction": "Führerschein erneuern",
+      "renewTitle": "Führerschein erneuern",
+      "renewHint": "Der bisherige Führerschein wird archiviert und durch den neuen Eintrag ersetzt. Bitte alle Daten und neue Nachweisdokumente erfassen.",
+      "renewSuccess": "Führerschein wurde erneuert.",
+      "correctAction": "Korrigieren",
+      "deleteAction": "Führerschein löschen",
+      "createSuccess": "Führerschein wurde hinzugefügt.",
+      "createError": "Führerschein konnte nicht hinzugefügt werden.",
+      "updateSuccess": "Führerschein wurde aktualisiert.",
+      "updateError": "Führerschein konnte nicht aktualisiert werden.",
+      "issueDateLabel": "Ausstellungsdatum",
+      "documentExpirationDateLabel": "Ablaufdatum der Karte",
+      "licenseNumberLabel": "Führerscheinnummer",
+      "issuingAuthorityLabel": "Ausstellende Behörde",
+      "attachmentsLabel": "Dokumente (optional)",
+      "attachmentsHint": "Optional Nachweisdokumente hochladen.",
+      "detailTitle": "Führerschein",
+      "editTitle": "Führerschein korrigieren",
+      "deleteSuccess": "Führerschein wurde gelöscht.",
+      "deleteError": "Führerschein konnte nicht gelöscht werden.",
+      "confirmDeleteTitle": "Führerschein löschen?",
+      "confirmDeleteMessage": "Möchtest du den Führerschein wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    }
+  },
+  "list": {
+    "sort": {
+      "label": "Sortierung",
+      "default": "Standard"
+    },
+    "search": {
+      "label": "Suche",
+      "placeholder": "Suchen…",
+      "clear": "Suche leeren"
+    },
+    "filters": {
+      "title": "Filter",
+      "open": "Filter",
+      "showMenubar": "Filter anzeigen",
+      "hideMenubar": "Filter ausblenden",
+      "reset": "Zurücksetzen",
+      "done": "Fertig",
+      "activeCount": "{{count}} aktive Filter",
+      "all": "Alle",
+      "searchInList": "In Liste suchen…",
+      "selectedCount": "{{count}} ausgewählt",
+      "clearSelection": "Auswahl leeren",
+      "hubHint": "Wähle eine Kategorie. Die Liste aktualisiert sich sofort."
+    },
+    "dateRange": {
+      "from": "Von",
+      "to": "Bis",
+      "chipFrom": "ab {{date}}",
+      "chipTo": "bis {{date}}",
+      "presets": {
+        "thisMonth": "Dieser Monat",
+        "lastMonth": "Letzter Monat",
+        "thisYear": "Dieses Jahr",
+        "custom": "Eigener Zeitraum"
+      }
+    },
+    "noResults": {
+      "title": "Keine Treffer",
+      "reset": "Filter zurücksetzen"
+    },
+    "loadMore": "Mehr laden"
+  }
+}

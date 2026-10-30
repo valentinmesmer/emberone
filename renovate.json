@@ -1,0 +1,91 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "separateMajorMinor": false,
+  "separateMultipleMajor": false,
+  "separateMinorPatch": false,
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "Bump the version range in frontend/package.json instead of widening it",
+      "matchManagers": ["bun"],
+      "matchFileNames": ["frontend/package.json"],
+      "rangeStrategy": "replace"
+    },
+    {
+      "description": "Keep React and Next.js versions in sync",
+      "matchManagers": ["bun"],
+      "matchPackageNames": [
+        "next",
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ],
+      "groupName": "React & Next.js",
+      "groupSlug": "react-next"
+    },
+    {
+      "description": "Group remaining frontend patch and minor updates",
+      "matchManagers": ["bun"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "frontend dependencies (non-major)",
+      "groupSlug": "frontend-non-major",
+      "matchPackageNames": [
+        "!next",
+        "!react",
+        "!react-dom",
+        "!@types/react",
+        "!@types/react-dom"
+      ]
+    },
+    {
+      "description": "Group Spring Boot plugin and BOM updates",
+      "matchManagers": ["gradle"],
+      "groupName": "Spring Boot",
+      "groupSlug": "spring-boot",
+      "matchPackageNames": [
+        "/^org\\.springframework\\.boot/",
+        "/^io\\.spring/"
+      ]
+    },
+    {
+      "description": "Group remaining backend patch and minor updates",
+      "matchManagers": ["gradle"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "backend dependencies (non-major)",
+      "groupSlug": "backend-non-major",
+      "matchPackageNames": [
+        "!/^org\\.springframework\\.boot/",
+        "!/^io\\.spring/"
+      ]
+    },
+    {
+      "description": "Stay on Java 25 for eclipse-temurin Docker image (matches Gradle sourceCompatibility).",
+      "matchManagers": ["dockerfile"],
+      "matchPackageNames": ["eclipse-temurin"],
+      "allowedVersions": "/^25/"
+    },
+    {
+      "description": "Stay on the JDK 25 variant of the Gradle build image (matches Gradle sourceCompatibility); gradle tool version itself may still update.",
+      "matchManagers": ["dockerfile"],
+      "matchPackageNames": ["gradle"],
+      "allowedVersions": "/-jdk25$/"
+    },
+    {
+      "description": "Stay on Java 25 in CI setup-java (matches Gradle sourceCompatibility and Docker images).",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["java-jdk"],
+      "allowedVersions": "/^25$/"
+    },
+    {
+      "description": "Align frontend Bun version with frontend Dockerfile (oven/bun:1.4.0)",
+      "matchManagers": ["dockerfile"],
+      "matchFileNames": ["frontend/docker/Dockerfile"],
+      "matchPackageNames": ["oven/bun"],
+      "allowedVersions": "/^1\\.4\\.0$/"
+    }
+  ]
+}

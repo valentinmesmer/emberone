@@ -1,0 +1,184 @@
+# Copyright (C) 2026 Valentin Mesmer
+# This file is part of EmberOne.
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+spring:
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD:}
+      timeout: 1s
+      connect-timeout: 1s
+      repositories:
+        enabled: false
+  threads:
+    virtual:
+      enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  task:
+    scheduling:
+      pool:
+        size: 8
+      shutdown:
+        await-termination: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI}
+          audiences: ${OAUTH2_AUDIENCES}
+  application:
+    name: emberone-app
+  datasource:
+    # Behind PgBouncer < 1.21 in transaction mode, append prepareThreshold=0 to the JDBC URL.
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 25
+      minimum-idle: 25
+      connection-timeout: 5000
+      leak-detection-threshold: 20000
+      max-lifetime: 1800000
+      keepalive-time: 120000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        default_batch_fetch_size: 64
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
+  jackson:
+    time-zone: UTC
+  flyway:
+    enabled: true
+    # Migrations run as the migrator role (owns the schema, no superuser). The app connects as
+    # DATASOURCE_USERNAME, which RLS applies to. afterMigrate.sql grants it access to all tables.
+    url: ${DATASOURCE_URL}
+    user: ${FLYWAY_USERNAME}
+    password: ${FLYWAY_PASSWORD}
+    locations: classpath:db/migration/postgresql
+    placeholders:
+      appRole: ${DATASOURCE_USERNAME}
+    validate-on-migrate: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+server:
+  port: 8080
+  shutdown: graceful
+  forward-headers-strategy: framework
+
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: db,redis
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: ${SPRINGDOC_ENABLED:false}
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: ${SPRINGDOC_ENABLED:false}
+    operationsSorter: method
+    tagsSorter: alpha
+  show-actuator: false
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web.socket.config.WebSocketMessageBrokerStats: WARN
+  structured:
+    format:
+      console: ecs
+
+authentik:
+  api:
+    base-url: ${AUTHENTIK_API_BASE_URL}
+    token: ${AUTHENTIK_API_TOKEN}
+
+emberone:
+  identity:
+    provider: authentik
+    deprovision-cron: ${EMBERONE_IDENTITY_DEPROVISION_CRON:0 * * * * *}
+    deprovision-batch-size: ${EMBERONE_IDENTITY_DEPROVISION_BATCH_SIZE:100}
+  time:
+    organization-zone: ${EMBERONE_ORGANIZATION_ZONE:Europe/Berlin}
+  app:
+    public-base-url: ${EMBERONE_APP_PUBLIC_BASE_URL}
+  db:
+    require-transaction: ${EMBERONE_DB_REQUIRE_TRANSACTION:false}
+  realtime:
+    enabled: ${EMBERONE_REALTIME_ENABLED:true}
+    redis-channel: ${EMBERONE_REALTIME_REDIS_CHANNEL:emberone:realtime}
+    token-expiry-check-interval-ms: 30000
+  mail:
+    smtp:
+      host: ${MAIL_HOST}
+      port: ${MAIL_PORT}
+      username: ${MAIL_USERNAME}
+      password: ${MAIL_PASSWORD}
+      auth: ${MAIL_SMTP_AUTH:true}
+      start-tls: ${MAIL_SMTP_START_TLS:true}
+    from-address: ${MAIL_USERNAME}
+    from-name: ${MAIL_FROM_NAME}
+  appointments:
+    auto-archive-cron: ${EMBERONE_APPOINTMENTS_AUTO_ARCHIVE_CRON:0 0 2 * * *}
+    series-extension-cron: ${EMBERONE_APPOINTMENTS_SERIES_EXTENSION_CRON:0 0 4 * * *}
+  certifications:
+    reminder-cron: ${EMBERONE_CERTIFICATIONS_REMINDER_CRON:0 0 6 * * *}
+  course-offerings:
+    reminder-cron: ${EMBERONE_COURSE_OFFERINGS_REMINDER_CRON:0 0 7 * * *}
+    start-reminder-lead: ${EMBERONE_COURSE_OFFERINGS_START_REMINDER_LEAD:72h}
+  memberships:
+    end-cleanup-cron: ${EMBERONE_MEMBERSHIPS_END_CLEANUP_CRON:0 * * * * *}
+  notifications:
+    outbox-cron: ${EMBERONE_NOTIFICATIONS_OUTBOX_CRON:0 * * * * *}
+    max-delivery-attempts: ${EMBERONE_NOTIFICATIONS_MAX_DELIVERY_ATTEMPTS:5}
+    outbox-batch-size: ${EMBERONE_NOTIFICATIONS_OUTBOX_BATCH_SIZE:100}
+  attachments:
+    draft-cleanup-cron: ${EMBERONE_ATTACHMENTS_DRAFT_CLEANUP_CRON:0 0 4 * * *}
+    draft-retention-hours: ${EMBERONE_ATTACHMENTS_DRAFT_RETENTION_HOURS:12}
+  retention:
+    cron: ${EMBERONE_RETENTION_CRON:0 30 3 * * *}
+  object-storage:
+    deletion-outbox-cron: ${EMBERONE_OBJECT_STORAGE_DELETION_OUTBOX_CRON:0 * * * * *}
+    deletion-outbox-batch-size: ${EMBERONE_OBJECT_STORAGE_DELETION_OUTBOX_BATCH_SIZE:100}
+    max-deletion-attempts: ${EMBERONE_OBJECT_STORAGE_MAX_DELETION_ATTEMPTS:5}
+
+cors:
+  allowed-origin-patterns: ${EMBERONE_APP_PUBLIC_BASE_URL}
+
+object-storage:
+  endpoint: ${OBJECT_STORAGE_ENDPOINT}
+  access-key: ${OBJECT_STORAGE_ACCESS_KEY}
+  secret-key: ${OBJECT_STORAGE_SECRET_KEY}
+  attachments-bucket: attachments
+  profile-images-bucket: profile-images
+  workflows-bucket: workflows
+  user-documents-bucket: user-documents

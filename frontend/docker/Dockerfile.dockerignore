@@ -1,0 +1,31 @@
+# Kaniko: see backend/docker/Dockerfile.dockerignore - same mechanism.
+# Frontend build only needs ./frontend and ./frontend/docker helper scripts.
+
+.git
+.gitattributes
+.gitlab-ci.yml
+
+.idea
+.vscode
+**/.DS_Store
+
+backend
+local
+
+**/node_modules
+frontend/node_modules
+frontend/.next
+**/dist
+**/coverage
+**/.turbo
+
+backend/.gradle
+backend/**/.gradle
+backend/**/build
+
+*.iml
+
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.production.local

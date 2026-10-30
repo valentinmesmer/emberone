@@ -1,0 +1,44 @@
+version: 1
+metadata:
+  name: emberone-bootstrap
+  labels:
+    blueprints.goauthentik.io/instantiate: "true"
+entries:
+  - model: authentik_core.group
+    id: role-user
+    identifiers:
+      name: "role:USER"
+    attrs:
+      name: "role:USER"
+  - model: authentik_core.group
+    id: role-tenant-admin
+    identifiers:
+      name: "role:TENANT_ADMIN"
+    attrs:
+      name: "role:TENANT_ADMIN"
+  - model: authentik_core.group
+    id: role-global-admin
+    identifiers:
+      name: "role:GLOBAL_ADMIN"
+    attrs:
+      name: "role:GLOBAL_ADMIN"
+  - model: authentik_core.group
+    id: emberone-admin-group
+    state: created
+    identifiers:
+      name: authentik Admins
+    attrs:
+      name: authentik Admins
+      is_superuser: true
+  - model: authentik_core.user
+    state: present
+    identifiers:
+      username: akadmin
+    attrs:
+      name: EmberOne Admin
+      attributes:
+        emberone_user_id:
+          - "0"
+      groups:
+        - !KeyOf emberone-admin-group
+        - !KeyOf role-global-admin

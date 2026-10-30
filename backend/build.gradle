@@ -1,0 +1,115 @@
+/*
+ * Copyright (C) 2026 Valentin Mesmer
+ * This file is part of EmberOne.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+    id 'com.diffplug.spotless' version '8.10.4'
+}
+
+group = 'com.emberone'
+version = '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation', '-parameters']
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:7.10.1'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.10.1'
+    implementation 'org.thymeleaf:thymeleaf-spring6'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    implementation 'software.amazon.awssdk:s3:2.57.6'
+    implementation 'io.github.openfeign:feign-okhttp:13.17'
+    implementation 'io.github.openfeign:feign-jackson3:13.17'
+    implementation 'io.github.openfeign:feign-core:13.17'
+
+    implementation 'org.mnode.ical4j:ical4j:4.4.0'
+
+    implementation 'com.googlecode.libphonenumber:libphonenumber:9.0.42'
+
+    implementation 'com.github.librepdf:openpdf:3.0.5'
+
+    compileOnly 'org.projectlombok:lombok:1.18.48'
+    annotationProcessor 'org.projectlombok:lombok:1.18.48'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:4.1.2"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs '-Xshare:off'
+    finalizedBy jacocoTestReport
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn test
+    reports {
+        xml.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacoco.xml')
+        html.required = true
+    }
+}
+
+spotless {
+    java {
+        target 'src/**/*.java'
+        googleJavaFormat().aosp()
+        formatAnnotations()
+    }
+}
+
+tasks.register('printJacocoCoverage') {
+    dependsOn jacocoTestReport
+    doLast {
+        def reportFile = layout.buildDirectory.file('reports/jacoco/test/jacoco.xml').get().asFile
+        def counters = (reportFile.text =~ /type="LINE" missed="(\d+)" covered="(\d+)"/)
+        def missed = counters ? counters[-1][1].toBigDecimal() : 0
+        def covered = counters ? counters[-1][2].toBigDecimal() : 0
+        def total = covered + missed
+        def pct = total == 0 ? 0 : (covered / total * 100).setScale(2, java.math.RoundingMode.HALF_UP)
+        println "Total coverage: ${pct}%"
+    }
+}

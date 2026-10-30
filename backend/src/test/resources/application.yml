@@ -1,0 +1,18 @@
+# Copyright (C) 2026 Valentin Mesmer
+# This file is part of EmberOne.
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+spring:
+  cache:
+    type: simple
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://test.example.com/realms/emberone
+          audiences: emberone
+emberone:
+  db:
+    require-transaction: true

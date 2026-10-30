@@ -1,0 +1,253 @@
+/*
+ * Copyright (C) 2026 Valentin Mesmer
+ * This file is part of EmberOne.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+@import "tailwindcss";
+
+/* Match next-themes class strategy (tailwind.config darkMode: 'class' is ignored in v4 without this) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  /* EmberOne Brand Book v1.0 - Ember Red / Charcoal / warm neutrals */
+  --background: #eceae5;
+  --foreground: #1a1a1a;
+  --fire-red: #c1272d;
+  --fire-red-dark: #9c1f24;
+  --fire-red-light: #e0463f;
+  --fire-red-lighter: #f7e0e0;
+  --page-bg: #eceae5;
+  --card-bg: #fdfcfa;
+  /** Opaque chrome (header / bottom nav) - used for iOS Safari toolbar tinting. */
+  --chrome-bg: #fdfcfa;
+  --border-color: #d8d4cc;
+  --border: var(--border-color);
+  --text-secondary: #8a8580;
+  --text-primary: #1a1a1a;
+  --hover-bg: #e5e2db;
+  --surface-soft: #f4f2ee;
+  --surface-muted: #e5e2db;
+  --focus-ring: rgba(193, 39, 45, 0.22);
+  --focus-ring-offset: #eceae5;
+  --interactive-shadow: 0 1px 2px rgba(21, 26, 35, 0.06);
+  --interactive-shadow-strong: 0 2px 6px rgba(21, 26, 35, 0.1);
+
+  /* Floating hints / tooltips (HoverHint) */
+  --hint-surface: #ffffff;
+  --hint-ink: var(--text-primary);
+  --hint-border: var(--border-color);
+  --hint-shadow: var(--interactive-shadow-strong);
+
+  --toast-success-bg: #e7f3ec;
+  --toast-success-border: #8fc4a6;
+  --toast-success-text: #17402a;
+  --toast-error-bg: #f9e6e6;
+  --toast-error-border: #dd9a9c;
+  --toast-error-text: #5a1417;
+  --toast-info-bg: #eaf1ff;
+  --toast-info-border: #9fb6e9;
+  --toast-info-text: #1a2f57;
+  --toast-warning-bg: #fbf1de;
+  --toast-warning-border: #e0bd72;
+  --toast-warning-text: #4d3810;
+
+  /* Inline status accents (badges, checkmarks, list tints) - brandbook status colors */
+  --status-success-accent: #2e8b57;
+  --status-success-solid: #2e8b57;
+  --status-success-solid-hover: #256f46;
+  --status-success-surface: #e7f3ec;
+  --status-success-surface-hover: #daecdf;
+  --status-danger-accent: #c1272d;
+  --status-danger-solid: var(--fire-red);
+  --status-danger-solid-hover: var(--fire-red-dark);
+  --status-danger-surface: #f9e6e6;
+  --status-danger-surface-hover: #f4d6d6;
+  --status-warning-accent: #d9a02a;
+  --status-warning-surface: #fbf1de;
+  --status-warning-surface-hover: #f7e6c6;
+
+  /** Subtle brand-tinted surfaces (icon boxes, highlights) */
+  --accent-surface: color-mix(in srgb, var(--fire-red) 9%, var(--card-bg));
+
+  /**
+   * Scroll padding for pages under the fixed mobile tab bar (`MobileBottomNav`):
+   * h-16 row + border + home-indicator safe area + bottom float margin (`pb-2`)
+   * + small gap so the last list/card is not flush against the bar.
+   * Keep in sync with `MobileBottomNav`.
+   */
+  --app-mobile-bottom-safe: calc(4rem + 1px + env(safe-area-inset-bottom, 0px) + 0.5rem + 0.75rem);
+
+  /** Fixed header row height (keep in sync with `Header`). */
+  --app-header-h: 3rem;
+  --app-header-offset: calc(var(--app-header-h) + env(safe-area-inset-top, 0px));
+  /** Content top padding: header + small gap (`pt-14` when header is `h-12`). */
+  --app-content-top: calc(var(--app-header-offset) + 0.5rem);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --app-header-h: 3.5rem;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #17181a;
+  --foreground: #ecebe8;
+  /* Ember Red (Dark-UI) - brighter variant tuned for dark surfaces */
+  --fire-red: #e0463f;
+  --fire-red-dark: #c1272d;
+  --fire-red-light: #ff8177;
+  --fire-red-lighter: #3a201e;
+  --page-bg: #141516;
+  --card-bg: #1e1f21;
+  --chrome-bg: #1e1f21;
+  --border-color: #333436;
+  --border: var(--border-color);
+  --text-secondary: #9b9994;
+  --text-primary: #ecebe8;
+  --hover-bg: #28292b;
+  --surface-soft: #232426;
+  --surface-muted: #2a2b2d;
+  --focus-ring: rgba(224, 70, 63, 0.35);
+  --focus-ring-offset: #141516;
+  --interactive-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --interactive-shadow-strong: 0 2px 6px rgba(0, 0, 0, 0.4);
+
+  --hint-surface: var(--surface-muted);
+  --hint-ink: var(--text-primary);
+  --hint-border: var(--border-color);
+  --hint-shadow: var(--interactive-shadow-strong);
+
+  --toast-success-bg: #0f2a20;
+  --toast-success-border: #2d6b51;
+  --toast-success-text: #bdebd4;
+  --toast-error-bg: #3a1e1a;
+  --toast-error-border: #8e453a;
+  --toast-error-text: #ffd4cb;
+  --toast-info-bg: #172642;
+  --toast-info-border: #3a5c98;
+  --toast-info-text: #cbdaff;
+  --toast-warning-bg: #352511;
+  --toast-warning-border: #8a6432;
+  --toast-warning-text: #ffdfaf;
+
+  --status-success-accent: #6ecf9a;
+  --status-success-solid: #2d8a5e;
+  --status-success-solid-hover: #256f4d;
+  --status-success-surface: #0f2a20;
+  --status-success-surface-hover: #143528;
+  --status-danger-accent: #f08a7a;
+  --status-danger-solid: var(--fire-red);
+  --status-danger-solid-hover: var(--fire-red-dark);
+  --status-danger-surface: #3a1e1a;
+  --status-danger-surface-hover: #452622;
+  --status-warning-accent: #e5b67a;
+  --status-warning-surface: #352511;
+  --status-warning-surface-hover: #3f2c15;
+
+  --accent-surface: color-mix(in srgb, var(--fire-red) 14%, var(--card-bg));
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-fire-red: var(--fire-red);
+  --color-fire-red-dark: var(--fire-red-dark);
+  --color-fire-red-light: var(--fire-red-light);
+  --color-fire-red-lighter: var(--fire-red-lighter);
+  --font-sans: var(--font-manrope);
+  --font-heading: var(--font-sora);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+html {
+  background: var(--page-bg);
+  /* Prevent iOS from inflating text / shifting layout when the URL bar changes. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* iOS Safari (esp. iOS 26 with the bottom URL bar): keep <html> from scrolling
+     at the top level. Safari then treats <body> as a nested scroll container and
+     stops collapsing/expanding its toolbar on scroll - so the fixed Header and
+     MobileBottomNav stay pinned to the viewport instead of drifting with the
+     toolbar. Also removes the document-level rubber-band overscroll. */
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--page-bg);
+  color: var(--foreground);
+  font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
+  /* Body is the scroll container (see <html> above). */
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-sora), Arial, Helvetica, sans-serif;
+}
+
+/* iOS: inputs with font-size below 16px trigger focus zoom; keep at least 16px on touch. */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: max(1rem, 16px);
+  }
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Custom scrollbar styles for DatePicker */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(209, 213, 219) transparent;
+}
+
+.dark .scrollbar-thin {
+  scrollbar-color: rgb(75, 85, 99) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(209, 213, 219);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(156, 163, 175);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(75, 85, 99);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(107, 114, 128);
+}

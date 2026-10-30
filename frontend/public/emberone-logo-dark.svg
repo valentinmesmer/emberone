@@ -1,0 +1,12 @@
+<!--
+  Copyright (C) 2026 Valentin Mesmer
+  This file is part of EmberOne.
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <title>EmberOne logo</title>
+  <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#e0463f"></path>
+  <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#ECEAE5"></path>
+  <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#ECEAE5" opacity="0.45"></path>
+</svg>
