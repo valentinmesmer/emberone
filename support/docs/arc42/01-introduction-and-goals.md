@@ -2,7 +2,7 @@
 
 ## 1.1 Anforderungsüberblick
 
-**EmberOne** ist eine mandantenfähige Feuerwehr-Verwaltungsplattform für Organisation, Personal, Qualifikation, Termine und Freigabeprozesse.
+**EmberOne** ist eine mandantenfähige Feuerwehr-Verwaltungsplattform für Organisation, Personal, Qualifikation, Einsätze und Dienste, Termine und Freigabeprozesse.
 
 Sie bündelt:
 
@@ -12,9 +12,11 @@ Sie bündelt:
 | **Standards** | Blueprints für Setup (Gruppen, Permissions, Workflow-Definitionen, Module) inkl. Tenant-/Org-Overrides |
 | **Workflows** | Generische Genehmigungs-Engine (Adressänderung, Namensänderung, Zertifizierungs-/Lehrgangsnachweise, …) |
 | **Qualifikation & Zertifizierung** | Kataloge, Übungsstatus, Org-Entscheidungen, Zertifikats-/Lehrgangsnachweise |
-| **Termine & Events** | Termine (inkl. Serien), Einsätze/Events mit Anwesenheit |
+| **Lehrgangsangebote** | Angebote und Termine, Zielgruppe, Voraussetzungen, Anmeldung, Kontingente, Abschluss |
+| **Termine & Events** | Termine (inkl. Serien), Dienste und Einsätze mit Anwesenheit |
 | **Zeiterfassung & Abwesenheit** | Freie Zeiteinträge (kein Stempeluhr-Modell); Abwesenheiten als direktes CRUD (kein Workflow) |
 | **Dokumente & Profil** | User-Dokumente, Profilbilder, Notfallkontakte |
+| **Geschäftsstelle** | Verwaltung anderer Organisationen desselben Mandanten per zeitlich begrenzter Aktivierung |
 | **Kommunikation** | In-App-Benachrichtigungen, E-Mail, Realtime (WebSocket/STOMP), Todos |
 
 Zielgruppe sind Organisationen, die Personal, Nachweise und Freigabeprozesse **mandantenisoliert** und **berechtigungsgesteuert** digitalisieren wollen - nicht eine generische CRM-/ERP-Suite.

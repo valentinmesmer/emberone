@@ -1,8 +1,8 @@
 # EmberOne
 
-Mandantenfähige Feuerwehr-Verwaltungsplattform für Organisation, Personal, Qualifikation, Termine und Freigabeprozesse.
+Mandantenfähige Feuerwehr-Verwaltungsplattform für Organisation, Personal, Qualifikation, Einsätze und Dienste, Termine und Freigabeprozesse.
 
-*Multi-tenant management platform for fire departments (organization, personnel, qualifications, appointments, approval workflows). Documentation is in German; English issues are welcome.*
+*Multi-tenant management platform for fire departments (organization, personnel, qualifications, operations and duty events, appointments, approval workflows). Documentation is in German; English issues are welcome.*
 
 EmberOne ist ein modularer Monolith (Spring Boot) mit Next.js-Frontend. Identitäten kommen über einen externen OIDC-IdP (derzeit Authentik), Domänendaten liegen in PostgreSQL mit Row Level Security.
 
