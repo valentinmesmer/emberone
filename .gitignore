@@ -1,0 +1,133 @@
+### Gradle ###
+.gradle/
+build/
+bin/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### Java ###
+*.class
+*.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.stm
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Frontend ###
+node_modules/
+bun-debug.log
+
+### React / Frontend Build ###
+dist/
+.next/
+.cache/
+.parcel-cache/
+coverage/
+.nyc_output/
+
+### Local / editor (not committed) ###
+/support/local/
+/org/
+.claude/
+.cursor/
+
+### Graphify ###
+graphify-out/
+
+### Docker ###
+docker-compose.override.yml
+support/dev/config/seaweedfs-s3.json
+
+### Environment Variables ###
+.env
+.env.*
+!.env.example
+!**/.env.example
+!**/.env*.example
+.env.local
+.env.*.local
+
+### Logs ###
+logs/
+*.log
+*.log.*
+
+### Application Properties (local) ###
+**/src/main/resources/application-local.properties
+**/src/main/resources/application-local.yml
+**/src/main/resources/application-local.yaml
+
+### OS ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+
+### Spring Boot ###
+.spring-boot-devtools.properties
+
+### Secrets / keys ###
+*.pem
+*.p12
+*.jks
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+
+### Maven (optional) ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+

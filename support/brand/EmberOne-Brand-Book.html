@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #ECEAE5; font-family: 'Manrope', sans-serif; }
+  </style>
+</helmet>
+
+<div style="max-width:980px; margin:0 auto; padding:72px 40px 120px; display:flex; flex-direction:column; gap:72px;">
+
+  <!-- COVER -->
+  <div style="background:#1a1a1a; border-radius:28px; padding:80px 56px; display:flex; flex-direction:column; align-items:center; gap:32px; text-align:center;">
+    <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:56px; line-height:1; color:#fff; letter-spacing:-0.025em;">Ember<span style="margin-left:0.04em; color:#e0463f;">One</span></div>
+    <div style="font-weight:600; font-size:13px; letter-spacing:0.2em; color:#9a958d; text-transform:uppercase;">Brand Book · Kompakt</div>
+  </div>
+
+  <!-- LOGO -->
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    <h2 style="font-family:'Sora',sans-serif; font-weight:700; font-size:24px; color:#1a1a1a; margin:0; border-bottom:2px solid #1a1a1a; padding-bottom:12px;">01 · Wortmarke</h2>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
+      <div style="background:#fff; border-radius:16px; padding:32px 28px; display:flex; flex-direction:column; align-items:center; gap:20px;">
+        <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:28px; line-height:1; color:#1a1a1a; letter-spacing:-0.025em;">Ember<span style="margin-left:0.04em; color:#c1272d;">One</span></div>
+        <div style="font-size:12px; font-weight:600; color:#8a8580; letter-spacing:0.08em;">PRIMÄR · AUF HELL</div>
+      </div>
+      <div style="background:#1a1a1a; border-radius:16px; padding:32px 28px; display:flex; flex-direction:column; align-items:center; gap:20px;">
+        <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:28px; line-height:1; color:#fff; letter-spacing:-0.025em;">Ember<span style="margin-left:0.04em; color:#e0463f;">One</span></div>
+        <div style="font-size:12px; font-weight:600; color:#9a958d; letter-spacing:0.08em;">INVERTIERT · AUF DUNKEL</div>
+      </div>
+      <div style="background:#c1272d; border-radius:16px; padding:32px 28px; display:flex; flex-direction:column; align-items:center; gap:20px;">
+        <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:28px; line-height:1; color:#fff; letter-spacing:-0.025em;">Ember<span style="margin-left:0.04em;">One</span></div>
+        <div style="font-size:12px; font-weight:600; color:#f3c7c9; letter-spacing:0.08em;">MONOCHROM · AUF FARBE</div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center; background:#fff; border-radius:16px; padding:32px 40px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="width:16px; height:16px; border-radius:4px; background:#1a1a1a; transform:rotate(45deg); position:relative;"></div>
+        <span style="font-size:13px; color:#5c5852;">Schutzraum = Höhe des „E“ rundum</span>
+      </div>
+      <div style="width:1px; height:24px; background:#d8d4cc;"></div>
+      <span style="font-size:13px; color:#5c5852;">Minimalgröße Wortmarke: <strong>96px</strong> Breite · Das Icon steht nie neben der Wortmarke - es wird ausschließlich als App-Icon und Favicon verwendet.</span>
+    </div>
+  </div>
+
+  <!-- APP ICON + FAVICON -->
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    <h2 style="font-family:'Sora',sans-serif; font-weight:700; font-size:24px; color:#1a1a1a; margin:0; border-bottom:2px solid #1a1a1a; padding-bottom:12px;">02 · App-Icon &amp; Favicon</h2>
+
+    <div style="background:#fff; border-radius:16px; padding:32px 40px; display:flex; flex-direction:column; gap:16px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; letter-spacing:0.14em; color:#8a8580;">APP-ICON · iOS / ANDROID / PWA</div>
+      <div style="display:flex; gap:24px; align-items:flex-end; flex-wrap:wrap;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <div style="width:96px; height:96px; border-radius:22px; background:#c1272d; display:flex; align-items:center; justify-content:center;">
+          <svg width="56" height="56" viewBox="0 0 120 120">
+            <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#fff"/>
+            <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#fff" opacity="0.7"/>
+            <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#fff" opacity="0.4"/>
+          </svg>
+        </div>
+        <span style="font-size:12px; color:#8a8580;">96px</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <div style="width:64px; height:64px; border-radius:15px; background:#c1272d; display:flex; align-items:center; justify-content:center;">
+          <svg width="38" height="38" viewBox="0 0 120 120">
+            <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#fff"/>
+            <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#fff" opacity="0.7"/>
+            <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#fff" opacity="0.4"/>
+          </svg>
+        </div>
+        <span style="font-size:12px; color:#8a8580;">64px</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <div style="width:40px; height:40px; border-radius:10px; background:#c1272d; display:flex; align-items:center; justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 120 120">
+            <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#fff"/>
+            <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#fff" opacity="0.7"/>
+            <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#fff" opacity="0.4"/>
+          </svg>
+        </div>
+        <span style="font-size:12px; color:#8a8580;">40px</span>
+      </div>
+      </div>
+      <div style="font-size:13px; color:#5c5852; margin-top:4px;">Weiße Marke auf Ember Red, Eckenradius 22 % der Kantenlänge. Kein Rand, kein Verlauf, keine Wortmarke im Icon.</div>
+    </div>
+
+    <div style="background:#fff; border-radius:16px; padding:32px 40px; display:flex; flex-direction:column; gap:16px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; letter-spacing:0.14em; color:#8a8580;">FAVICON · BROWSER</div>
+      <div style="display:flex; gap:32px; align-items:flex-end; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+          <div style="width:64px; height:64px; display:flex; align-items:center; justify-content:center;">
+            <svg width="32" height="32" viewBox="0 0 120 120">
+              <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#c1272d"/>
+              <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#1a1a1a"/>
+              <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#1a1a1a" opacity="0.45"/>
+            </svg>
+          </div>
+          <span style="font-size:12px; color:#8a8580;">32px · voll</span>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+          <div style="width:64px; height:64px; display:flex; align-items:center; justify-content:center;">
+            <svg width="16" height="16" viewBox="26 12 68 68">
+              <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#c1272d"/>
+            </svg>
+          </div>
+          <span style="font-size:12px; color:#8a8580;">16px · nur oberer Chevron</span>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px; background:#ECEAE5; border-radius:10px 10px 0 0; padding:10px 16px;">
+            <svg width="16" height="16" viewBox="26 12 68 68">
+              <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#c1272d"/>
+            </svg>
+            <span style="font-size:12px; color:#5c5852;">EmberOne - Einsatzverwaltung</span>
+          </div>
+          <span style="font-size:12px; color:#8a8580;">Browser-Tab</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLORS -->
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    <h2 style="font-family:'Sora',sans-serif; font-weight:700; font-size:24px; color:#1a1a1a; margin:0; border-bottom:2px solid #1a1a1a; padding-bottom:12px;">03 · Farben</h2>
+
+    <div style="font-size:13px; font-weight:700; color:#8a8580; letter-spacing:0.1em; text-transform:uppercase;">Primär</div>
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:88px; background:#c1272d;"></div>
+        <div style="padding:16px;">
+          <div style="font-weight:700; font-size:14px; color:#1a1a1a;">Ember Red</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#8a8580; margin-top:4px;">#C1272D</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#8a8580;">oklch(51% 0.19 24)</div>
+        </div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:88px; background:#e0463f;"></div>
+        <div style="padding:16px;">
+          <div style="font-weight:700; font-size:14px; color:#1a1a1a;">Ember Red (Dark-UI)</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#8a8580; margin-top:4px;">#E0463F</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#8a8580;">oklch(58% 0.18 24)</div>
+        </div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:88px; background:#1a1a1a;"></div>
+        <div style="padding:16px;">
+          <div style="font-weight:700; font-size:14px; color:#1a1a1a;">Charcoal</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#8a8580; margin-top:4px;">#1A1A1A</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#8a8580;">oklch(21% 0 0)</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:13px; font-weight:700; color:#8a8580; letter-spacing:0.1em; text-transform:uppercase; margin-top:8px;">Neutrale (App-Oberfläche)</div>
+    <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:16px;">
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#FDFCFA; border-bottom:1px solid #eee;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Surface</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#FDFCFA</div></div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#ECEAE5;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Background</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#ECEAE5</div></div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#D8D4CC;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Border</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#D8D4CC</div></div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#8A8580;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Muted Text</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#8A8580</div></div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#1A1A1A;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Text</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#1A1A1A</div></div>
+      </div>
+    </div>
+
+    <div style="font-size:13px; font-weight:700; color:#8a8580; letter-spacing:0.1em; text-transform:uppercase; margin-top:8px;">Status (für Einsatz-/Verfügbarkeitsanzeigen)</div>
+    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;">
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#2E8B57;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Verfügbar</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#2E8B57</div></div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#D9A02A;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Im Einsatz</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#D9A02A</div></div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#C1272D;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Alarm</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#C1272D</div></div>
+      </div>
+      <div style="background:#fff; border-radius:16px; overflow:hidden;">
+        <div style="height:64px; background:#8A8580;"></div>
+        <div style="padding:12px;"><div style="font-weight:700; font-size:12px; color:#1a1a1a;">Außer Dienst</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a8580;">#8A8580</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    <h2 style="font-family:'Sora',sans-serif; font-weight:700; font-size:24px; color:#1a1a1a; margin:0; border-bottom:2px solid #1a1a1a; padding-bottom:12px;">04 · Typografie</h2>
+    <div style="background:#fff; border-radius:16px; padding:40px; display:flex; flex-direction:column; gap:28px;">
+      <div>
+        <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:40px; color:#1a1a1a;">Sora · Headlines</div>
+        <div style="font-size:12px; color:#8a8580; margin-top:6px;">Wortmarke, H1-H3, Zahlen/KPIs · Weights 700/800</div>
+      </div>
+      <div style="height:1px; background:#eee;"></div>
+      <div>
+        <div style="font-family:'Manrope',sans-serif; font-weight:600; font-size:28px; color:#1a1a1a;">Manrope · UI &amp; Fließtext</div>
+        <div style="font-size:12px; color:#8a8580; margin-top:6px;">Buttons, Labels, Body-Text · Weights 500/600/700</div>
+      </div>
+      <div style="height:1px; background:#eee;"></div>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-weight:500; font-size:22px; color:#1a1a1a;">JetBrains Mono · Codes &amp; IDs</div>
+        <div style="font-size:12px; color:#8a8580; margin-top:6px;">Einsatznummern, Fahrzeug-IDs, technische Werte</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DO / DONT -->
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    <h2 style="font-family:'Sora',sans-serif; font-weight:700; font-size:24px; color:#1a1a1a; margin:0; border-bottom:2px solid #1a1a1a; padding-bottom:12px;">05 · Do &amp; Don't</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:32px;">
+
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:6px; height:6px; border-radius:50%; background:#2E8B57;"></div>
+          <div style="font-family:'JetBrains Mono',monospace; font-weight:500; font-size:11px; letter-spacing:0.14em; color:#2E8B57;">DO</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:1px; background:#e2ded6; border:1px solid #e2ded6; border-radius:14px; overflow:hidden;">
+          <div style="background:#fff; padding:22px 24px; display:flex; align-items:center; gap:22px;">
+            <svg width="40" height="40" viewBox="0 0 120 120" style="flex:none;">
+              <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#c1272d"/>
+              <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#1a1a1a"/>
+              <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#1a1a1a" opacity="0.45"/>
+              </svg>
+            <div style="font-size:13.5px; line-height:1.45; color:#1a1a1a; font-weight:600; text-wrap:pretty;">Schutzraum von mind. halber Icon-Höhe einhalten</div>
+          </div>
+          <div style="background:#fff; padding:22px 24px; display:flex; align-items:center; gap:22px;">
+            <div style="width:40px; height:40px; flex:none; background:#ECEAE5; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 120 120">
+                <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#c1272d"/>
+              <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#1a1a1a"/>
+              <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#1a1a1a" opacity="0.45"/>
+                </svg>
+            </div>
+            <div style="font-size:13.5px; line-height:1.45; color:#1a1a1a; font-weight:600; text-wrap:pretty;">Auf ruhigem, kontrastreichem Grund platzieren</div>
+          </div>
+          <div style="background:#fff; padding:22px 24px; display:flex; align-items:center; gap:22px;">
+            <div style="width:40px; height:40px; flex:none; background:#1a1a1a; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 120 120">
+                <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#e0463f"/>
+              <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#ECEAE5"/>
+              <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#ECEAE5" opacity="0.45"/>
+                </svg>
+            </div>
+            <div style="font-size:13.5px; line-height:1.45; color:#1a1a1a; font-weight:600; text-wrap:pretty;">Auf Dunkel die invertierte Variante verwenden</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:6px; height:6px; border-radius:50%; background:#c1272d;"></div>
+          <div style="font-family:'JetBrains Mono',monospace; font-weight:500; font-size:11px; letter-spacing:0.14em; color:#c1272d;">DON'T</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:1px; background:#e2ded6; border:1px solid #e2ded6; border-radius:14px; overflow:hidden;">
+          <div style="background:#fff; padding:22px 24px; display:flex; align-items:center; gap:22px;">
+            <svg width="40" height="40" viewBox="0 0 120 120" style="flex:none;">
+              <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#2E8B57"/>
+              <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#4a6fa5"/>
+              <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#4a6fa5" opacity="0.45"/>
+              </svg>
+            <div style="font-size:13.5px; line-height:1.45; color:#5c5852; font-weight:600; text-wrap:pretty;">Farben nicht ersetzen oder umfärben</div>
+          </div>
+          <div style="background:#fff; padding:22px 24px; display:flex; align-items:center; gap:22px;">
+            <svg width="40" height="40" viewBox="0 0 120 120" style="flex:none; transform:rotate(18deg) scaleX(1.35);">
+              <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#c1272d"/>
+              <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#1a1a1a"/>
+              <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#1a1a1a" opacity="0.45"/>
+              </svg>
+            <div style="font-size:13.5px; line-height:1.45; color:#5c5852; font-weight:600; text-wrap:pretty;">Nicht verzerren, drehen oder neigen</div>
+          </div>
+          <div style="background:#fff; padding:22px 24px; display:flex; align-items:center; gap:22px;">
+            <div style="width:40px; height:40px; flex:none; border-radius:8px; background:#8a8580; display:flex; align-items:center; justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 120 120">
+                <path d="M60 18 L88 44 L76 55 L60 40 L44 55 L32 44 Z" fill="#c1272d"/>
+              <path d="M60 48 L88 74 L76 85 L60 70 L44 85 L32 74 Z" fill="#1a1a1a"/>
+              <path d="M60 78 L88 104 L76 115 L60 100 L44 115 L32 104 Z" fill="#1a1a1a" opacity="0.45"/>
+                </svg>
+            </div>
+            <div style="font-size:13.5px; line-height:1.45; color:#5c5852; font-weight:600; text-wrap:pretty;">Keine unruhigen, farbigen oder Verlaufs-Flächen</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="text-align:center; font-size:12px; color:#8a8580; padding-top:16px;">EmberOne - Verwaltungssoftware für Feuerwehren · Brand Book v1.0</div>
+
+</div>
+
+</x-dc>
+</body>
+</html>

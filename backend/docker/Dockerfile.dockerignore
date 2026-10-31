@@ -1,0 +1,32 @@
+# Kaniko uses this file (same path as --dockerfile + ".dockerignore") instead of
+# repo-root .dockerignore. Keeps the build context small: no frontend tree, no
+# local/docker compose assets, and no dependency caches accidentally present on the runner.
+
+.git
+.gitattributes
+.gitlab-ci.yml
+
+.idea
+.vscode
+**/.DS_Store
+
+# Not referenced by backend/docker/Dockerfile (only COPY backend/... )
+frontend
+local
+
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/.turbo
+
+backend/.gradle
+backend/**/.gradle
+backend/**/build
+
+*.iml
+
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.production.local

@@ -1,0 +1,8 @@
+/*
+ * Copyright (C) 2026 Valentin Mesmer
+ * This file is part of EmberOne.
+ * SPDX-License-Identifier: Elastic-2.0
+ */
+
+export { useAuth } from '@/lib/auth/AuthContext';
+export type { AuthAccount } from '@/lib/auth/AuthContext';
