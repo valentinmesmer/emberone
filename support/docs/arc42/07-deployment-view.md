@@ -20,7 +20,7 @@
 | **backend** (Host) | Spring Boot | 8080 | API |
 | **frontend** (Host) | Next.js | 3000 | UI |
 
-Mail läuft über konfigurierbaren SMTP (`MAIL_*`, `MAIL_SMTP_AUTH`/`MAIL_SMTP_START_TLS` mit Default `true` in Backend-Env). Dev-Compose bringt Mailpit als lokalen Mail-Catcher mit (ohne Auth/TLS); im Betrieb stellt der Betreiber den SMTP-Server.
+Mail läuft über konfigurierbaren SMTP (`MAIL_HOST`/`MAIL_PORT`/`MAIL_USERNAME`/`MAIL_PASSWORD`, `MAIL_SMTP_AUTH`/`MAIL_SMTP_START_TLS` mit Default `true`). Absender (`MAIL_FROM_ADDRESS`, Fallback `MAIL_USERNAME`) und Anzeigename (`MAIL_FROM_NAME`) sind vom SMTP-Login getrennt. Dev-Compose bringt Mailpit als lokalen Mail-Catcher mit (ohne Auth/TLS); im Betrieb stellt der Betreiber den SMTP-Server.
 
 ```mermaid
 flowchart TB

@@ -149,7 +149,7 @@ emberone:
       password: ${MAIL_PASSWORD}
       auth: ${MAIL_SMTP_AUTH:true}
       start-tls: ${MAIL_SMTP_START_TLS:true}
-    from-address: ${MAIL_USERNAME}
+    from-address: ${MAIL_FROM_ADDRESS:${MAIL_USERNAME}}
     from-name: ${MAIL_FROM_NAME}
   appointments:
     auto-archive-cron: ${EMBERONE_APPOINTMENTS_AUTO_ARCHIVE_CRON:0 0 2 * * *}
