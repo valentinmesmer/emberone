@@ -27,6 +27,7 @@ public class EmberOneMailProperties {
         private String username = "";
         private String password = "";
         private boolean startTls = true;
+        private boolean ssl = false;
         private boolean auth = true;
     }
 }

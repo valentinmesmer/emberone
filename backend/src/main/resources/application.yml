@@ -149,6 +149,7 @@ emberone:
       password: ${MAIL_PASSWORD}
       auth: ${MAIL_SMTP_AUTH:true}
       start-tls: ${MAIL_SMTP_START_TLS:true}
+      ssl: ${MAIL_SMTP_SSL:false}
     from-address: ${MAIL_FROM_ADDRESS:${MAIL_USERNAME}}
     from-name: ${MAIL_FROM_NAME}
   appointments:

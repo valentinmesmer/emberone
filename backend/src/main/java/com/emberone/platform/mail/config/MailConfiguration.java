@@ -35,6 +35,7 @@ public class MailConfiguration {
         props.put("mail.smtp.auth", Boolean.toString(smtp.isAuth()));
         props.put("mail.smtp.starttls.enable", Boolean.toString(smtp.isStartTls()));
         props.put("mail.smtp.starttls.required", Boolean.toString(smtp.isStartTls()));
+        props.put("mail.smtp.ssl.enable", Boolean.toString(smtp.isSsl()));
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
         props.put("mail.smtp.writetimeout", "10000");
