@@ -23,7 +23,7 @@ services:
       retries: 5
 
   seaweedfs:
-    image: chrislusf/seaweedfs:4.51
+    image: chrislusf/seaweedfs:4.52
     container_name: emberone-seaweedfs
     command: "server -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -dir=/data -ip=seaweedfs"
     environment:
