@@ -173,6 +173,7 @@ public class PermissionGroupStandardDomain implements StandardDomain {
     @Transactional(readOnly = true)
     public List<StandardContentItem> describeContent(Standard standard) {
         Long tenantId = standard.getTenantId();
+        Set<Module> enabledModules = enabledModuleResolver.forStandard(standard);
         List<StandardContentItem> items = new ArrayList<>();
         templateRepository.findByStandardId(standard.getId()).stream()
                 .sorted(java.util.Comparator.comparing(PermissionGroupTemplate::getConfigKey))
@@ -184,10 +185,8 @@ public class PermissionGroupStandardDomain implements StandardDomain {
                                                 template.getConfigKey(),
                                                 resolveName(template, tenantId),
                                                 template.getGroupType().name(),
-                                                template
-                                                        .getGroupType()
-                                                        .effectivePermissionTypes(
-                                                                template.getPermissionTypes())
+                                                materializedPermissionTypes(
+                                                                template, enabledModules)
                                                         .stream()
                                                         .map(PermissionType::name)
                                                         .sorted()
