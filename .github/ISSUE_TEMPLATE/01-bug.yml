@@ -1,0 +1,35 @@
+name: Bug
+description: Fehler oder unerwartetes Verhalten
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Was passiert?
+      description: Kurz, 1-3 Sätze.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduktion
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Umgebung
+      placeholder: "z. B. local / staging, Browser, App-Version"
+    validations:
+      required: false

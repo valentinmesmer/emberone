@@ -1,0 +1,7 @@
+# Ensure JAR files are treated as binary
+*.jar binary
+
+# Ensure gradle wrapper files are handled correctly
+gradle/wrapper/gradle-wrapper.jar binary
+**/gradle/wrapper/gradle-wrapper.jar binary
+

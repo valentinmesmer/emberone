@@ -1,0 +1,51 @@
+version: 1
+metadata:
+  name: emberone-claims
+  labels:
+    blueprints.goauthentik.io/instantiate: "true"
+entries:
+  - model: authentik_providers_oauth2.scopemapping
+    id: scope-mapping-emberone-user
+    identifiers:
+      name: "EmberOne user scope (userId, tenantId, app_role)"
+    attrs:
+      name: "EmberOne user scope (userId, tenantId, app_role)"
+      scope_name: emberone
+      description: EmberOne user scope (userId, tenantId, app_role)
+      expression: |
+        role_groups = [g.name for g in request.user.groups.all() if g.name.startswith("role:")]
+        role_precedence = ("GLOBAL_ADMIN", "TENANT_ADMIN", "USER")
+        claims = {}
+        emberone_user_id = request.user.attributes.get("emberone_user_id")
+        if isinstance(emberone_user_id, list):
+            emberone_user_id = emberone_user_id[0] if emberone_user_id else None
+        if emberone_user_id is not None and str(emberone_user_id).strip() != "":
+            claims["userId"] = str(emberone_user_id)
+        emberone_tenant_id = request.user.attributes.get("emberone_tenant_id")
+        if isinstance(emberone_tenant_id, list):
+            emberone_tenant_id = emberone_tenant_id[0] if emberone_tenant_id else None
+        if emberone_tenant_id is not None and str(emberone_tenant_id).strip() != "":
+            claims["tenantId"] = str(emberone_tenant_id)
+
+        effective_roles = set()
+        if role_groups:
+            for g in role_groups:
+                n = g.replace("role:", "", 1)
+                if n in role_precedence:
+                    effective_roles.add(n)
+        attr_role = request.user.attributes.get("emberone_role")
+        if isinstance(attr_role, list):
+            attr_role = attr_role[0] if attr_role else None
+        if attr_role is not None and str(attr_role).strip() != "":
+            r = str(attr_role).strip().upper()
+            if r in role_precedence:
+                effective_roles.add(r)
+
+        app_role = "USER"
+        for candidate in role_precedence:
+            if candidate in effective_roles:
+                app_role = candidate
+                break
+        claims["app_role"] = app_role
+
+        return claims

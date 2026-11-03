@@ -1,0 +1,49 @@
+version: 1
+metadata:
+  name: emberone-single-role-group-policy
+  labels:
+    blueprints.goauthentik.io/instantiate: "true"
+entries:
+  - model: authentik_policies_expression.expressionpolicy
+    id: policy-emberone-at-most-one-role-group
+    identifiers:
+      name: EmberOne at most one role group
+    attrs:
+      name: EmberOne at most one role group
+      expression: |
+        write_user = request.context.get("pending_user")
+        if write_user is None:
+            write_user = request.user
+        if write_user is None or not getattr(write_user, "pk", None):
+            return True
+        role_groups = [g for g in write_user.groups.all() if g.name.startswith("role:")]
+        if len(role_groups) > 1:
+            ak_message("User darf nur einer Rollen-Gruppe angehören.")
+            return False
+        return True
+
+  - model: authentik_policies.policybinding
+    id: binding-emberone-at-most-one-role-on-user-settings-write
+    identifiers:
+      order: 15
+      target: !Find [
+        authentik_policies.policybindingmodel,
+        [flowstagebinding__order, 100],
+        [flowstagebinding__target__slug, default-user-settings-flow],
+      ]
+      policy: !Find [
+        authentik_policies_expression.expressionpolicy,
+        [name, "EmberOne at most one role group"],
+      ]
+    attrs:
+      enabled: true
+      order: 15
+      target: !Find [
+        authentik_policies.policybindingmodel,
+        [flowstagebinding__order, 100],
+        [flowstagebinding__target__slug, default-user-settings-flow],
+      ]
+      policy: !Find [
+        authentik_policies_expression.expressionpolicy,
+        [name, "EmberOne at most one role group"],
+      ]

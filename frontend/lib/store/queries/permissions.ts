@@ -1,0 +1,11 @@
+/*
+ * Copyright (C) 2026 Valentin Mesmer
+ * This file is part of EmberOne.
+ * SPDX-License-Identifier: Elastic-2.0
+ */
+
+// React Query keys for Permissions (Server State)
+
+export const permissionKeys = {
+  all: ['permissions'] as const,
+};

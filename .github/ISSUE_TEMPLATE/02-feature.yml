@@ -1,0 +1,25 @@
+name: Feature
+description: Neue Funktion oder Verbesserung
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Vorschlag
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Akzeptanzkriterien
+      placeholder: |
+        - [ ] …
+    validations:
+      required: false
