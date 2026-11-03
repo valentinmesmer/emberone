@@ -20,8 +20,11 @@ import com.emberone.platform.exception.ConflictException;
 import com.emberone.platform.exception.ResourceNotFoundException;
 import com.emberone.standard.domain.Standard;
 import com.emberone.standard.service.EffectiveStandardResolver;
+import com.emberone.userorganizationmembership.service.ActiveOrganizationMembershipLookup;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CertificationCatalogService {
 
     private final OrganizationRepository organizationRepository;
+    private final ActiveOrganizationMembershipLookup activeOrganizationMembershipLookup;
     private final EffectiveStandardResolver effectiveStandardResolver;
     private final CertDefinitionSelectionRepository selectionRepository;
     private final TenantCertDefinitionRepository tenantDefinitionRepository;
@@ -69,9 +73,56 @@ public class CertificationCatalogService {
                 .build();
     }
 
+    /**
+     * Catalog definitions from the union of effective-standard catalogs of every organization where
+     * the user has an active membership. Empty when the user has no active membership.
+     */
+    @Transactional(readOnly = true)
+    public List<CertificationDefinitionDto> listAvailableDefinitionsForUser(Long userId) {
+        Map<Long, CertificationDefinitionDto> byId = new LinkedHashMap<>();
+        for (Long organizationId :
+                activeOrganizationMembershipLookup.listActiveOrganizationIds(userId)) {
+            for (CertificationDefinitionDto definition :
+                    getCatalog(organizationId).getDefinitions()) {
+                byId.putIfAbsent(definition.getId(), definition);
+            }
+        }
+        return byId.values().stream()
+                .sorted(
+                        Comparator.comparing(
+                                CertificationDefinitionDto::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public void requireTypeAvailableForOrg(Long tenantCertDefinitionId, Long organizationId) {
         Organization organization = requireOrganization(organizationId);
+        requireDefinitionSelectable(tenantCertDefinitionId);
+        if (!catalogContainsDefinition(organization, tenantCertDefinitionId)) {
+            throw new ConflictException(
+                    "Certification definition is not available for organization " + organizationId);
+        }
+    }
+
+    /**
+     * Ensures the definition is selectable in at least one active-membership organization catalog
+     * of the user. Used by self-service workflows.
+     */
+    @Transactional(readOnly = true)
+    public void requireTypeAvailableForUser(Long tenantCertDefinitionId, Long userId) {
+        requireDefinitionSelectable(tenantCertDefinitionId);
+        for (Long organizationId :
+                activeOrganizationMembershipLookup.listActiveOrganizationIds(userId)) {
+            Organization organization = requireOrganization(organizationId);
+            if (catalogContainsDefinition(organization, tenantCertDefinitionId)) {
+                return;
+            }
+        }
+        throw new ConflictException(
+                "Certification definition is not available for any of the user's organizations");
+    }
+
+    private void requireDefinitionSelectable(Long tenantCertDefinitionId) {
         TenantCertDefinition definition =
                 tenantDefinitionRepository
                         .findById(tenantCertDefinitionId)
@@ -82,14 +133,13 @@ public class CertificationCatalogService {
         if (!LifecycleFields.isCatalogSelectable(definition)) {
             throw new ConflictException("Certification definition is not available");
         }
-        Set<Long> catalogIds =
-                resolveCatalogDefinitions(organization).stream()
-                        .map(CertificationDefinitionDto::getId)
-                        .collect(Collectors.toSet());
-        if (!catalogIds.contains(tenantCertDefinitionId)) {
-            throw new ConflictException(
-                    "Certification definition is not available for organization " + organizationId);
-        }
+    }
+
+    private boolean catalogContainsDefinition(
+            Organization organization, Long tenantCertDefinitionId) {
+        return resolveCatalogDefinitions(organization).stream()
+                .map(CertificationDefinitionDto::getId)
+                .anyMatch(tenantCertDefinitionId::equals);
     }
 
     private List<CertificationDefinitionDto> resolveCatalogDefinitions(Organization organization) {

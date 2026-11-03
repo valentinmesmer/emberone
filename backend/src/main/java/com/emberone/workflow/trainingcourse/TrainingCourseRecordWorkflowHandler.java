@@ -191,18 +191,19 @@ public class TrainingCourseRecordWorkflowHandler
             throw new WorkflowValidationException("name is too long");
         }
         requireOpeningUser(ctx);
-        Long membershipOrgId = requireMembershipOrganization(ctx.getOpenedByUserId());
+        Long userId = ctx.getOpenedByUserId();
+        Long membershipOrgId = requireMembershipOrganization(userId);
         for (Long typeId : typeIds) {
             TenantTrainingCourseType type = requireType(typeId);
             requireCatalogSelectableTrainingType(type);
             try {
-                catalogService.requireTypeAvailableForOrg(typeId, membershipOrgId);
+                catalogService.requireTypeAvailableForUser(typeId, userId);
             } catch (RuntimeException ex) {
                 throw new WorkflowValidationException(ex.getMessage());
             }
         }
         validateWorkflowDraftAttachments(
-                ctx.getOpenedByUserId(),
+                userId,
                 membershipOrgId,
                 payload.getAttachmentIds(),
                 TrainingCourseRecordWorkflowPayload.MAX_ATTACHMENTS,
@@ -219,18 +220,19 @@ public class TrainingCourseRecordWorkflowHandler
             throw new WorkflowValidationException("tenantTrainingCourseTypeIds is required");
         }
         requireOpeningUser(ctx);
-        Long membershipOrgId = requireMembershipOrganization(ctx.getOpenedByUserId());
+        Long userId = ctx.getOpenedByUserId();
+        Long membershipOrgId = requireMembershipOrganization(userId);
         for (Long typeId : typeIds) {
             TenantTrainingCourseType type = requireType(typeId);
             requireCatalogSelectableTrainingType(type);
             try {
-                catalogService.requireTypeAvailableForOrg(typeId, membershipOrgId);
+                catalogService.requireTypeAvailableForUser(typeId, userId);
             } catch (RuntimeException ex) {
                 throw new WorkflowValidationException(ex.getMessage());
             }
         }
         validateWorkflowAttachmentsForUpdate(
-                ctx.getOpenedByUserId(),
+                userId,
                 membershipOrgId,
                 existing.getId(),
                 payload.getAttachmentIds(),

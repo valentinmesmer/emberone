@@ -104,7 +104,7 @@ class TrainingCourseRecordWorkflowHandlerTest {
     }
 
     @Test
-    void validateOpenRejectsTypeNotAvailableForOrg() {
+    void validateOpenRejectsTypeNotAvailableForUser() {
         User user = User.builder().id(USER_ID).tenantId(TENANT_ID).build();
         TrainingCourseRecordWorkflowPayload payload =
                 TrainingCourseRecordWorkflowPayload.builder()
@@ -120,7 +120,7 @@ class TrainingCourseRecordWorkflowHandlerTest {
         stubMembership(MEMBERSHIP_ORG_ID);
         doThrow(new ConflictException("Training course type is not available"))
                 .when(catalogService)
-                .requireTypeAvailableForOrg(TYPE_ID, MEMBERSHIP_ORG_ID);
+                .requireTypeAvailableForUser(TYPE_ID, USER_ID);
 
         assertThatThrownBy(() ->
                         handler.validateOpen(

@@ -20,10 +20,11 @@ import com.emberone.trainingcourse.standard.TrainingCourseTypeSelection;
 import com.emberone.trainingcourse.standard.TrainingCourseTypeSelectionRepository;
 import com.emberone.trainingcourse.tenant.TenantTrainingCourseType;
 import com.emberone.trainingcourse.tenant.TenantTrainingCourseTypeRepository;
-import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
-import java.time.Instant;
+import com.emberone.userorganizationmembership.service.ActiveOrganizationMembershipLookup;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TrainingCourseCatalogService {
 
     private final OrganizationRepository organizationRepository;
-    private final UserOrganizationMembershipRepository membershipRepository;
+    private final ActiveOrganizationMembershipLookup activeOrganizationMembershipLookup;
     private final EffectiveStandardResolver effectiveStandardResolver;
     private final TrainingCourseTypeSelectionRepository selectionRepository;
     private final TenantTrainingCourseTypeRepository tenantTypeRepository;
@@ -67,28 +68,55 @@ public class TrainingCourseCatalogService {
     }
 
     /**
-     * Catalog types for the user's membership organization (main, else first active). Empty when
-     * the user has no active membership. Used by self-service submission and type-name resolution.
+     * Catalog types from the union of effective-standard catalogs of every organization where the
+     * user has an active membership. Empty when the user has no active membership. Used by
+     * self-service submission and type-name resolution.
      */
     @Transactional(readOnly = true)
     public List<TrainingCourseTypeDto> listAvailableTypesForUser(Long userId) {
-        return resolveMembershipOrganizationId(userId)
-                .map(this::getAvailableTypesForOrg)
-                .map(OrgTrainingCourseCatalogDto::getTypes)
-                .orElse(List.of());
-    }
-
-    private Optional<Long> resolveMembershipOrganizationId(Long userId) {
-        Instant now = Instant.now();
-        return membershipRepository
-                .findActiveByUser_IdAndMainTrue(userId, now)
-                .or(() -> membershipRepository.findFirstActiveByUser_IdOrderByIdAsc(userId, now))
-                .map(membership -> membership.getOrganization().getId());
+        Map<Long, TrainingCourseTypeDto> byId = new LinkedHashMap<>();
+        for (Long organizationId :
+                activeOrganizationMembershipLookup.listActiveOrganizationIds(userId)) {
+            for (TrainingCourseTypeDto type : getAvailableTypesForOrg(organizationId).getTypes()) {
+                byId.putIfAbsent(type.getId(), type);
+            }
+        }
+        return byId.values().stream()
+                .sorted(
+                        Comparator.comparing(
+                                TrainingCourseTypeDto::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public void requireTypeAvailableForOrg(Long tenantTrainingCourseTypeId, Long organizationId) {
         Organization organization = requireOrganization(organizationId);
+        requireTypeSelectable(tenantTrainingCourseTypeId);
+        if (!catalogContainsType(organization, tenantTrainingCourseTypeId)) {
+            throw new ConflictException(
+                    "Training course type is not available for organization " + organizationId);
+        }
+    }
+
+    /**
+     * Ensures the type is selectable in at least one active-membership organization catalog of the
+     * user. Used by self-service workflows.
+     */
+    @Transactional(readOnly = true)
+    public void requireTypeAvailableForUser(Long tenantTrainingCourseTypeId, Long userId) {
+        requireTypeSelectable(tenantTrainingCourseTypeId);
+        for (Long organizationId :
+                activeOrganizationMembershipLookup.listActiveOrganizationIds(userId)) {
+            Organization organization = requireOrganization(organizationId);
+            if (catalogContainsType(organization, tenantTrainingCourseTypeId)) {
+                return;
+            }
+        }
+        throw new ConflictException(
+                "Training course type is not available for any of the user's organizations");
+    }
+
+    private void requireTypeSelectable(Long tenantTrainingCourseTypeId) {
         TenantTrainingCourseType type =
                 tenantTypeRepository
                         .findById(tenantTrainingCourseTypeId)
@@ -99,14 +127,13 @@ public class TrainingCourseCatalogService {
         if (!LifecycleFields.isCatalogSelectable(type)) {
             throw new ConflictException("Training course type is not available");
         }
-        Set<Long> catalogIds =
-                resolveCatalogTypes(organization).stream()
-                        .map(TrainingCourseTypeDto::getId)
-                        .collect(Collectors.toSet());
-        if (!catalogIds.contains(tenantTrainingCourseTypeId)) {
-            throw new ConflictException(
-                    "Training course type is not available for organization " + organizationId);
-        }
+    }
+
+    private boolean catalogContainsType(
+            Organization organization, Long tenantTrainingCourseTypeId) {
+        return resolveCatalogTypes(organization).stream()
+                .map(TrainingCourseTypeDto::getId)
+                .anyMatch(tenantTrainingCourseTypeId::equals);
     }
 
     private List<TrainingCourseTypeDto> resolveCatalogTypes(Organization organization) {

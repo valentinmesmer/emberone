@@ -18,6 +18,12 @@ bin/
 hs_err_pid*
 replay_pid*
 
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
 ### STS ###
 .apt_generated
 .classpath

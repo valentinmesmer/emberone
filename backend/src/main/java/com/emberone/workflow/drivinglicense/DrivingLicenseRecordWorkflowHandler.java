@@ -102,7 +102,7 @@ public class DrivingLicenseRecordWorkflowHandler
             WorkflowOpenContext<DrivingLicenseRecordWorkflowPayload> ctx) {
         DrivingLicenseRecordWorkflowPayload payload = ctx.getPayload();
         requirePayloadPresent(payload);
-        validateClassDefinitions(payload, requireMembershipOrganization(ctx.getOpenedByUserId()));
+        validateClassDefinitions(payload, ctx.getOpenedByUserId());
         return requireMembershipOrganization(ctx.getOpenedByUserId());
     }
 
@@ -124,11 +124,12 @@ public class DrivingLicenseRecordWorkflowHandler
         DrivingLicenseRecordWorkflowPayload payload = ctx.getPayload();
         requirePayloadPresent(payload);
         requireOpeningUser(ctx);
-        Long membershipOrgId = requireMembershipOrganization(ctx.getOpenedByUserId());
+        Long userId = ctx.getOpenedByUserId();
+        Long membershipOrgId = requireMembershipOrganization(userId);
         validatePayload(payload);
-        validateClassDefinitions(payload, membershipOrgId);
+        validateClassDefinitions(payload, userId);
         validateWorkflowDraftAttachments(
-                ctx.getOpenedByUserId(),
+                userId,
                 membershipOrgId,
                 payload.getAttachmentIds(),
                 DrivingLicenseRecordWorkflowPayload.MAX_ATTACHMENTS,
@@ -141,9 +142,10 @@ public class DrivingLicenseRecordWorkflowHandler
         DrivingLicenseRecordWorkflowPayload payload = ctx.getPayload();
         requirePayloadPresent(payload);
         requireOpeningUser(ctx);
-        Long membershipOrgId = requireMembershipOrganization(ctx.getOpenedByUserId());
+        Long userId = ctx.getOpenedByUserId();
+        Long membershipOrgId = requireMembershipOrganization(userId);
         validatePayload(payload);
-        validateClassDefinitions(payload, membershipOrgId);
+        validateClassDefinitions(payload, userId);
         validateWorkflowAttachmentsForUpdate(
                 ctx.getOpenedByUserId(),
                 membershipOrgId,
@@ -208,7 +210,7 @@ public class DrivingLicenseRecordWorkflowHandler
     }
 
     private void validateClassDefinitions(
-            DrivingLicenseRecordWorkflowPayload payload, Long membershipOrgId) {
+            DrivingLicenseRecordWorkflowPayload payload, Long userId) {
         for (DrivingLicenseRecordWorkflowPayload.DrivingLicenseClassPayload classPayload :
                 payload.getClasses()) {
             TenantDrivingLicenseDefinition definition =
@@ -220,8 +222,7 @@ public class DrivingLicenseRecordWorkflowHandler
                                 : "Driving license definition is not active");
             }
             try {
-                catalogService.requireDefinitionAvailableForOrg(
-                        definition.getId(), membershipOrgId);
+                catalogService.requireDefinitionAvailableForUser(definition.getId(), userId);
             } catch (RuntimeException ex) {
                 throw new WorkflowValidationException(ex.getMessage());
             }

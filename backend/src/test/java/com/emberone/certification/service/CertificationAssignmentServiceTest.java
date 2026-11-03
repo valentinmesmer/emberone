@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.emberone.certification.domain.UserCertificationAssignment;
+import com.emberone.certification.dto.CertificationDefinitionDto;
 import com.emberone.certification.repository.UserCertificationAssignmentRepository;
 import com.emberone.certification.tenant.TenantCertDefinition;
 import com.emberone.certification.tenant.TenantCertDefinitionRepository;
@@ -122,5 +123,46 @@ class CertificationAssignmentServiceTest {
 
         assertThat(page.getContent()).isEmpty();
         assertThat(page.getTotalElements()).isZero();
+    }
+
+    @Test
+    void listRequestableDefinitionsForUser_filtersAssignedFromMembershipUnionCatalog() {
+        when(catalogService.listAvailableDefinitionsForUser(USER_ID))
+                .thenReturn(
+                        List.of(
+                                CertificationDefinitionDto.builder()
+                                        .id(100L)
+                                        .name("Atemschutz")
+                                        .active(true)
+                                        .build(),
+                                CertificationDefinitionDto.builder()
+                                        .id(200L)
+                                        .name("Funk")
+                                        .active(true)
+                                        .build(),
+                                CertificationDefinitionDto.builder()
+                                        .id(300L)
+                                        .name("Inactive")
+                                        .active(false)
+                                        .build()));
+        when(assignmentRepository.findByUserId(USER_ID))
+                .thenReturn(
+                        List.of(
+                                UserCertificationAssignment.builder()
+                                        .tenantCertDefinitionId(100L)
+                                        .startDate(LocalDate.now().minusDays(1))
+                                        .build()));
+        when(tenantDefinitionRepository.findById(100L))
+                .thenReturn(
+                        Optional.of(
+                                TenantCertDefinition.builder()
+                                        .id(100L)
+                                        .active(true)
+                                        .archived(false)
+                                        .build()));
+
+        assertThat(service.listRequestableDefinitionsForUser(USER_ID))
+                .extracting(CertificationDefinitionDto::getId)
+                .containsExactly(200L);
     }
 }

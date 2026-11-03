@@ -79,14 +79,13 @@ public class CertificationAssignmentService {
     }
 
     /**
-     * Active catalog definitions for the user's membership organization that are not yet assigned.
-     * Used by self-service certification submission (Nachweis einreichen) when no profile exists
-     * yet.
+     * Active catalog definitions from the union of all active-membership organization catalogs that
+     * are not yet assigned. Used by self-service certification submission (Nachweis einreichen)
+     * when no profile exists yet.
      */
     @Transactional(readOnly = true)
     public List<CertificationDefinitionDto> listRequestableDefinitionsForUser(Long userId) {
-        Long organizationId = resolveMembershipOrganizationId(userId);
-        return catalogService.getCatalog(organizationId).getDefinitions().stream()
+        return catalogService.listAvailableDefinitionsForUser(userId).stream()
                 .filter(CertificationDefinitionDto::isActive)
                 .filter(definition -> !isDefinitionAssignedToUser(userId, definition.getId()))
                 .sorted(

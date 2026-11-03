@@ -99,7 +99,7 @@ Schema in `V1__Initial_setup.sql`:
 | Bereich | Pfad |
 |---------|------|
 | Self (lesen) | `GET /api/v1/self/driving-license` |
-| Self (Katalog) | `GET /api/v1/self/driving-license/available-definitions` (`@BoundedList`, Membership-Org-Katalog) |
+| Self (Katalog) | `GET /api/v1/self/driving-license/available-definitions` (`@BoundedList`, Union der Kataloge aller Orgs mit aktiver Mitgliedschaft; Validierung analog `requireDefinitionAvailableForUser`) |
 | Org (CRUD) | `GET/POST/PUT/DELETE /api/v1/auth/organizations/{orgId}/users/{userId}/driving-license` |
 | Org (pending) | `GET .../driving-license/pending-workflow` |
 | Org (Katalog) | `GET .../driving-license/available-definitions` (`@BoundedList`) |

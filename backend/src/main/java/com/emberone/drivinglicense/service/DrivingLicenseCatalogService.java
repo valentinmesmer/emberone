@@ -20,10 +20,11 @@ import com.emberone.platform.exception.ConflictException;
 import com.emberone.platform.exception.ResourceNotFoundException;
 import com.emberone.standard.domain.Standard;
 import com.emberone.standard.service.EffectiveStandardResolver;
-import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
-import java.time.Instant;
+import com.emberone.userorganizationmembership.service.ActiveOrganizationMembershipLookup;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DrivingLicenseCatalogService {
 
     private final OrganizationRepository organizationRepository;
-    private final UserOrganizationMembershipRepository membershipRepository;
+    private final ActiveOrganizationMembershipLookup activeOrganizationMembershipLookup;
     private final EffectiveStandardResolver effectiveStandardResolver;
     private final DrivingLicenseDefinitionSelectionRepository selectionRepository;
     private final TenantDrivingLicenseDefinitionRepository tenantDefinitionRepository;
@@ -67,30 +68,60 @@ public class DrivingLicenseCatalogService {
     }
 
     /**
-     * Catalog definitions for the user's membership organization (main, else first active). Empty
-     * when the user has no active membership. Used by self-service submission and class-name
-     * resolution.
+     * Catalog definitions from the union of effective-standard catalogs of every organization where
+     * the user has an active membership. Empty when the user has no active membership. Used by
+     * self-service submission and class-name resolution.
      */
     @Transactional(readOnly = true)
     public List<DrivingLicenseDefinitionDto> listAvailableDefinitionsForUser(Long userId) {
-        return resolveMembershipOrganizationId(userId)
-                .map(this::getAvailableDefinitionsForOrg)
-                .map(OrgDrivingLicenseCatalogDto::getDefinitions)
-                .orElse(List.of());
-    }
-
-    private Optional<Long> resolveMembershipOrganizationId(Long userId) {
-        Instant now = Instant.now();
-        return membershipRepository
-                .findActiveByUser_IdAndMainTrue(userId, now)
-                .or(() -> membershipRepository.findFirstActiveByUser_IdOrderByIdAsc(userId, now))
-                .map(membership -> membership.getOrganization().getId());
+        Map<Long, DrivingLicenseDefinitionDto> byId = new LinkedHashMap<>();
+        for (Long organizationId :
+                activeOrganizationMembershipLookup.listActiveOrganizationIds(userId)) {
+            for (DrivingLicenseDefinitionDto definition :
+                    getAvailableDefinitionsForOrg(organizationId).getDefinitions()) {
+                byId.putIfAbsent(definition.getId(), definition);
+            }
+        }
+        return byId.values().stream()
+                .sorted(
+                        Comparator.comparing(
+                                DrivingLicenseDefinitionDto::getName,
+                                String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public void requireDefinitionAvailableForOrg(
             Long tenantDrivingLicenseDefinitionId, Long organizationId) {
         Organization organization = requireOrganization(organizationId);
+        requireDefinitionSelectable(tenantDrivingLicenseDefinitionId);
+        if (!catalogContainsDefinition(organization, tenantDrivingLicenseDefinitionId)) {
+            throw new ConflictException(
+                    "Driving license definition is not available for organization "
+                            + organizationId);
+        }
+    }
+
+    /**
+     * Ensures the definition is selectable in at least one active-membership organization catalog
+     * of the user. Used by self-service workflows.
+     */
+    @Transactional(readOnly = true)
+    public void requireDefinitionAvailableForUser(
+            Long tenantDrivingLicenseDefinitionId, Long userId) {
+        requireDefinitionSelectable(tenantDrivingLicenseDefinitionId);
+        for (Long organizationId :
+                activeOrganizationMembershipLookup.listActiveOrganizationIds(userId)) {
+            Organization organization = requireOrganization(organizationId);
+            if (catalogContainsDefinition(organization, tenantDrivingLicenseDefinitionId)) {
+                return;
+            }
+        }
+        throw new ConflictException(
+                "Driving license definition is not available for any of the user's organizations");
+    }
+
+    private void requireDefinitionSelectable(Long tenantDrivingLicenseDefinitionId) {
         TenantDrivingLicenseDefinition definition =
                 tenantDefinitionRepository
                         .findById(tenantDrivingLicenseDefinitionId)
@@ -101,15 +132,13 @@ public class DrivingLicenseCatalogService {
         if (!LifecycleFields.isCatalogSelectable(definition)) {
             throw new ConflictException("Driving license definition is not available");
         }
-        Set<Long> catalogIds =
-                resolveCatalogDefinitions(organization).stream()
-                        .map(DrivingLicenseDefinitionDto::getId)
-                        .collect(Collectors.toSet());
-        if (!catalogIds.contains(tenantDrivingLicenseDefinitionId)) {
-            throw new ConflictException(
-                    "Driving license definition is not available for organization "
-                            + organizationId);
-        }
+    }
+
+    private boolean catalogContainsDefinition(
+            Organization organization, Long tenantDrivingLicenseDefinitionId) {
+        return resolveCatalogDefinitions(organization).stream()
+                .map(DrivingLicenseDefinitionDto::getId)
+                .anyMatch(tenantDrivingLicenseDefinitionId::equals);
     }
 
     private List<DrivingLicenseDefinitionDto> resolveCatalogDefinitions(Organization organization) {

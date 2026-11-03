@@ -249,7 +249,7 @@ public class CertificationRecordWorkflowHandler
                             ? "Certification definition is archived"
                             : "Certification definition is not active");
         }
-        catalogService.requireTypeAvailableForOrg(definitionId, membershipOrgId);
+        catalogService.requireTypeAvailableForUser(definitionId, ctx.getOpenedByUserId());
         Set<CertEvidenceType> evidenceTypes = evidenceTypeService.getEvidenceTypes(definitionId);
         if (!TenantCertDefinitionEvidenceTypeService.allowsWorkflowSubmission(evidenceTypes)) {
             throw new WorkflowValidationException(

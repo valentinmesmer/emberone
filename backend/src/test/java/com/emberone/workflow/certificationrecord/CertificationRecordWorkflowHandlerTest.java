@@ -149,7 +149,7 @@ class CertificationRecordWorkflowHandlerTest {
 
         handler.validateOpen(new WorkflowOpenContext<>(USER_ID, TENANT_ID, payload));
 
-        verify(catalogService).requireTypeAvailableForOrg(DEFINITION_ID, MEMBERSHIP_ORG_ID);
+        verify(catalogService).requireTypeAvailableForUser(DEFINITION_ID, USER_ID);
     }
 
     @Test
@@ -196,7 +196,7 @@ class CertificationRecordWorkflowHandlerTest {
 
         handler.validateOpen(new WorkflowOpenContext<>(USER_ID, TENANT_ID, payload));
 
-        verify(catalogService).requireTypeAvailableForOrg(DEFINITION_ID, MEMBERSHIP_ORG_ID);
+        verify(catalogService).requireTypeAvailableForUser(DEFINITION_ID, USER_ID);
     }
 
     @Test

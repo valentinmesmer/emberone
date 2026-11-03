@@ -119,6 +119,7 @@ Gruppen selbst, PermissionGroupMappings, `GroupMembershipType`-Enum (liegt in `o
 | Thema | Ort |
 |-------|-----|
 | Org-Membership | `userorganizationmembership/{domain,service,controller,…}/` |
+| Aktive Org-IDs für Self-Katalog-Union | `userorganizationmembership/service/ActiveOrganizationMembershipLookup.java` (Lehrgang/Cert/Führerschein-Auswahl) |
 | Org-Membership Realtime | `userorganizationmembership/realtime/{OrganizationMembershipRealtimeListener,OrganizationMembershipRealtimeNotifier}.java` |
 | Group-Membership | `userorganizationgroupmembership/{domain,service,controller,…}/` |
 | Ended→Groups | `userorganizationgroupmembership/.../OrganizationMembershipEndedGroupListener.java` |

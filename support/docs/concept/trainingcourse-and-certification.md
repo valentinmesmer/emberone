@@ -80,11 +80,11 @@ Org-Listen `GET …/certifications/assignments` und `…/records`: paginiert (`p
 | Bereich | Pfad |
 |---------|------|
 | Self (Records) | `GET /api/v1/self/training-courses/records` (`ListQuery`, `TrainingCourseUserRecordPageDto`) |
-| Self (Katalog) | `GET /api/v1/self/training-courses/available-types` (`@BoundedList`, Membership-Org-Katalog) |
-| Org (CRUD / Katalog) | `/api/v1/auth/organizations/{orgId}/users/{userId}/training-courses/…`; Records paginiert; `available-types` / `pending-submissions` `@BoundedList` |
+| Self (Katalog) | `GET /api/v1/self/training-courses/available-types` (`@BoundedList`, Union der Kataloge aller Orgs mit aktiver Mitgliedschaft) |
+| Org (CRUD / Katalog) | `/api/v1/auth/organizations/{orgId}/users/{userId}/training-courses/…`; Records paginiert; `available-types` / `pending-submissions` `@BoundedList` (nur Katalog der Pfad-Org) |
 | Workflow (Self) | `POST /api/v1/auth/workflows/training-course-record` |
 
-Self-Katalog entspricht Cert `requestable-definitions`: My-Area und Self-Workflows dürfen **nicht** den Org-Endpoint mit `TRAINING_COURSE_READ` nutzen.
+Self-Katalog (Lehrgang `available-types`, Cert `requestable-definitions`, Führerschein `available-definitions`) und die zugehörige Workflow-Validierung (`require*AvailableForUser`) bilden die **Union** der effektiven Standard-Kataloge aller Orgs mit aktiver Mitgliedschaft. Org-CRUD und manuelle Org-Nachweise bleiben am Katalog der Pfad-Org; Workflow-Kontext-Org / Attachments weiterhin Hauptorg. My-Area und Self-Workflows dürfen **nicht** den Org-Endpoint mit `TRAINING_COURSE_READ` nutzen.
 
 ## Zertifikats-Statusübersicht (Org)
 
@@ -110,8 +110,9 @@ Submission = ganzer Lehrgang-Nachweis; granted types sind per PUT nicht änderba
 
 | Thema | Ort |
 |-------|-----|
-| Training-Katalog / Submissions | `trainingcourse/` |
-| Cert-Definitionen / Assignments / Records | `certification/` |
+| Training-Katalog / Submissions | `trainingcourse/` (`TrainingCourseCatalogService.listAvailableTypesForUser` / `requireTypeAvailableForUser`) |
+| Cert-Definitionen / Assignments / Records | `certification/` (`CertificationCatalogService.listAvailableDefinitionsForUser` / `requireTypeAvailableForUser`; Self-Requestable filtert zusätzlich unassigned) |
+| Aktive Membership-Orgs (Katalog-Union) | `userorganizationmembership/service/ActiveOrganizationMembershipLookup.java` |
 | Status | `certification/…/CertificationStatusService` |
 | Reminder | `certification/…/CertificationReminderService` + Scheduler |
 | Event-Grants | `certification/event/` (`CertificationEventGrant`, `CertificationEventGrantService`, `EventAttendanceCertificationGrantListener`) |
