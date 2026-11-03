@@ -146,8 +146,6 @@ export interface AdminOrganizationDetailDto {
   hasChildren?: boolean;
   /** True when this org or any descendant has no active leadership group member (from API). */
   leaderMissingInSubtree?: boolean;
-  /** True when this org may manage other organizations (management module and access). */
-  managementCapable?: boolean;
   deactivatedAt?: string | null;
 }
 
@@ -209,6 +207,8 @@ export interface ManagementOptionDto {
 }
 
 export interface ManagementAudienceSettingsDto {
+  /** False when the management module is off for the organization's standard. */
+  enabled: boolean;
   entries: ManagementAudienceEntryDto[];
   organizations: ManagementOptionDto[];
   organizationTypes: ManagementOptionDto[];

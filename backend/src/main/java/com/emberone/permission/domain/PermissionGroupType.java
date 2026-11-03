@@ -23,14 +23,12 @@ public enum PermissionGroupType {
     }
 
     /**
-     * ADMIN receives every {@link PermissionType} except {@link PermissionType#MANAGEMENT_ACCESS},
-     * which must be granted explicitly. Other types use the requested list as-is.
+     * ADMIN receives every {@link PermissionType}; materialization then clips to the standard's
+     * enabled modules. Other types use the requested list as-is.
      */
     public List<PermissionType> effectivePermissionTypes(List<PermissionType> requested) {
         if (this == ADMIN) {
-            return Arrays.stream(PermissionType.values())
-                    .filter(type -> type != PermissionType.MANAGEMENT_ACCESS)
-                    .toList();
+            return Arrays.asList(PermissionType.values());
         }
         return requested == null ? List.of() : List.copyOf(requested);
     }

@@ -31,8 +31,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ManagementAudienceCleanupListenerTest {
 
     private static final long TENANT_ID = 7L;
-    private static final long INCAPABLE_ORG_ID = 10L;
+    private static final long MODULE_OFF_ORG_ID = 10L;
     private static final long CAPABLE_ORG_ID = 11L;
+    private static final long ACCESS_LOST_ORG_ID = 12L;
 
     @Mock ManagementAudienceRepository audienceRepository;
     @Mock OrganizationRepository organizationRepository;
@@ -43,33 +44,44 @@ class ManagementAudienceCleanupListenerTest {
     @InjectMocks ManagementAudienceCleanupListener listener;
 
     @Test
-    void removesEntriesOnlyOfOrganizationsThatLostCapability() {
-        Organization incapable = organization(INCAPABLE_ORG_ID);
+    void removesAudienceOnlyWhenModuleIsOffAndEndsActivationsWhenNotCapable() {
+        Organization moduleOff = organization(MODULE_OFF_ORG_ID);
         Organization capable = organization(CAPABLE_ORG_ID);
-        ManagementAudience entry =
+        Organization accessLost = organization(ACCESS_LOST_ORG_ID);
+        ManagementAudience moduleOffEntry =
                 ManagementAudience.builder()
                         .id(1L)
                         .tenantId(TENANT_ID)
-                        .managingOrganizationId(INCAPABLE_ORG_ID)
+                        .managingOrganizationId(MODULE_OFF_ORG_ID)
                         .kind(ManagementAudienceKind.TENANT)
                         .maxDurationMinutes(30)
                         .build();
         when(audienceRepository.findDistinctManagingOrganizationIds())
-                .thenReturn(List.of(INCAPABLE_ORG_ID, CAPABLE_ORG_ID));
-        when(organizationRepository.findById(INCAPABLE_ORG_ID)).thenReturn(Optional.of(incapable));
+                .thenReturn(List.of(MODULE_OFF_ORG_ID, CAPABLE_ORG_ID, ACCESS_LOST_ORG_ID));
+        when(organizationRepository.findById(MODULE_OFF_ORG_ID)).thenReturn(Optional.of(moduleOff));
         when(organizationRepository.findById(CAPABLE_ORG_ID)).thenReturn(Optional.of(capable));
-        when(capabilityService.isCapable(incapable)).thenReturn(false);
+        when(organizationRepository.findById(ACCESS_LOST_ORG_ID))
+                .thenReturn(Optional.of(accessLost));
+        when(capabilityService.isModuleEnabled(moduleOff)).thenReturn(false);
+        when(capabilityService.isCapable(moduleOff)).thenReturn(false);
+        when(capabilityService.isModuleEnabled(capable)).thenReturn(true);
         when(capabilityService.isCapable(capable)).thenReturn(true);
-        when(audienceRepository.findByManagingOrganizationIdOrderByIdAsc(INCAPABLE_ORG_ID))
-                .thenReturn(List.of(entry));
+        when(capabilityService.isModuleEnabled(accessLost)).thenReturn(true);
+        when(capabilityService.isCapable(accessLost)).thenReturn(false);
+        when(audienceRepository.findByManagingOrganizationIdOrderByIdAsc(MODULE_OFF_ORG_ID))
+                .thenReturn(List.of(moduleOffEntry));
 
         listener.onStandardEnabledModulesChanged(
                 new StandardEnabledModulesChangedEvent(TENANT_ID, 3L));
 
         verify(audienceRepository).deleteAll(any(Iterable.class));
-        verify(activationService).endSystemActivationsThrough(INCAPABLE_ORG_ID);
+        verify(activationService).endSystemActivationsThrough(MODULE_OFF_ORG_ID);
+        verify(activationService).endSystemActivationsThrough(ACCESS_LOST_ORG_ID);
         verify(audienceRepository, never())
                 .findByManagingOrganizationIdOrderByIdAsc(eq(CAPABLE_ORG_ID));
+        verify(audienceRepository, never())
+                .findByManagingOrganizationIdOrderByIdAsc(eq(ACCESS_LOST_ORG_ID));
+        verify(activationService, never()).endSystemActivationsThrough(CAPABLE_ORG_ID);
     }
 
     @Test

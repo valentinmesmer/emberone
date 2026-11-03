@@ -35,6 +35,7 @@ interface AdminOrganizationManagementSectionProps {
   organizationId: number;
 }
 
+/** Audience of organizations this org may manage. Hidden while the management module is off. */
 export function AdminOrganizationManagementSection({
   tenantId,
   organizationId,
@@ -42,6 +43,7 @@ export function AdminOrganizationManagementSection({
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
   const { data, isLoading, isError, error } = useAdminManagementAudiences(tenantId, organizationId);
+  const enabled = data?.enabled === true;
   const replaceAudiences = useReplaceAdminManagementAudiences(tenantId, organizationId);
 
   const [adding, setAdding] = useState(false);
@@ -59,7 +61,7 @@ export function AdminOrganizationManagementSection({
       </Card>
     );
   }
-  if (!data) return null;
+  if (!enabled || !data) return null;
 
   const entries = data.entries;
 

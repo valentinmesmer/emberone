@@ -9,6 +9,7 @@ package com.emberone.management.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -23,9 +24,9 @@ import com.emberone.management.repository.ManagementAudienceRepository;
 import com.emberone.organization.domain.Organization;
 import com.emberone.organization.exception.OrganizationNotFoundException;
 import com.emberone.organization.repository.OrganizationRepository;
-import com.emberone.organization.repository.OrganizationTypeDefinitionRepository;
 import com.emberone.organization.service.OrganizationTypeDefinitionService;
 import com.emberone.permission.domain.PermissionType;
+import com.emberone.platform.exception.ConflictException;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +46,6 @@ class ManagementAudienceServiceTest {
     @Mock ManagementAudienceRepository audienceRepository;
     @Mock ManagementCapabilityService capabilityService;
     @Mock OrganizationRepository organizationRepository;
-    @Mock OrganizationTypeDefinitionRepository organizationTypeRepository;
     @Mock OrganizationTypeDefinitionService organizationTypeService;
 
     @InjectMocks ManagementAudienceService service;
@@ -63,16 +63,20 @@ class ManagementAudienceServiceTest {
         lenient()
                 .when(organizationRepository.findById(MANAGING_ORG_ID))
                 .thenReturn(Optional.of(managing));
-        lenient().when(capabilityService.isCapable(managing)).thenReturn(true);
+        lenient().when(capabilityService.isModuleEnabled(managing)).thenReturn(true);
+        lenient()
+                .when(organizationRepository.findActiveByTenantIdOrderByName(TENANT_ID))
+                .thenReturn(List.of());
+        lenient().when(organizationTypeService.listActive()).thenReturn(List.of());
     }
 
     @Test
-    void rejectsOrganizationWithoutCapability() {
-        when(capabilityService.isCapable(managing)).thenReturn(false);
+    void rejectsOrganizationWhenModuleIsDisabled() {
+        when(capabilityService.isModuleEnabled(managing)).thenReturn(false);
 
         assertThatThrownBy(
                         () -> service.replace(TENANT_ID, MANAGING_ORG_ID, List.of(tenantEntry(60))))
-                .isInstanceOf(ManagementAudienceValidationException.class);
+                .isInstanceOf(ConflictException.class);
 
         verify(audienceRepository, never()).saveAll(any());
     }
@@ -192,9 +196,21 @@ class ManagementAudienceServiceTest {
                 .thenReturn(List.of(entry));
         ManagementAudienceSettingsDto settings = service.getSettings(TENANT_ID, MANAGING_ORG_ID);
 
+        assertThat(settings.isEnabled()).isTrue();
         assertThat(settings.getEntries())
                 .extracting(e -> e.getMaxDurationMinutes())
                 .containsExactly(45);
+    }
+
+    @Test
+    void settingsAreEmptyWhenModuleIsDisabled() {
+        when(capabilityService.isModuleEnabled(managing)).thenReturn(false);
+
+        ManagementAudienceSettingsDto settings = service.getSettings(TENANT_ID, MANAGING_ORG_ID);
+
+        assertThat(settings.isEnabled()).isFalse();
+        assertThat(settings.getEntries()).isEmpty();
+        verify(audienceRepository, never()).findByManagingOrganizationIdOrderByIdAsc(anyLong());
     }
 
     private static ManagementAudienceEntryRequest tenantEntry(int maxDurationMinutes) {

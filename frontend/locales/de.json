@@ -830,7 +830,7 @@
       "systemOrgGroupsAlreadyPresent": "Leitung und Alle Mitglieder sind bereits vorhanden. Neue Gruppen können nur als benutzerdefiniert angelegt werden.",
       "systemPermissionGroupRequired": "Pflichtgruppe",
       "systemPermissionGroupRequiredHint": "Administration und Standard sind pro Standard verpflichtend und können nicht entfernt werden.",
-      "adminPermissionGroupHint": "Die Administration-Gruppe umfasst immer alle Berechtigungen und kann nicht eingeschränkt werden.",
+      "adminPermissionGroupHint": "Die Administration-Gruppe umfasst immer alle Berechtigungen der aktiven Module und kann nicht eingeschränkt werden.",
       "permissionGroupTypes": {
         "ADMIN": "Administration",
         "STANDARD": "Standard",

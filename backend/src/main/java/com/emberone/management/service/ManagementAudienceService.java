@@ -17,9 +17,9 @@ import com.emberone.management.repository.ManagementAudienceRepository;
 import com.emberone.organization.domain.Organization;
 import com.emberone.organization.exception.OrganizationNotFoundException;
 import com.emberone.organization.repository.OrganizationRepository;
-import com.emberone.organization.repository.OrganizationTypeDefinitionRepository;
 import com.emberone.organization.service.OrganizationTypeDefinitionService;
 import com.emberone.permission.domain.PermissionType;
+import com.emberone.platform.exception.ConflictException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -34,7 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Configures which organizations a managing organization may open. Only configuration: nothing here
- * grants access, the access check reads these entries together with open activations.
+ * grants access, the access check reads these entries together with open activations. Writable when
+ * the management module is enabled (like course-offering types); {@code MANAGEMENT_ACCESS} is only
+ * required to activate.
  */
 @Service
 @RequiredArgsConstructor
@@ -43,7 +45,6 @@ public class ManagementAudienceService {
     private final ManagementAudienceRepository audienceRepository;
     private final ManagementCapabilityService capabilityService;
     private final OrganizationRepository organizationRepository;
-    private final OrganizationTypeDefinitionRepository organizationTypeRepository;
     private final OrganizationTypeDefinitionService organizationTypeService;
 
     @Transactional(readOnly = true)
@@ -59,9 +60,8 @@ public class ManagementAudienceService {
     public ManagementAudienceSettingsDto replace(
             Long tenantId, Long organizationId, List<ManagementAudienceEntryRequest> entries) {
         Organization managing = requireOrganization(tenantId, organizationId);
-        if (!capabilityService.isCapable(managing)) {
-            throw new ManagementAudienceValidationException(
-                    "The organization cannot manage other organizations");
+        if (!capabilityService.isModuleEnabled(managing)) {
+            throw new ConflictException("Management module is not enabled for organization");
         }
         validate(managing, entries);
 
@@ -155,8 +155,18 @@ public class ManagementAudienceService {
     }
 
     private ManagementAudienceSettingsDto toSettings(Organization managing) {
+        boolean enabled = capabilityService.isModuleEnabled(managing);
+        if (!enabled) {
+            return ManagementAudienceSettingsDto.builder()
+                    .enabled(false)
+                    .entries(List.of())
+                    .organizations(List.of())
+                    .organizationTypes(List.of())
+                    .build();
+        }
         Long tenantId = managing.getTenantId();
         return ManagementAudienceSettingsDto.builder()
+                .enabled(true)
                 .entries(
                         audienceRepository
                                 .findByManagingOrganizationIdOrderByIdAsc(managing.getId())

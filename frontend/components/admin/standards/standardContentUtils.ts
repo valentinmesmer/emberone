@@ -13,8 +13,9 @@ import type {
 import { workflowTypeIdFromEnumKey } from '@/lib/utils/workflowLabels';
 import { PermissionTypeEnum } from '@/types/permission';
 
-export const ALL_PERMISSION_TYPES = Object.keys(PermissionTypeEnum).filter(
-  (k) => Number.isNaN(Number(k)) && k !== 'ORGANIZATION_READ',
+/** Permission type keys for pickers and ADMIN wildcard (clipped by enabled modules at materialize). */
+export const ALL_PERMISSION_TYPES = Object.keys(PermissionTypeEnum).filter((k) =>
+  Number.isNaN(Number(k)),
 );
 
 const ORG_GROUP_TYPES: OrganizationGroupTypeName[] = ['LEADERSHIP', 'ALL_MEMBERS', 'CUSTOM'];

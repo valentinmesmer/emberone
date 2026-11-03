@@ -44,19 +44,18 @@ SecurityService  (Fassade, 8 Kollaboratoren)
 | **OPERATIONS** | `OPERATION_EVENT_READ/WRITE`(7/8) |
 | **APPOINTMENTS** | `APPOINTMENT_READ/WRITE`(9/10), `EVENT_ATTENDANCE_READ/WRITE`(11/12) |
 | **COURSE_OFFERINGS** | `COURSE_OFFERING_READ/WRITE`(33/34); die Anmeldungen eines Mitglieds in der Mitgliederansicht dagegen über `TRAINING_COURSE_READ` |
-| **MANAGEMENT** | `MANAGEMENT_ACCESS`(35); Fähigkeit, andere Organisationen des Mandanten zu verwalten. Nie im ADMIN-Wildcard, siehe unten |
+| **MANAGEMENT** | `MANAGEMENT_ACCESS`(35); Fähigkeit, andere Organisationen des Mandanten zu verwalten |
 
 Die IDs sind lückenlos (1-35); Backend-Enum und Frontend-`PermissionTypeEnum` führen dieselben Werte.
-
-**Ausnahme ADMIN-Wildcard:** `PermissionGroupType.ADMIN.effectivePermissionTypes` liefert alle `PermissionType`-Werte **außer** `MANAGEMENT_ACCESS`. Die Verwaltungsfähigkeit muss immer ausdrücklich über eine PermissionGroup vergeben werden. Die Ausnahme liegt an dieser einen Stelle; Materialisieren, Kopieren, Instanz-Sync und Baselines laufen alle darüber. Die Baseline vergibt `MANAGEMENT_ACCESS` nicht.
 
 ### Permission Groups
 
 `PermissionGroupType`: `ADMIN` | `STANDARD` | `CUSTOM`.
 
-- `ADMIN.effectivePermissionTypes` → **alle** `PermissionType`-Werte.
+- `ADMIN.effectivePermissionTypes` → alle `PermissionType`-Werte; Materialisierung filtert auf enabled Modules.
 - `STANDARD` / `CUSTOM` mit expliziten Listen.
 - `PermissionGroupMapping` verknüpft `OrganizationGroup` → `PermissionGroup` (oft `standardManaged`).
+- Über Management-Aktivierung wird `MANAGEMENT_ACCESS` in der Ziel-Org nie weitergegeben (keine Ketten).
 
 System-Baseline: `LEADERSHIP` → `ADMIN`, `ALL_MEMBERS` → `STANDARD`.
 

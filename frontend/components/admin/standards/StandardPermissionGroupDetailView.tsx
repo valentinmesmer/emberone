@@ -35,6 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
 import { getAdminStandardDetailPath } from '@/lib/navigation/adminWorkspace';
+import { PERMISSION_MODULE_MAP, PermissionTypeEnum } from '@/types/permission';
 
 interface StandardPermissionGroupDetailViewProps {
   state: StandardContentState;
@@ -61,18 +62,30 @@ export function StandardPermissionGroupDetailView({
   const [description, setDescription] = useState('');
   const [perms, setPerms] = useState<Set<string>>(new Set());
 
+  const adminPermissionsForEnabledModules = useMemo(
+    () =>
+      ALL_PERMISSION_TYPES.filter((key) => {
+        const id = PermissionTypeEnum[key as keyof typeof PermissionTypeEnum];
+        if (typeof id !== 'number') return false;
+        return enabledModules.has(PERMISSION_MODULE_MAP[id]);
+      }),
+    [enabledModules],
+  );
+
   if (!item) {
     return <NotFoundState message={t('organizationManagement.errors.notFound')} />;
   }
 
   const isSystemGroup = isSystemStandardPermissionGroupItem(item);
   const isAdminGroup = standardPermissionGroupItemType(item) === 'ADMIN';
-  const displayedPermissions = isAdminGroup ? ALL_PERMISSION_TYPES : item.permissionTypes;
+  const displayedPermissions = isAdminGroup
+    ? adminPermissionsForEnabledModules
+    : item.permissionTypes;
 
   const openEdit = () => {
     setName(item.title);
     setDescription(a.description ?? '');
-    setPerms(new Set(isAdminGroup ? ALL_PERMISSION_TYPES : item.permissionTypes));
+    setPerms(new Set(isAdminGroup ? adminPermissionsForEnabledModules : item.permissionTypes));
     setEditOpen(true);
   };
 
@@ -83,7 +96,7 @@ export function StandardPermissionGroupDetailView({
         standardsApi.updatePermissionGroup(tenantId, standardId, configKey, {
           name: name.trim(),
           description: description.trim() || undefined,
-          permissionTypes: isAdminGroup ? ALL_PERMISSION_TYPES : Array.from(perms),
+          permissionTypes: isAdminGroup ? adminPermissionsForEnabledModules : Array.from(perms),
         }),
       'admin.standards.itemSaved',
       'admin.standards.errors.saveFailed',

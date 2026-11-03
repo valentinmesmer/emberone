@@ -259,7 +259,7 @@ function TenantOrganizationDetailInner() {
   };
 
   // A standard change can add or remove the management, course offering and onboarding sections,
-  // so reload the org (managementCapable) and drop the cached section data before re-rendering.
+  // so reload the org and drop the cached section data before re-rendering.
   const handleOrganizationStandardChanged = () => {
     setOrganizationStandardRevision((value) => value + 1);
     void queryClient.invalidateQueries({ queryKey: adminCourseOfferingTypeKeys.all });
@@ -362,9 +362,7 @@ function TenantOrganizationDetailInner() {
 
           <AdminOrganizationCourseOfferingTypeSection tenantId={tenantId} organizationId={org.id} />
 
-          {org.managementCapable ? (
-            <AdminOrganizationManagementSection tenantId={tenantId} organizationId={org.id} />
-          ) : null}
+          <AdminOrganizationManagementSection tenantId={tenantId} organizationId={org.id} />
 
           <Card className="p-3 sm:p-4">
             <SectionHeader

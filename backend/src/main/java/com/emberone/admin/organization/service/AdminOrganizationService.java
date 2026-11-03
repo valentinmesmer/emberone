@@ -9,7 +9,6 @@ package com.emberone.admin.organization.service;
 import com.emberone.admin.organization.dto.*;
 import com.emberone.admin.tenant.domain.Tenant;
 import com.emberone.admin.tenant.repository.TenantRepository;
-import com.emberone.management.service.ManagementCapabilityService;
 import com.emberone.organization.domain.Organization;
 import com.emberone.organization.dto.CreateChildOrganizationRequest;
 import com.emberone.organization.dto.DeactivateOrganizationRequest;
@@ -66,7 +65,6 @@ public class AdminOrganizationService {
     private final OrganizationGroupRepository organizationGroupRepository;
     private final UserOrganizationGroupMembershipService groupMembershipService;
     private final UserOrganizationGroupMembershipMapper groupMembershipMapper;
-    private final ManagementCapabilityService managementCapabilityService;
 
     @Transactional(readOnly = true)
     public AdminOrganizationTreeResponseDto getOrganizationTree(long tenantId) {
@@ -122,22 +120,18 @@ public class AdminOrganizationService {
             long tenantId, long organizationId) {
         requireOrganizationInTenant(tenantId, organizationId);
         Map<Long, Boolean> leaderMissingByOrganization = buildLeaderMissingInSubtreeMap();
-        Set<Long> managementCandidates = managementCapabilityService.managementCandidateIds();
         return organizationRepository.findByParentOrganizationId(organizationId).stream()
                 .sorted(
                         Comparator.comparing(Organization::getName, String.CASE_INSENSITIVE_ORDER)
                                 .thenComparing(Organization::getId))
-                .map(child -> toDetail(child, leaderMissingByOrganization, managementCandidates))
+                .map(child -> toDetail(child, leaderMissingByOrganization))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public AdminOrganizationDetailDto getOrganization(long tenantId, long organizationId) {
         Organization organization = requireOrganizationInTenant(tenantId, organizationId);
-        return toDetail(
-                organization,
-                buildLeaderMissingInSubtreeMap(),
-                managementCapabilityService.managementCandidateIds());
+        return toDetail(organization, buildLeaderMissingInSubtreeMap());
     }
 
     @Transactional(readOnly = true)
@@ -173,10 +167,7 @@ public class AdminOrganizationService {
                                         new ResponseStatusException(
                                                 HttpStatus.INTERNAL_SERVER_ERROR,
                                                 "Created organization not found"));
-        return toDetail(
-                created,
-                buildLeaderMissingInSubtreeMap(),
-                managementCapabilityService.managementCandidateIds());
+        return toDetail(created, buildLeaderMissingInSubtreeMap());
     }
 
     @Transactional
@@ -192,10 +183,7 @@ public class AdminOrganizationService {
                                         new ResponseStatusException(
                                                 HttpStatus.INTERNAL_SERVER_ERROR,
                                                 "Organization not found after update"));
-        return toDetail(
-                updated,
-                buildLeaderMissingInSubtreeMap(),
-                managementCapabilityService.managementCandidateIds());
+        return toDetail(updated, buildLeaderMissingInSubtreeMap());
     }
 
     @Transactional
@@ -431,9 +419,7 @@ public class AdminOrganizationService {
     }
 
     private AdminOrganizationDetailDto toDetail(
-            Organization organization,
-            Map<Long, Boolean> leaderMissingByOrganization,
-            Set<Long> managementCandidates) {
+            Organization organization, Map<Long, Boolean> leaderMissingByOrganization) {
         List<UserOrganizationGroupMembership> leaders =
                 groupMembershipRepository.findActiveLeadershipMemberships(
                         organization.getId(), Instant.now());
@@ -454,9 +440,6 @@ public class AdminOrganizationService {
                 .leaderMissingInSubtree(
                         leaderMissingByOrganization.getOrDefault(
                                 organization.getId(), leaders.isEmpty()))
-                .managementCapable(
-                        managementCandidates.contains(organization.getId())
-                                && managementCapabilityService.isCapable(organization))
                 .deactivatedAt(organization.getDeactivatedAt())
                 .build();
     }

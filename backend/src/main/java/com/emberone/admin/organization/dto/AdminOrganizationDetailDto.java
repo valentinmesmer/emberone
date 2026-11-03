@@ -29,8 +29,5 @@ public class AdminOrganizationDetailDto {
     /** True if this org or any descendant has no active member in the leadership group. */
     private boolean leaderMissingInSubtree;
 
-    /** True if this organization may manage other organizations (management module and access). */
-    private boolean managementCapable;
-
     private Instant deactivatedAt;
 }

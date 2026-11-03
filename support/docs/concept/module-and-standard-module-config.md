@@ -28,7 +28,7 @@ Gespeicherte Zeilen in `std_standard_modules` = **deaktivierte** toggleable Modu
 | `OPERATIONS` | ja | Einsatz-Events (`OPERATION_EVENT_*`) |
 | `APPOINTMENTS` | ja | Termine + Event-Attendance (`APPOINTMENT_*`, `EVENT_ATTENDANCE_*`) |
 | `COURSE_OFFERINGS` | ja | Lehrgangsangebote (`COURSE_OFFERING_*`) |
-| `MANAGEMENT` | ja | Verwaltung anderer Organisationen (`MANAGEMENT_ACCESS`); Default an in allen Standards, die Fähigkeit entsteht erst durch Mapping einer Gruppe mit `MANAGEMENT_ACCESS` |
+| `MANAGEMENT` | ja | Verwaltung anderer Organisationen (`MANAGEMENT_ACCESS`); Default an |
 
 ## Was es besitzt
 
@@ -51,9 +51,10 @@ Gespeicherte Zeilen in `std_standard_modules` = **deaktivierte** toggleable Modu
 
 ## Key Flow
 
-1. Admin setzt enabled Modules → Disabled-Rows speichern → Event → Cache-Evict
-2. Runtime: `allEnabled − disabled`
-3. Templates dürfen nur Permissions enabled Modules tragen (`requireModulesEnabled`); Disable strippt Grants an Instanzen
+1. Admin setzt enabled Modules → Disabled-Rows speichern → Event → Cache-Evict (after-commit)
+2. Sofort `PermissionGroupStandardDomain.syncInstancesForEnabledModules` mit dem neuen Enabled-Set (nicht dem Cache): Custom-Templates und alle Org-Instanzen werden an die enabled Modules angepasst
+3. Runtime: `allEnabled − disabled`
+4. Templates dürfen nur Permissions enabled Modules tragen (`requireModulesEnabled`)
 
 ## Quellcode-Karte
 
@@ -68,4 +69,4 @@ Gespeicherte Zeilen in `std_standard_modules` = **deaktivierte** toggleable Modu
 
 ## Modul MANAGEMENT
 
-`MANAGEMENT` ist toggleable und standardmäßig an. Die Fähigkeit zu verwalten entsteht erst mit `MANAGEMENT_ACCESS` in einer Gruppe der Organisation, nicht durch das Modul allein. Details: [management.md](management.md).
+`MANAGEMENT` ist toggleable und standardmäßig an. Audience-Konfiguration und `MANAGEMENT_ACCESS` folgen dem Modul wie bei anderen Feature-Modulen. Details: [management.md](management.md).

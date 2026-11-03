@@ -19,9 +19,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * Drops audience entries of managing organizations that lost their capability, and ends their open
- * activations ({@code SYSTEM}), so stale entries do not come back when the capability is restored.
- * The access check does not rely on this; it re-evaluates the capability on every request.
+ * When the management module is off, drops audience entries. When the organization is no longer
+ * capable ({@code MANAGEMENT_ACCESS} gone or module off), ends open activations ({@code SYSTEM}).
+ * Hygiene only; the access check re-evaluates on every request.
  */
 @Service
 @RequiredArgsConstructor
@@ -34,42 +34,42 @@ public class ManagementAudienceCleanupListener {
 
     @AfterCommitEventListener
     public void onStandardEnabledModulesChanged(StandardEnabledModulesChangedEvent event) {
-        removeEntriesOfIncapableOrganizations(event.tenantId());
+        cleanupManagingOrganizations(event.tenantId());
     }
 
     @AfterCommitEventListener
     public void onOrganizationTypeStandardAssigned(OrganizationTypeStandardAssignedEvent event) {
-        removeEntriesOfIncapableOrganizations(event.tenantId());
+        cleanupManagingOrganizations(event.tenantId());
     }
 
     @AfterCommitEventListener
     public void onOrganizationStandardOverrideChanged(
             OrganizationStandardOverrideChangedEvent event) {
-        removeEntriesOfIncapableOrganizations(event.tenantId());
+        cleanupManagingOrganizations(event.tenantId());
     }
 
     @AfterCommitEventListener
     public void onPermissionGroupPermissionsChanged(PermissionGroupPermissionsChangedEvent event) {
-        removeEntriesOfIncapableOrganizations(event.tenantId());
+        cleanupManagingOrganizations(event.tenantId());
     }
 
     /** Archiving or deleting a group can remove the managing capability of its organization. */
     @AfterCommitEventListener
     public void onOrganizationGroupDeleting(OrganizationGroupDeletingEvent event) {
-        removeEntriesOfIncapableOrganizations(event.tenantId());
+        cleanupManagingOrganizations(event.tenantId());
     }
 
     @AfterCommitEventListener
     public void onOrganizationGroupPermissionsChanged(
             OrganizationGroupPermissionsChangedEvent event) {
-        removeEntriesOfIncapableOrganizations(event.tenantId());
+        cleanupManagingOrganizations(event.tenantId());
     }
 
     /**
      * Checks every managing organization of the tenant that has entries. The set is small (only
      * configured managing organizations), so no per-event narrowing is needed.
      */
-    private void removeEntriesOfIncapableOrganizations(Long tenantId) {
+    private void cleanupManagingOrganizations(Long tenantId) {
         if (tenantId == null) {
             return;
         }
@@ -78,17 +78,21 @@ public class ManagementAudienceCleanupListener {
             organizationRepository
                     .findById(managingOrganizationId)
                     .filter(organization -> tenantId.equals(organization.getTenantId()))
-                    .filter(organization -> !capabilityService.isCapable(organization))
                     .ifPresent(
                             organization -> {
-                                audienceRepository.deleteAll(
-                                        audienceRepository.findByManagingOrganizationIdOrderByIdAsc(
-                                                organization.getId()));
-                                for (Long userId :
-                                        activationService.endSystemActivationsThrough(
-                                                organization.getId())) {
-                                    permissionRealtimeNotifier.notifyPermissionsChanged(
-                                            tenantId, userId);
+                                if (!capabilityService.isModuleEnabled(organization)) {
+                                    audienceRepository.deleteAll(
+                                            audienceRepository
+                                                    .findByManagingOrganizationIdOrderByIdAsc(
+                                                            organization.getId()));
+                                }
+                                if (!capabilityService.isCapable(organization)) {
+                                    for (Long userId :
+                                            activationService.endSystemActivationsThrough(
+                                                    organization.getId())) {
+                                        permissionRealtimeNotifier.notifyPermissionsChanged(
+                                                tenantId, userId);
+                                    }
                                 }
                             });
         }

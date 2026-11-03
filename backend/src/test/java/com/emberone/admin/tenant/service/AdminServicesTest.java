@@ -25,7 +25,6 @@ import com.emberone.admin.tenant.mapper.TenantMapper;
 import com.emberone.admin.tenant.repository.TenantRepository;
 import com.emberone.federalstate.FederalStateSettingsRegistry;
 import com.emberone.federalstate.domain.FederalState;
-import com.emberone.management.service.ManagementCapabilityService;
 import com.emberone.organization.domain.Organization;
 import com.emberone.organization.domain.OrganizationTypeDefinition;
 import com.emberone.organization.dto.CreateChildOrganizationRequest;
@@ -89,7 +88,6 @@ class AdminServicesTest {
     @Mock OrganizationGroupRepository organizationGroupRepository;
     @Mock UserOrganizationGroupMembershipService groupMembershipService;
     @Mock UserOrganizationGroupMembershipMapper groupMembershipMapper;
-    @Mock ManagementCapabilityService managementCapabilityService;
     @Mock TokenService tokenService;
     @Mock TenantCreationService tenantCreationService;
     @Mock TenantStandardsBootstrapService tenantStandardsBootstrapService;
@@ -112,8 +110,7 @@ class AdminServicesTest {
                         groupMembershipRepository,
                         organizationGroupRepository,
                         groupMembershipService,
-                        groupMembershipMapper,
-                        managementCapabilityService);
+                        groupMembershipMapper);
         tenantAdminService =
                 new AdminTenantService(
                         tenantRepository,

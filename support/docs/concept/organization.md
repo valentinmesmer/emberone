@@ -179,9 +179,7 @@ Siehe auch: [Org- und Gruppen-Mitgliedschaften](user-memberships.md), [Sicherhei
 
 ## Verwaltung über Audience pro Organisation
 
-Eine Organisation mit verwaltender Fähigkeit kann eine Audience pflegen (`org_management_audiences`). Der Abschnitt „Verwaltung“ im Admin-Org-Fenster erscheint nur dann. Der Eintrag gewährt keinen Zugriff; das Modell und die Regeln stehen in [management.md](management.md).
-
-Die Fähigkeit (`managementCapable` im Admin-Org-Detail) wird für die ganze Liste mit einer Abfrage vorgefiltert (Organisationen mit direkter `MANAGEMENT_ACCESS`-Zuordnung), danach erst pro Kandidat geprüft. Damit entstehen keine Abfragen je Organisation im Baum.
+Eine Organisation mit aktivem Modul `MANAGEMENT` kann eine Audience pflegen (`org_management_audiences`). Der Abschnitt erscheint bei Modul an (Settings-`enabled`, wie anbietbare Lehrgangstypen). Modell und Regeln: [management.md](management.md).
 
 Ob eine Organisation **Ziel** einer Verwaltung ist, hängt nicht an dieser Organisation selbst, sondern an ihrer Eigenschaft als aktive Organisation des Mandanten (Auswahl und Aktivierung lehnen inaktive Ziele ab). Wird eine Organisation deaktiviert, verliert sie damit als Ziel sofort ihre Abdeckung, ohne dass Einträge gelöscht werden.
 

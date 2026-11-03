@@ -68,8 +68,10 @@ export function AdminManagementAudienceDetailView({
     return <LoadingState variant="embedded" />;
   }
 
-  const entry = data?.entries.find((candidate) => candidate.id === entryId);
-  if (!data || !entry) {
+  const entry = data?.enabled
+    ? data.entries.find((candidate) => candidate.id === entryId)
+    : undefined;
+  if (!data?.enabled || !entry) {
     return <NotFoundState message={t('admin.managementAudience.notFound')} />;
   }
 

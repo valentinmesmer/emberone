@@ -44,6 +44,21 @@ class ManagementCapabilityServiceTest {
     private final Standard standard = mock(Standard.class);
 
     @Test
+    void moduleEnabledWhenManagementModuleIsOn() {
+        stubModules(EnumSet.allOf(Module.class));
+
+        assertThat(service.isModuleEnabled(organization(null))).isTrue();
+        verifyNoInteractions(permissionGroupMappingRepository);
+    }
+
+    @Test
+    void moduleDisabledWhenManagementModuleIsOff() {
+        stubModules(EnumSet.complementOf(EnumSet.of(Module.MANAGEMENT)));
+
+        assertThat(service.isModuleEnabled(organization(null))).isFalse();
+    }
+
+    @Test
     void capableWhenModuleIsEnabledAndAGroupMapsManagementAccess() {
         stubModules(EnumSet.allOf(Module.class));
         when(permissionGroupMappingRepository.countMappingsGrantingPermission(
@@ -76,6 +91,7 @@ class ManagementCapabilityServiceTest {
                 .thenReturn(0L);
 
         assertThat(service.isCapable(organization(null))).isFalse();
+        assertThat(service.isModuleEnabled(organization(null))).isTrue();
     }
 
     @Test

@@ -18,8 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Decides whether an organization may manage other organizations: the management module is enabled
- * for its effective standard and one of its active groups carries {@code MANAGEMENT_ACCESS}.
+ * Management module and runtime capability. Admin audience config needs only the module ({@link
+ * #isModuleEnabled}); activating and using management rights also need {@code MANAGEMENT_ACCESS}
+ * ({@link #isCapable}).
  */
 @Service
 @RequiredArgsConstructor
@@ -40,21 +41,35 @@ public class ManagementCapabilityService {
                         PermissionType.MANAGEMENT_ACCESS.getId()));
     }
 
+    /**
+     * Whether the organization's effective standard has the management module. Gates admin audience
+     * configuration (same pattern as course-offering types).
+     */
+    @Transactional(readOnly = true)
+    public boolean isModuleEnabled(Organization organization) {
+        if (organization == null || organization.getId() == null) {
+            return false;
+        }
+        return effectiveStandardResolver
+                .resolveForOrganization(organization)
+                .map(
+                        standard ->
+                                enabledModuleResolver
+                                        .forStandard(standard)
+                                        .contains(Module.MANAGEMENT))
+                .orElse(false);
+    }
+
+    /**
+     * Whether the organization may activate management into other organizations: module enabled and
+     * an active group carries {@code MANAGEMENT_ACCESS}.
+     */
     @Transactional(readOnly = true)
     public boolean isCapable(Organization organization) {
         if (organization == null || organization.getId() == null || organization.isDeactivated()) {
             return false;
         }
-        boolean moduleEnabled =
-                effectiveStandardResolver
-                        .resolveForOrganization(organization)
-                        .map(
-                                standard ->
-                                        enabledModuleResolver
-                                                .forStandard(standard)
-                                                .contains(Module.MANAGEMENT))
-                        .orElse(false);
-        if (!moduleEnabled) {
+        if (!isModuleEnabled(organization)) {
             return false;
         }
         return permissionGroupMappingRepository.countMappingsGrantingPermission(

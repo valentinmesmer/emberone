@@ -25,7 +25,7 @@ Dieses Cluster besitzt das **Datenmodell und die Ableitung** der Org-Feature-Ber
 | **`permissiongroupmapping`** | N:M OrgGroup → PermissionGroup (`perm_group_mappings`, Flag `standardManaged`) |
 | **`userpermission`** | Effektive Map laden/cachen; Read-API nur Self `GET /api/v1/self/permissions` |
 
-Baseline: `LEADERSHIP` → `ADMIN`, `ALL_MEMBERS` → `STANDARD`. `ADMIN.effectivePermissionTypes` expandiert zu allen Types **außer `MANAGEMENT_ACCESS`** (bei Materialisierung zusätzlich nach enabled Modules gefiltert). Details: [Sicherheit](security-and-permissions.md).
+Baseline: `LEADERSHIP` → `ADMIN`, `ALL_MEMBERS` → `STANDARD`. `ADMIN` erhält alle Types der enabled Modules. Modul-Toggle: [Module-Config](module-and-standard-module-config.md). Details: [Sicherheit](security-and-permissions.md).
 
 ## Was es nicht besitzt
 

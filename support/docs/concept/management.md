@@ -8,10 +8,12 @@ Status: Konfiguration, Aktivierung, Zugriffsauswertung, Frontend-Flow und Aktivi
 
 | Ebene | Wo | Was | Erzeugt Umfang? |
 |-------|----|-----|-----------------|
-| Standard | Standard-Admin | Modul `MANAGEMENT` an/aus, `MANAGEMENT_ACCESS` in einer PermissionGroup, Mapping einer Organisationsgruppe auf diese Gruppe | **Nie** |
+| Standard | Standard-Admin | Modul `MANAGEMENT` an/aus; Permission-Gruppen mit `MANAGEMENT_ACCESS` | **Nie** |
 | Organisation | Admin-Org-Fenster (Tenant-Admin), Abschnitt „Verwaltung“ | Audience-Einträge: Umfang (`ORG`, `ORG_SUBTREE`, `ORG_TYPE`, `TENANT`), erlaubte Berechtigungen (Enum-Typen, standardmäßig alle, abwählbar), Pflicht-Höchstdauer | Ja, nur durch diese Einträge |
 
-Die Fähigkeit („darf verwalten“) ist `ManagementCapabilityService.isCapable`: Modul aktiv für den effektiven Standard **und** eine aktive Organisationsgruppe ist auf eine Berechtigungsgruppe gemappt, die `MANAGEMENT_ACCESS` enthält. Ohne Fähigkeit lässt sich keine Audience speichern.
+Admin-Audience wie anbietbare Lehrgangstypen: sichtbar/speicherbar bei Modul an (`isModuleEnabled` / Settings-`enabled`).
+
+Aktivieren (`isCapable`): Modul an und eine Org-Gruppe ist auf eine Berechtigungsgruppe mit `MANAGEMENT_ACCESS` gemappt.
 
 ## Datenmodell
 
@@ -47,7 +49,7 @@ Tabelle `org_management_activations` (ebenfalls in `V1__Initial_setup.sql`):
 
 `ManagementActivationService.activate`. Eine Aktivierung wird nur angelegt, wenn alle Regeln gelten:
 
-- Die Person ist aktives Mitglied von M und hat `MANAGEMENT_ACCESS` **direkt** in M (Berechtigungskarte, kein Admin-Wildcard, kein Bypass). M ist verwaltungsfähig (`isCapable`). Sonst `AccessDeniedException` (403).
+- Die Person ist aktives Mitglied von M und hat `MANAGEMENT_ACCESS` **direkt** in M (Berechtigungskarte, kein Tenant-/Global-Admin-Bypass). M ist verwaltungsfähig (`isCapable`). Sonst `AccessDeniedException` (403).
 - M ≠ T; beide aktiv und im Mandanten. (Selbst-Ziel ist bewusst ausgeschlossen.)
 - Es gibt **einen** Audience-Eintrag von M, der T abdeckt (`ORG`, `ORG_SUBTREE`, `ORG_TYPE` über den gemeinsamen Resolver, oder `TENANT`), und für diesen Eintrag gilt: Dauer ≤ `max_duration_minutes` und die gewählten Berechtigungen ⊆ erlaubte Typen des Eintrags ∩ Module von T ∩ ohne `MANAGEMENT_ACCESS`.
 - Die Person wählt die Berechtigungen selbst aus den Rechten der Zielorganisation. Standardmäßig ist nichts gewählt; die Auswahl muss mindestens einen Eintrag haben. Anlass getrimmt 1 bis 500 Zeichen.
@@ -88,7 +90,7 @@ Die Matrix ohne Datenbank steht in `ManagementSecurityTest` (`management/service
 
 `ManagementAudienceService.replace` (Replace-Semantik; behaltene Einträge behalten ihre ID):
 
-- M ist verwaltungsfähig (`isCapable`), sonst Ablehnung.
+- Modul `MANAGEMENT` für M aktiv (`isModuleEnabled`), sonst `ConflictException` (wie Course-Offering-Types).
 - Referenz passt zur Art (`TENANT` ohne Referenz, die anderen mit), keine Duplikate.
 - Ziel ist aktiv im Mandanten (Organisation bzw. Organisationsart). Inaktive Ziele werden abgelehnt, damit Auswahl und Speicherung übereinstimmen.
 - Ein direkter `ORG`-Eintrag auf die verwaltende Organisation selbst wird abgelehnt (kein Selbst-Ziel). Unterbäume und Arten, die M mit abdecken, sind erlaubt; die Aktivierung schließt M zur Laufzeit ohnehin aus.
@@ -97,7 +99,7 @@ Die Matrix ohne Datenbank steht in `ManagementSecurityTest` (`management/service
 
 ## Bereinigung
 
-`ManagementAudienceCleanupListener` (`@AfterCommitEventListener`) auf Modul-, Standard-, Override- und Berechtigungsgruppen-Änderungen: Einträge von Organisationen, die die Fähigkeit verloren haben, werden gelöscht. Deren offene Aktivierungen werden mit `ended_by = SYSTEM` beendet, und die betroffenen Personen erhalten `permissions.changed`. Das ist Hygiene, damit alte Ziele nicht wieder auftauchen. Der Zugriffsschutz kommt aus der Live-Auswertung, nicht aus dieser Bereinigung.
+`ManagementAudienceCleanupListener` (`@AfterCommitEventListener`) auf Modul-, Standard-, Override- und Berechtigungsgruppen-Änderungen: Audience-Einträge werden gelöscht, wenn das Modul aus ist. Offene Aktivierungen werden beendet (`ended_by = SYSTEM`), wenn die Org nicht mehr `isCapable` ist (Modul aus oder `MANAGEMENT_ACCESS` weg); betroffene Personen erhalten `permissions.changed`. Hygiene; der Zugriffsschutz kommt aus der Live-Auswertung.
 
 ## API
 
@@ -115,7 +117,7 @@ Self-API (`isSelfServiceUser()`; Anzeige- und Schreibpfad, die Zugriffswirkung k
 | POST | `/api/v1/self/management/activations` | 201; Body: `managingOrganizationId`, `targetOrganizationId`, `durationMinutes`, `permissionTypes`, `reason` |
 | DELETE | `/api/v1/self/management/activations/{id}` | 204; nur eigene offene Aktivierung |
 
-Antwort: Einträge plus Auswahllisten (Organisationen, Organisationsarten). Rechte wählt die aktivierende Person selbst, standardmäßig keine. Das Admin-Org-Detail trägt zusätzlich `managementCapable`; der Abschnitt im Admin-Org-Fenster erscheint nur dann.
+Antwort: `enabled` (Modul an/aus), Einträge plus Auswahllisten (Organisationen, Organisationsarten). Rechte wählt die aktivierende Person selbst, standardmäßig keine. Der Abschnitt im Admin-Org-Fenster erscheint bei `enabled` (wie Course-Offering-Types).
 
 ## Protokoll der Aktivierungen
 

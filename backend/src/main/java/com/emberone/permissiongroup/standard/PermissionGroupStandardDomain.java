@@ -112,6 +112,7 @@ public class PermissionGroupStandardDomain implements StandardDomain {
     @Transactional
     public void materializeForOrg(Long organizationId, Standard standard) {
         Organization organization = requireOrganization(organizationId);
+        Set<Module> enabledModules = enabledModuleResolver.forStandard(standard);
         for (PermissionGroupTemplate template :
                 templateRepository.findByStandardId(standard.getId())) {
             if (permissionGroupRepository
@@ -119,7 +120,7 @@ public class PermissionGroupStandardDomain implements StandardDomain {
                     .isPresent()) {
                 continue;
             }
-            permissionGroupRepository.save(toInstance(organization, template, standard));
+            permissionGroupRepository.save(toInstance(organization, template, enabledModules));
         }
         materializeMappings(organizationId, standard);
     }
@@ -134,6 +135,7 @@ public class PermissionGroupStandardDomain implements StandardDomain {
                 templates.stream()
                         .map(PermissionGroupTemplate::getConfigKey)
                         .collect(Collectors.toSet());
+        Set<Module> enabledModules = enabledModuleResolver.forStandard(standard);
 
         for (PermissionGroupTemplate template : templates) {
             permissionGroupRepository
@@ -144,10 +146,10 @@ public class PermissionGroupStandardDomain implements StandardDomain {
                                             existing,
                                             template,
                                             organization.getTenantId(),
-                                            standard),
+                                            enabledModules),
                             () ->
                                     permissionGroupRepository.save(
-                                            toInstance(organization, template, standard)));
+                                            toInstance(organization, template, enabledModules)));
         }
 
         for (PermissionGroup group :
@@ -259,11 +261,12 @@ public class PermissionGroupStandardDomain implements StandardDomain {
                         .build();
         template.setPermissionTypes(type.effectivePermissionTypes(permissionTypes));
         templateRepository.save(template);
+        Set<Module> enabledModules = enabledModuleResolver.forStandard(standard);
         for (Organization org : orgs) {
             if (permissionGroupRepository
                     .findByOrganizationIdAndConfigKey(org.getId(), configKey)
                     .isEmpty()) {
-                permissionGroupRepository.save(toInstance(org, template, standard));
+                permissionGroupRepository.save(toInstance(org, template, enabledModules));
             }
         }
         log.info(
@@ -292,13 +295,14 @@ public class PermissionGroupStandardDomain implements StandardDomain {
         template.setPermissionTypes(
                 template.getGroupType().effectivePermissionTypes(permissionTypes));
         templateRepository.save(template);
+        Set<Module> enabledModules = enabledModuleResolver.forStandard(standard);
         for (Organization org : orgs) {
             permissionGroupRepository
                     .findByOrganizationIdAndConfigKey(org.getId(), configKey)
                     .ifPresent(
                             existing -> {
                                 applyTemplateToInstance(
-                                        existing, template, org.getTenantId(), standard);
+                                        existing, template, org.getTenantId(), enabledModules);
                                 eventPublisher.publishEvent(
                                         new PermissionGroupPermissionsChangedEvent(
                                                 existing.getTenantId(), existing.getId()));
@@ -313,8 +317,13 @@ public class PermissionGroupStandardDomain implements StandardDomain {
 
     /**
      * Re-materialize permission group instances after the standard's enabled {@link Module} set
-     * changed: strips disabled-module grants from custom templates and from every org instance
-     * (including ADMIN).
+     * changed. Uses the passed {@code enabledModules} (not the cache: eviction is after-commit).
+     *
+     * <ul>
+     *   <li>Disable: strips that module's grants from custom templates and from every org instance
+     *       (ADMIN/STANDARD keep the template list so a later enable restores them).
+     *   <li>Enable: ADMIN instances receive every permission of the enabled modules.
+     * </ul>
      */
     @Transactional
     public void syncInstancesForEnabledModules(
@@ -333,7 +342,7 @@ public class PermissionGroupStandardDomain implements StandardDomain {
                         .ifPresent(
                                 existing -> {
                                     applyTemplateToInstance(
-                                            existing, template, org.getTenantId(), standard);
+                                            existing, template, org.getTenantId(), enabledModules);
                                     eventPublisher.publishEvent(
                                             new PermissionGroupPermissionsChangedEvent(
                                                     existing.getTenantId(), existing.getId()));
@@ -541,7 +550,9 @@ public class PermissionGroupStandardDomain implements StandardDomain {
     }
 
     private PermissionGroup toInstance(
-            Organization organization, PermissionGroupTemplate template, Standard standard) {
+            Organization organization,
+            PermissionGroupTemplate template,
+            Set<Module> enabledModules) {
         PermissionGroup group =
                 PermissionGroup.builder()
                         .tenantId(organization.getTenantId())
@@ -553,7 +564,7 @@ public class PermissionGroupStandardDomain implements StandardDomain {
                         .standardOriginId(template.getId())
                         .permissionTypeLinks(new ArrayList<>())
                         .build();
-        group.setPermissionTypes(materializedPermissionTypes(template, standard));
+        group.setPermissionTypes(materializedPermissionTypes(template, enabledModules));
         return group;
     }
 
@@ -562,18 +573,21 @@ public class PermissionGroupStandardDomain implements StandardDomain {
             PermissionGroup group,
             PermissionGroupTemplate template,
             Long tenantId,
-            Standard standard) {
+            Set<Module> enabledModules) {
         group.setName(resolveName(template, tenantId));
         group.setDescription(template.getDescription());
         group.setType(template.getGroupType());
         group.setStandardOriginId(template.getId());
-        group.setPermissionTypes(materializedPermissionTypes(template, standard));
+        group.setPermissionTypes(materializedPermissionTypes(template, enabledModules));
         permissionGroupRepository.save(group);
     }
 
-    private List<PermissionType> materializedPermissionTypes(
-            PermissionGroupTemplate template, Standard standard) {
-        Set<Module> enabledModules = enabledModuleResolver.forStandard(standard);
+    /**
+     * Grants for an instance: group-type expansion (ADMIN = all {@link PermissionType}s) then
+     * clipped to the standard's enabled modules.
+     */
+    private static List<PermissionType> materializedPermissionTypes(
+            PermissionGroupTemplate template, Set<Module> enabledModules) {
         return Module.filterPermissions(
                 template.getGroupType().effectivePermissionTypes(template.getPermissionTypes()),
                 enabledModules);

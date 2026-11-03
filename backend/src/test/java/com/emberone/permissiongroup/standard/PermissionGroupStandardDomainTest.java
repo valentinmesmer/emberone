@@ -29,6 +29,7 @@ import com.emberone.standard.service.EnabledModuleResolver;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -143,9 +144,7 @@ class PermissionGroupStandardDomainTest {
                 ArgumentCaptor.forClass(PermissionGroupTemplate.class);
         verify(templateRepository).save(captor.capture());
         assertThat(captor.getValue().getPermissionTypes())
-                .containsExactlyInAnyOrder(
-                        EnumSet.complementOf(EnumSet.of(PermissionType.MANAGEMENT_ACCESS))
-                                .toArray(PermissionType[]::new));
+                .containsExactlyInAnyOrder(PermissionType.values());
     }
 
     @Test
@@ -180,5 +179,114 @@ class PermissionGroupStandardDomainTest {
 
         verify(permissionGroupRepository).save(instance);
         verify(eventPublisher).publishEvent(new PermissionGroupPermissionsChangedEvent(7L, 200L));
+    }
+
+    @Test
+    void syncInstancesForEnabledModulesUsesPassedModulesNotCache() {
+        Standard standard = standard(1L);
+        Organization org = Organization.builder().id(100L).tenantId(7L).build();
+        PermissionGroupTemplate admin =
+                PermissionGroupTemplate.builder()
+                        .id(10L)
+                        .tenantId(7L)
+                        .standardId(1L)
+                        .configKey("ADMIN")
+                        .groupType(PermissionGroupType.ADMIN)
+                        .grants(new java.util.ArrayList<>())
+                        .build();
+        admin.setPermissionTypes(List.of());
+        PermissionGroupTemplate custom =
+                PermissionGroupTemplate.builder()
+                        .id(11L)
+                        .tenantId(7L)
+                        .standardId(1L)
+                        .configKey("DISPATCH")
+                        .name("Dispatch")
+                        .groupType(PermissionGroupType.CUSTOM)
+                        .grants(new java.util.ArrayList<>())
+                        .build();
+        custom.setPermissionTypes(
+                List.of(
+                        PermissionType.APPOINTMENT_READ,
+                        PermissionType.COURSE_OFFERING_READ,
+                        PermissionType.USER_READ));
+        when(templateRepository.findByStandardId(1L)).thenReturn(List.of(admin, custom));
+
+        PermissionGroup adminInstance =
+                PermissionGroup.builder()
+                        .id(200L)
+                        .tenantId(7L)
+                        .organizationId(100L)
+                        .permissionTypeLinks(new java.util.ArrayList<>())
+                        .build();
+        PermissionGroup customInstance =
+                PermissionGroup.builder()
+                        .id(201L)
+                        .tenantId(7L)
+                        .organizationId(100L)
+                        .permissionTypeLinks(new java.util.ArrayList<>())
+                        .build();
+        when(permissionGroupRepository.findByOrganizationIdAndConfigKey(100L, "ADMIN"))
+                .thenReturn(Optional.of(adminInstance));
+        when(permissionGroupRepository.findByOrganizationIdAndConfigKey(100L, "DISPATCH"))
+                .thenReturn(Optional.of(customInstance));
+
+        // Sync must use the passed set even if the cache would still report all modules.
+        Set<Module> enabledWithoutCourseOfferings =
+                EnumSet.complementOf(EnumSet.of(Module.COURSE_OFFERINGS));
+
+        domain.syncInstancesForEnabledModules(
+                standard, enabledWithoutCourseOfferings, List.of(org));
+
+        assertThat(adminInstance.getPermissionTypes())
+                .doesNotContain(
+                        PermissionType.COURSE_OFFERING_READ, PermissionType.COURSE_OFFERING_WRITE)
+                .contains(
+                        PermissionType.USER_READ,
+                        PermissionType.APPOINTMENT_READ,
+                        PermissionType.MANAGEMENT_ACCESS);
+        assertThat(custom.getPermissionTypes())
+                .containsExactlyInAnyOrder(
+                        PermissionType.APPOINTMENT_READ, PermissionType.USER_READ);
+        assertThat(customInstance.getPermissionTypes())
+                .containsExactlyInAnyOrder(
+                        PermissionType.APPOINTMENT_READ, PermissionType.USER_READ);
+        verify(templateRepository).save(custom);
+        verify(eventPublisher).publishEvent(new PermissionGroupPermissionsChangedEvent(7L, 200L));
+        verify(eventPublisher).publishEvent(new PermissionGroupPermissionsChangedEvent(7L, 201L));
+    }
+
+    @Test
+    void syncInstancesForEnabledModulesRestoresAdminGrantsWhenModuleEnabled() {
+        Standard standard = standard(1L);
+        Organization org = Organization.builder().id(100L).tenantId(7L).build();
+        PermissionGroupTemplate admin =
+                PermissionGroupTemplate.builder()
+                        .id(10L)
+                        .tenantId(7L)
+                        .standardId(1L)
+                        .configKey("ADMIN")
+                        .groupType(PermissionGroupType.ADMIN)
+                        .grants(new java.util.ArrayList<>())
+                        .build();
+        admin.setPermissionTypes(List.of());
+        when(templateRepository.findByStandardId(1L)).thenReturn(List.of(admin));
+        PermissionGroup adminInstance =
+                PermissionGroup.builder()
+                        .id(200L)
+                        .tenantId(7L)
+                        .organizationId(100L)
+                        .permissionTypeLinks(new java.util.ArrayList<>())
+                        .build();
+        when(permissionGroupRepository.findByOrganizationIdAndConfigKey(100L, "ADMIN"))
+                .thenReturn(Optional.of(adminInstance));
+
+        domain.syncInstancesForEnabledModules(standard, EnumSet.allOf(Module.class), List.of(org));
+
+        assertThat(adminInstance.getPermissionTypes())
+                .contains(
+                        PermissionType.COURSE_OFFERING_READ,
+                        PermissionType.COURSE_OFFERING_WRITE,
+                        PermissionType.MANAGEMENT_ACCESS);
     }
 }

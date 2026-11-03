@@ -54,7 +54,7 @@ public final class BayernOrganizationSetupBaseline {
 
     private static List<PermissionGroupBaseline> permissionGroups(Labels labels) {
         return List.of(
-                permissionGroup(PermissionGroupType.ADMIN, assignablePermissionTypes()),
+                permissionGroup(PermissionGroupType.ADMIN, List.of()),
                 permissionGroup(
                         PermissionGroupType.STANDARD,
                         permissionTypes(
@@ -159,13 +159,6 @@ public final class BayernOrganizationSetupBaseline {
 
     private static List<PermissionType> permissionTypes(PermissionType... types) {
         return Arrays.asList(types);
-    }
-
-    private static List<PermissionType> assignablePermissionTypes() {
-        return Arrays.stream(PermissionType.values())
-                .filter(type -> type != PermissionType.ORGANIZATION_READ)
-                .filter(type -> type != PermissionType.MANAGEMENT_ACCESS)
-                .toList();
     }
 
     public record Labels(
