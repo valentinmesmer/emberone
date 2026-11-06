@@ -50,7 +50,7 @@
     "@types/node": "^26.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@biomejs/biome": "2.6.4",
+    "@biomejs/biome": "2.6.6",
     "tailwindcss": "^4",
     "typescript": "^7.0.0"
   },
