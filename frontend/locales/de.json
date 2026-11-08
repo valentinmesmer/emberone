@@ -3588,7 +3588,7 @@
     "helpChat": {
       "open": "Hilfe-Assistent",
       "title": "Hilfe-Assistent",
-      "intro": "Frag, wie etwas in EmberOne funktioniert, zum Beispiel „Wie reiche ich meine G26.3 ein?“ oder „Wie lege ich eine neue Dienstleistung an?“. Wenn es passt, öffne ich dir direkt die richtige Stelle.",
+      "intro": "Frag mich, wie etwas in EmberOne funktioniert. Ich öffne dir direkt die passende Stelle.",
       "privacyHint": "Bitte gib keine persönlichen Angaben ein. Antworten der KI können Fehler enthalten und sind unverbindlich.",
       "inputLabel": "Deine Frage",
       "suggestionsTitle": "Zum Beispiel",
@@ -3659,7 +3659,7 @@
       "needFile": "Wähle zuerst eine Datei (Foto, Scan oder PDF) aus.",
       "imageOnly": "Gelesen werden Fotos und Scans (JPEG, PNG, WEBP, GIF) sowie PDFs (bis zu drei Seiten).",
       "needSelection": "Wähle zuerst den Nachweis aus.",
-      "suggestionTitle": "KI-Vorschlag – bitte prüfen",
+      "suggestionTitle": "KI-Vorschlag, bitte prüfen",
       "suggestionFilled": "Vorbefüllt: {{fields}}. Bitte kontrolliere alle Angaben, bevor du absendest.",
       "suggestionEmpty": "Aus dem Dokument konnten keine Angaben übernommen werden. Bitte fülle das Formular selbst aus.",
       "hints": {

@@ -89,7 +89,11 @@ function HelpChatPanelContent() {
   }, [entries, chat.isPending]);
 
   useEffect(() => {
-    if (open && !chat.isPending) inputRef.current?.focus();
+    // Only auto-focus with a precise pointer: on touch devices it would pop the keyboard open
+    // and cover the conversation before the user chose to type.
+    if (open && !chat.isPending && window.matchMedia?.('(pointer: fine)').matches) {
+      inputRef.current?.focus();
+    }
   }, [open, chat.isPending]);
 
   const limitReached = entries.length >= HELP_CHAT_MAX_MESSAGES;
