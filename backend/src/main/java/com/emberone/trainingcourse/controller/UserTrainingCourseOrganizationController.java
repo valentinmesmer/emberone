@@ -6,6 +6,8 @@
 
 package com.emberone.trainingcourse.controller;
 
+import com.emberone.platform.ai.extraction.DocumentExtractionResult;
+import com.emberone.platform.ai.extraction.DocumentExtractionService;
 import com.emberone.platform.web.list.BoundedList;
 import com.emberone.platform.web.list.ListQuery;
 import com.emberone.trainingcourse.dto.*;
@@ -13,13 +15,16 @@ import com.emberone.trainingcourse.list.TrainingCourseRecordListFilter;
 import com.emberone.trainingcourse.service.TrainingCourseCatalogService;
 import com.emberone.trainingcourse.service.TrainingCourseRecordService;
 import com.emberone.user.service.UserService;
+import com.emberone.workflow.domain.WorkflowType;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /** Admin/manager training course API scoped to an organization. */
 @RestController
@@ -30,6 +35,7 @@ public class UserTrainingCourseOrganizationController {
     private final TrainingCourseRecordService recordService;
     private final TrainingCourseCatalogService catalogService;
     private final UserService userService;
+    private final DocumentExtractionService documentExtractionService;
 
     @GetMapping("/records")
     @PreAuthorize("@securityService.hasTrainingCourseReadPermission(#organizationId)")
@@ -91,5 +97,21 @@ public class UserTrainingCourseOrganizationController {
     public ResponseEntity<OrgTrainingCourseCatalogDto> getAvailableTypes(
             @PathVariable Long organizationId, @PathVariable Long userId) {
         return ResponseEntity.ok(catalogService.getAvailableTypesForOrg(organizationId));
+    }
+
+    /**
+     * Optional AI assist for the admin form: suggests values from the uploaded proof images. Same
+     * permission as creating the record; nothing is stored.
+     */
+    @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@securityService.hasTrainingCourseWritePermission(#organizationId)")
+    public ResponseEntity<DocumentExtractionResult> extract(
+            @PathVariable Long organizationId,
+            @PathVariable Long userId,
+            @RequestParam("file") List<MultipartFile> files) {
+        userService.assertUserBelongsToOrganization(userId, organizationId);
+        return ResponseEntity.ok(
+                documentExtractionService.extractForUser(
+                        WorkflowType.TRAINING_COURSE_RECORD.name(), files, null, userId));
     }
 }

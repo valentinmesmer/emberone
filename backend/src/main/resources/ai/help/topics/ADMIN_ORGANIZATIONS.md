@@ -1,0 +1,1 @@
+Admin area ("{management}") > "{myTenant}" > organizations: organization tree of the tenant; create new organizations and configure per organization e.g. leadership, offerable courses and management access.

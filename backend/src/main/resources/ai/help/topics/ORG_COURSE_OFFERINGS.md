@@ -1,0 +1,1 @@
+Organization > "{courseOfferings}": courses the organization offers, with sessions, audience, prerequisites and registrations. With write permission create a new offering (also from a template), publish it and complete it later.

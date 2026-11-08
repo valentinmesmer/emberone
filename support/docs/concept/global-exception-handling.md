@@ -1,6 +1,6 @@
 # Globale Exception-Behandlung
 
-Design-Notizen für die sieben `@RestControllerAdvice`-Klassen; kein gemeinsames `ProblemDetail` / `ApiError`-DTO. Package roots: `com.emberone.platform.exceptionhandler` / `platform.exception`, plus package-scoped `*exceptionhandler` in Workflow / Todo / Notification / Permission / Document. Eng verwandt: [Sicherheit & Berechtigungen](security-and-permissions.md), [Identity Provider (Authentik)](identity-provider-authentik.md), [Workflow-Engine](workflow-engine.md).
+Design-Notizen für die acht `@RestControllerAdvice`-Klassen; kein gemeinsames `ProblemDetail` / `ApiError`-DTO. Package roots: `com.emberone.platform.exceptionhandler` / `platform.exception`, plus package-scoped `*exceptionhandler` in Workflow / Todo / Notification / Permission / Document. Eng verwandt: [Sicherheit & Berechtigungen](security-and-permissions.md), [Identity Provider (Authentik)](identity-provider-authentik.md), [Workflow-Engine](workflow-engine.md).
 
 Bodies sind ad-hoc `Map<String, String>` (oder leeres `204`). Das Frontend-`apiClient` liest `error || message` und optional `code`.
 
@@ -32,8 +32,9 @@ Content-Type: application/json
 | 400 | `ValidationException`, erlaubte `IllegalArgumentException`, Bean-Validation |
 | 403 | Platform-`AccessDeniedException`, Spring `AuthorizationDeniedException`, `SecurityException` (Dokumente) |
 | 404 | `ResourceNotFoundException` |
-| 409 | `ConflictException` |
-| 502 | `IdentityException` (generische Identity-Meldung) |
+| 409 | `ConflictException` (inkl. `AiUnavailableException`: KI-Funktion nicht aktiviert) |
+| 429 | `AiRateLimitException` (`AiExceptionHandler`, KI-Limit je User) |
+| 502 | `IdentityException` (generische Identity-Meldung), `AiProviderException` (`AiExceptionHandler`, generische Meldung ohne Inhalte) |
 | 500 | Unerwartet / sanitisierte Meldungen |
 | 204 | Profilbild fehlt (leerer Body) |
 
@@ -73,6 +74,7 @@ Die meisten Domänen-Exceptions erben davon. Gemeinsame Helfer: `ClientErrorMess
 | `NotificationGlobalExceptionHandler` | `com.emberone.notification` | nur 404 |
 | `DocumentGlobalExceptionHandler` | `userdocument` / `attachment` / `profileimage` / `workflowsupporting` | `SecurityException` → 403 |
 | `ProfileImageExceptionHandler` | zwei Image-Controller | 204 bei fehlendem Avatar |
+| `AiExceptionHandler` | global, `@Order(0)` | nur `AiProviderException` (502, generische Meldung) und `AiRateLimitException` (429) |
 
 ## Neuer Handler vs. Wiederverwendung
 

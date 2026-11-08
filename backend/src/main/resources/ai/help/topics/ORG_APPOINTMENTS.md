@@ -1,0 +1,1 @@
+Organization > "{appointments}": planned appointments and appointment series of the organization, optionally with member responses (yes, no, uncertain). With write permission appointments can be created; an appointment can later become a service ("{service}").

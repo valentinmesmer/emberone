@@ -6,7 +6,6 @@
 
 package com.emberone.workflow.controller;
 
-import com.emberone.platform.security.SecurityService;
 import com.emberone.platform.web.list.BoundedList;
 import com.emberone.platform.web.list.ListQuery;
 import com.emberone.platform.web.list.options.ListFilterOptionsDto;
@@ -16,10 +15,8 @@ import com.emberone.workflow.dto.WorkflowPageDto;
 import com.emberone.workflow.dto.WorkflowTypeCatalogDto;
 import com.emberone.workflow.list.WorkflowListFilter;
 import com.emberone.workflow.list.WorkflowSelfListFilterOptions;
+import com.emberone.workflow.service.BeginnableWorkflowTypeService;
 import com.emberone.workflow.service.WorkflowService;
-import com.emberone.workflow.spi.WorkflowHandler;
-import com.emberone.workflow.spi.WorkflowHandlerRegistry;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -44,8 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkflowSelfController {
 
     private final WorkflowService workflowService;
-    private final WorkflowHandlerRegistry handlerRegistry;
-    private final SecurityService workflowSecurityService;
+    private final BeginnableWorkflowTypeService beginnableWorkflowTypeService;
     private final WorkflowSelfListFilterOptions selfListFilterOptions;
 
     @GetMapping("/list-filter-options")
@@ -86,16 +82,7 @@ public class WorkflowSelfController {
     @GetMapping("/beginnable-types")
     @BoundedList("Self-service beginnable workflow type catalog")
     public ResponseEntity<List<WorkflowTypeCatalogDto>> getBeginnableTypes() {
-        List<WorkflowTypeCatalogDto> types =
-                handlerRegistry.all().stream()
-                        .filter(h ->
-                                workflowSecurityService.canBeginSelfServiceWorkflow(
-                                        h.workflowTypeId()))
-                        .map(this::toCatalogDto)
-                        .sorted(
-                                Comparator.comparing(WorkflowTypeCatalogDto::getOpenScope)
-                                        .thenComparing(WorkflowTypeCatalogDto::getWorkflowTypeId))
-                        .toList();
+        List<WorkflowTypeCatalogDto> types = beginnableWorkflowTypeService.listForCurrentUser();
         return ResponseEntity.ok(types);
     }
 
@@ -115,16 +102,5 @@ public class WorkflowSelfController {
     @GetMapping("/open-state/{workflowTypeId}")
     public ResponseEntity<WorkflowOpenStateDto> getOpenState(@PathVariable long workflowTypeId) {
         return ResponseEntity.ok(workflowService.getOpenStateForCurrentUser(workflowTypeId));
-    }
-
-    private WorkflowTypeCatalogDto toCatalogDto(WorkflowHandler<?> handler) {
-        return WorkflowTypeCatalogDto.builder()
-                .workflowTypeId(handler.workflowTypeId())
-                .workflowTypeKey(handler.workflowType().name())
-                .mode(handler.mode())
-                .allowsMultipleConcurrentOpen(handler.allowsMultipleConcurrentOpen())
-                .openScope(handler.openScope())
-                .listedInBeginnableCatalog(handler.listedInBeginnableCatalog())
-                .build();
     }
 }

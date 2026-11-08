@@ -92,7 +92,9 @@
       "chooseFile": "Datei auswählen",
       "empty": "Keine Anhänge",
       "download": "Herunterladen",
-      "removeFile": "Datei entfernen"
+      "removeFile": "Datei entfernen",
+      "converting": "Foto wird umgewandelt …",
+      "convertFailed": "Das Foto konnte nicht umgewandelt werden. Bitte wähle ein JPEG oder PNG."
     },
     "request": {
       "submit": "Antrag absenden",
@@ -282,7 +284,7 @@
       "later": "Später"
     },
     "rank": {
-      "intro": "Du kannst optional einen Wunschdienstgrad angeben. Die Vergabe erfolgt erst nach Freigabe des Eintritts.",
+      "intro": "Frag, wie etwas in EmberOne funktioniert. Wenn es passt, öffne ich dir direkt die richtige Stelle.",
       "skip": "Keinen Dienstgrad angeben",
       "select": "Wunschdienstgrad",
       "proofLabel": "Belegdokument",
@@ -3580,5 +3582,93 @@
       "reset": "Filter zurücksetzen"
     },
     "loadMore": "Mehr laden"
+  },
+  "ai": {
+    "badge": "KI-Antwort",
+    "helpChat": {
+      "open": "Hilfe-Assistent",
+      "title": "Hilfe-Assistent",
+      "intro": "Frag, wie etwas in EmberOne funktioniert, zum Beispiel „Wie reiche ich meine G26.3 ein?“ oder „Wie lege ich eine neue Dienstleistung an?“. Wenn es passt, öffne ich dir direkt die richtige Stelle.",
+      "privacyHint": "Bitte gib keine persönlichen Angaben ein. Antworten der KI können Fehler enthalten und sind unverbindlich.",
+      "inputLabel": "Deine Frage",
+      "suggestionsTitle": "Zum Beispiel",
+      "suggestions": {
+        "g263": "Wie reiche ich eine G26.3 ein?",
+        "absence": "Wie trage ich eine Abwesenheit ein?",
+        "timeEntry": "Wie erfasse ich meine Arbeitszeit?",
+        "drivingLicense": "Wie hinterlege ich meinen Führerschein?",
+        "course": "Wie melde ich mich zu einem Lehrgang an?",
+        "emergencyContact": "Wie hinterlege ich einen Notfallkontakt?",
+        "name": "Wie ändere ich meinen Namen?",
+        "notifications": "Wie ändere ich meine Benachrichtigungen?"
+      },
+      "placeholder": "Wie ändere ich meinen Namen?",
+      "send": "Senden",
+      "thinking": "Die KI antwortet …",
+      "error": "Der Hilfe-Assistent ist gerade nicht erreichbar. Bitte versuche es später erneut.",
+      "reset": "Neues Gespräch",
+      "limitReached": "Das Gespräch ist zu lang. Bitte starte ein neues Gespräch.",
+      "actionStart": "{{name}} starten",
+      "actionStartCatalog": "{{name}}: {{entry}}",
+      "actionOpenRegistrations": "Zu den Lehrgangsanmeldungen",
+      "actionOpenTopic": "{{name}} öffnen",
+      "actionCreateTopic": "{{name}}: neu anlegen",
+      "chooseOrganization": "Für welche Organisation?",
+      "topics": {
+        "MY_MASTER_DATA": "Stammdaten",
+        "MY_EMERGENCY_CONTACTS": "Notfallkontakt",
+        "MY_ABSENCES": "Abwesenheiten",
+        "MY_TIME_ENTRIES": "Zeiterfassung",
+        "MY_DOCUMENTS": "Meine Dokumente",
+        "MY_QUALIFICATIONS": "Qualifikationen",
+        "MY_CERTIFICATIONS": "Nachweise",
+        "MY_TRAINING_COURSES": "Lehrgänge",
+        "MY_DRIVING_LICENSES": "Führerschein",
+        "MY_RANK": "Dienstgrad & Funktionen",
+        "MY_COURSE_REGISTRATIONS": "Lehrgangsanmeldung",
+        "MY_WORKFLOWS": "Anträge",
+        "MY_TODOS": "Meine Aufgaben",
+        "MY_NOTIFICATIONS": "Benachrichtigungen",
+        "MY_NOTIFICATION_SETTINGS": "Benachrichtigungseinstellungen",
+        "ORG_APPOINTMENTS": "Termine",
+        "ORG_SERVICE_EVENTS": "Dienstleistung",
+        "ORG_OPERATION_EVENTS": "Einsatz",
+        "ORG_COURSE_OFFERINGS": "Lehrgangsangebote",
+        "ORG_COURSE_REGISTRATIONS": "Lehrgangsanmeldungen",
+        "ORG_USERS": "Mitglieder",
+        "ORG_ABSENCES": "Abwesenheiten der Organisation",
+        "ORG_EMERGENCY_CONTACTS": "Notfallkontakte der Mitglieder",
+        "ORG_TIME_ENTRIES": "Zeiterfassung der Mitglieder",
+        "ORG_CERTIFICATIONS": "Nachweise der Organisation",
+        "ORG_QUALIFICATIONS": "Qualifikationen der Organisation",
+        "ORG_RANKS": "Dienstgrade und Funktionen",
+        "ORG_GROUPS": "Gruppen",
+        "ORG_WORKFLOWS": "Anträge der Organisation",
+        "ORG_MANAGEMENT": "Verwaltung",
+        "ADMIN_USERS": "Nutzerverwaltung",
+        "ADMIN_TENANT": "Mein Mandant",
+        "ADMIN_ORGANIZATIONS": "Organisationen des Mandanten",
+        "ADMIN_STANDARDS": "Organisationsstandards",
+        "ADMIN_CATALOGS": "Mandant Einstellungen",
+        "ADMIN_RETENTION": "Löschfristen"
+      }
+    },
+    "extract": {
+      "button": "Aus Dokument ausfüllen",
+      "running": "Dokument wird gelesen …",
+      "needFile": "Wähle zuerst eine Datei (Foto, Scan oder PDF) aus.",
+      "imageOnly": "Gelesen werden Fotos und Scans (JPEG, PNG, WEBP, GIF) sowie PDFs (bis zu drei Seiten).",
+      "needSelection": "Wähle zuerst den Nachweis aus.",
+      "suggestionTitle": "KI-Vorschlag – bitte prüfen",
+      "suggestionFilled": "Vorbefüllt: {{fields}}. Bitte kontrolliere alle Angaben, bevor du absendest.",
+      "suggestionEmpty": "Aus dem Dokument konnten keine Angaben übernommen werden. Bitte fülle das Formular selbst aus.",
+      "hints": {
+        "FUTURE_DATE": "{{field}}: Das erkannte Datum liegt in der Zukunft und wurde nicht übernommen.",
+        "DATE_ORDER": "{{field}}: Die erkannten Daten passen zeitlich nicht zusammen und wurden nicht übernommen.",
+        "VALIDITY_EXCEEDS_INTERVAL": "Die im Dokument genannte Gültigkeit ist länger als das Intervall dieses Nachweises. Bitte prüfen.",
+        "TYPE_MISMATCH": "Das Dokument scheint zu einem anderen Nachweis zu gehören als dem gewählten. Bitte prüfen.",
+        "VALUE_REJECTED": "{{field}}: Ein erkannter Wert war nicht plausibel und wurde nicht übernommen."
+      }
+    }
   }
 }

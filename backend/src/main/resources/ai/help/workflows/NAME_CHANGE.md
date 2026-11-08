@@ -1,0 +1,1 @@
+Request a name change ("{myArea}" > "{masterData}"): change first and/or last name. A proof document (e.g. marriage certificate) is required. The responsible unit of the main organization approves; the new name applies after approval. Requires an active main organization.

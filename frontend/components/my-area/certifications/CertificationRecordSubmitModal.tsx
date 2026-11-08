@@ -7,6 +7,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { CertificationRecordFormFields } from '@/components/my-area/certifications/CertificationRecordFormFields';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { Modal } from '@/components/ui/modal';
@@ -15,6 +16,7 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CertificationStatusItemDto } from '@/lib/api/certifications';
 import { ApiRequestError } from '@/lib/api/client';
+import { readString } from '@/lib/ai/extractionFields';
 import { workflowsApi } from '@/lib/api/workflows';
 import { requiresSubmissionAttachment } from '@/lib/certifications/evidenceTypes';
 import {
@@ -264,6 +266,26 @@ export function CertificationRecordSubmitModal({
           disabled={pending}
           attachmentsInputId="certification-attachments"
         />
+
+        {isEdit ? null : (
+          <AiExtractionAssist
+            proofType="CERTIFICATION_RECORD"
+            files={files}
+            selectionId={selectedDefinitionId}
+            requiresSelection
+            disabled={pending}
+            fieldLabels={{
+              completedDate: t('certifications.submit.completedDateLabel'),
+              tenantCertDefinitionId: t('certifications.submit.definitionLabel'),
+            }}
+            onApply={(fields) => {
+              const date = readString(fields, 'completedDate');
+              if (!date) return [];
+              setCompletedDate(date);
+              return ['completedDate'];
+            }}
+          />
+        )}
       </div>
     </Modal>
   );

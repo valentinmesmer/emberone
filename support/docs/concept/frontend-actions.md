@@ -23,6 +23,7 @@ Einheitliches Muster für Aktionen auf **Detailseiten** (eine einzelne Entität)
 7. **Bestätigung**: jede Seiten-Aktion mit Folgen öffnet `ConfirmDialog` bzw. `DestructiveTwoStepConfirmModal`. Nach Löschen: `router.push` auf die Liste.
 8. **Titel**: Default ist `common.actionsSection` („Aktionen"). Ein eigener `title` nur, wenn der Domänenkontext es braucht.
 9. **Create** (Hinzufügen, Einreichen) bleibt beschrifteter `Button` im `SectionHeader` / `PageHeader`, nicht in der `ActionsSection`.
+   Deep-Link auf den Anlegen-Dialog (z. B. aus dem Hilfe-Chat): `withCreateIntent(href)` hängt `?create=1` an; die Listenseite ruft `useCreateIntent(canWrite, open)` auf, öffnet den Dialog einmal, wenn der User dort anlegen darf, und entfernt den Parameter wieder. Kein eigener Weg je Seite.
 10. **Eingebettete Listen** auf Detailseiten (z. B. Sessions eines Kursangebots) behalten `ListRow.actions` für ihre Zeilen. Die Aktionen der Seite selbst folgen dieser Regel.
 11. **Navigation** ist keine Aktion: `href` / Chevron oder Hub-Tile (Ausnahme: „Workflow öffnen" auf Self-Seiten, solange es der einzige Weg zum Prozess ist).
 
@@ -42,3 +43,4 @@ Einheitliches Muster für Aktionen auf **Detailseiten** (eine einzelne Entität)
 - `ActionsSection`, `ActionRowIcon`: `frontend/components/ui/actions-section.tsx`
 - `DetailCardHeader`, `DetailCardAction`: `frontend/components/ui/detail-card-header.tsx`
 - `SectionEditAction`: `frontend/components/ui/section-header.tsx`
+- Anlegen-Deep-Link: `frontend/lib/navigation/createIntent.ts`, `frontend/hooks/useCreateIntent.ts`

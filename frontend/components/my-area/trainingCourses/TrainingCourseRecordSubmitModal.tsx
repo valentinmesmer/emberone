@@ -7,12 +7,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { TrainingCourseRecordFormFields } from '@/components/my-area/trainingCourses/TrainingCourseRecordFormFields';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readNumber, readNumberArray, readString } from '@/lib/ai/extractionFields';
 import { ApiRequestError } from '@/lib/api/client';
 import type { TrainingCourseTypeDto } from '@/lib/api/trainingCourses';
 import { workflowsApi } from '@/lib/api/workflows';
@@ -296,6 +298,58 @@ export function TrainingCourseRecordSubmitModal({
           disabled={pending}
           attachmentsInputId="training-course-submit-attachments"
         />
+
+        {isEdit ? null : (
+          <AiExtractionAssist
+            proofType="TRAINING_COURSE_RECORD"
+            files={files}
+            disabled={pending}
+            fieldLabels={{
+              tenantTrainingCourseTypeIds: t('trainingCourse.submit.typeLabel'),
+              name: t('trainingCourse.submissionName.label'),
+              startDate: t('trainingCourse.submit.startDateLabel'),
+              endDate: t('trainingCourse.submit.endDateLabel'),
+              location: t('trainingCourse.submit.locationLabel'),
+              hours: t('trainingCourse.submit.hoursLabel'),
+            }}
+            onApply={(fields) => {
+              const applied: string[] = [];
+              const typeIds = readNumberArray(fields, 'tenantTrainingCourseTypeIds').filter((id) =>
+                submittableTypes.some((type) => type.id === id),
+              );
+              if (typeIds.length > 0 && !lockTypes) {
+                setSelectedTypeIds(typeIds);
+                applied.push('tenantTrainingCourseTypeIds');
+              }
+              const suggestedName = readString(fields, 'name');
+              if (suggestedName) {
+                setName(suggestedName);
+                applied.push('name');
+              }
+              const suggestedStart = readString(fields, 'startDate');
+              if (suggestedStart) {
+                setStartDate(suggestedStart);
+                applied.push('startDate');
+              }
+              const suggestedEnd = readString(fields, 'endDate');
+              if (suggestedEnd) {
+                setEndDate(suggestedEnd);
+                applied.push('endDate');
+              }
+              const suggestedLocation = readString(fields, 'location');
+              if (suggestedLocation) {
+                setLocation(suggestedLocation);
+                applied.push('location');
+              }
+              const suggestedHours = readNumber(fields, 'hours');
+              if (suggestedHours !== undefined) {
+                setHours(String(suggestedHours));
+                applied.push('hours');
+              }
+              return applied;
+            }}
+          />
+        )}
       </div>
     </Modal>
   );

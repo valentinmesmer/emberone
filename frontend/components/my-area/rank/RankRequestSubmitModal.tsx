@@ -8,12 +8,14 @@
 
 import { useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Select } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readNumber } from '@/lib/ai/extractionFields';
 import { workflowsApi } from '@/lib/api/workflows';
 import { useMyAvailableRanks, useSubmitRankRequestWorkflow } from '@/lib/store';
 import { useUpdateWorkflowPayload } from '@/lib/store/queries/workflows';
@@ -154,6 +156,25 @@ function RankRequestSubmitModalBody({
           multiple={false}
           disabled={pending}
         />
+        {isEdit ? null : (
+          <AiExtractionAssist
+            proofType="RANK_REQUEST"
+            files={files}
+            disabled={pending}
+            fieldLabels={{ tenantRankId: t('ranks.request.rank') }}
+            onApply={(fields) => {
+              const suggestedRankId = readNumber(fields, 'tenantRankId');
+              if (
+                suggestedRankId === undefined ||
+                !ranks.some((rank) => rank.id === suggestedRankId)
+              ) {
+                return [];
+              }
+              setTenantRankId(String(suggestedRankId));
+              return ['tenantRankId'];
+            }}
+          />
+        )}
       </div>
     </Modal>
   );

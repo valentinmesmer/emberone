@@ -1,0 +1,1 @@
+Leave an organization ("{myArea}" > "{masterData}", organizations section): the exit is requested and applies right after approval, without a chosen date. Warning: leaving the main organization ends the whole account; leaving another organization ends only that membership. Members of the leadership group have restrictions.

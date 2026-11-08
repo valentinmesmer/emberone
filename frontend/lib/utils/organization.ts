@@ -103,6 +103,14 @@ export function isOrganizationWorkflowsPathActive(orgId: number, pathname: strin
   return pathname === workflowsPath || pathname.startsWith(`${workflowsPath}/`);
 }
 
+export function getOrganizationEmergencyContactsPath(orgId: number): string {
+  return `/organizations/${orgId}/emergency-contacts`;
+}
+
+export function getOrganizationTimeEntriesPath(orgId: number): string {
+  return `/organizations/${orgId}/time-entries`;
+}
+
 export function getOrganizationEmergencyContactDetailPath(
   orgId: number,
   contactId: number,

@@ -1,0 +1,1 @@
+Request a rank ("{myArea}" > "{rankAndFunctions}"): only possible while no rank is on record. Pick the rank, optionally attach proofs. Requires an active main organization; its leadership approves. Later rank changes are made by the organization itself.

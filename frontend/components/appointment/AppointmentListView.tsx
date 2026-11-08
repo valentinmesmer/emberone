@@ -63,6 +63,7 @@ import type {
   EventType,
 } from '@/types/event';
 import { PermissionTypeEnum } from '@/types/permission';
+import { useCreateIntent } from '@/hooks/useCreateIntent';
 
 interface AppointmentListViewProps {
   organizationId: number;
@@ -136,6 +137,7 @@ function AppointmentListContent({ organizationId, isMember }: AppointmentListCon
   const deleteMutation = useDeleteAppointment(organizationId);
 
   const [createOpen, setCreateOpen] = useState(false);
+  useCreateIntent(canWrite, () => setCreateOpen(true));
   const [editTarget, setEditTarget] = useState<AppointmentDto | null>(null);
   const [seriesDialog, setSeriesDialog] = useState<{
     mode: 'edit' | 'delete';

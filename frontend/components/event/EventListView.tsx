@@ -29,6 +29,7 @@ import { formatAppointmentDateTimeRange } from '@/lib/utils/date';
 import type { EventDto } from '@/types/event';
 import { EventType } from '@/types/event';
 import type { EventListState } from './useEventList';
+import { useCreateIntent } from '@/hooks/useCreateIntent';
 
 function eventAttendanceTone(attending: boolean | undefined): ListRowTone {
   if (attending === undefined) return 'default';
@@ -78,6 +79,7 @@ export function EventListView({ title, getEventLabel, list }: EventListViewProps
     handleCreateEvent,
     handleUpdateEvent,
   } = list;
+  useCreateIntent(canWrite, () => setIsCreateModalOpen(true));
 
   const [attendanceModalEvent, setAttendanceModalEvent] = useState<EventDto | null>(null);
   const [attendanceAfterCreate, setAttendanceAfterCreate] = useState(false);

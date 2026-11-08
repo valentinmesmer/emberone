@@ -1,0 +1,1 @@
+Register for a course ("{myArea}" > "{courseRegistration}"): pick a published course offering whose registration period is open and register. Requires a matching membership and the prerequisites of the offering. Only one active registration per offering. The specific offering must be picked in the list.

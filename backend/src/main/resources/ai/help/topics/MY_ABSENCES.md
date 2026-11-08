@@ -1,0 +1,1 @@
+"{myArea}" > "{absences}": enter own absences (e.g. vacation, personal, training, other) with a period and assign the affected organizations. Created directly, no request. Do not enter illness reasons or health details.

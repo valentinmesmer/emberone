@@ -8,12 +8,14 @@
 
 import { useMemo, useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { AddressInput } from '@/components/ui/address-input';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readString } from '@/lib/ai/extractionFields';
 import { ApiRequestError } from '@/lib/api/client';
 import { workflowsApi } from '@/lib/api/workflows';
 import { useSubmitAddressChangeWorkflow, useUpdateWorkflowPayload } from '@/lib/store';
@@ -267,6 +269,44 @@ export function AddressChangeRequestModal({
           optionalLabel={t('common.request.attachmentsOptional')}
           removeFileLabel={t('common.attachments.removeFile')}
         />
+
+        {isEdit ? null : (
+          <AiExtractionAssist
+            proofType="ADDRESS_CHANGE"
+            files={files}
+            disabled={pending}
+            fieldLabels={{
+              street: t('setup.user.street'),
+              postalCode: t('setup.user.postalCode'),
+              city: t('setup.user.city'),
+              country: t('setup.user.country'),
+            }}
+            onApply={(fields) => {
+              const applied: string[] = [];
+              const suggestedStreet = readString(fields, 'street');
+              if (suggestedStreet) {
+                setStreet(suggestedStreet);
+                applied.push('street');
+              }
+              const suggestedPostalCode = readString(fields, 'postalCode');
+              if (suggestedPostalCode) {
+                setPostalCode(suggestedPostalCode);
+                applied.push('postalCode');
+              }
+              const suggestedCity = readString(fields, 'city');
+              if (suggestedCity) {
+                setCity(suggestedCity);
+                applied.push('city');
+              }
+              const suggestedCountry = readString(fields, 'country');
+              if (suggestedCountry) {
+                setCountry(suggestedCountry);
+                applied.push('country');
+              }
+              return applied;
+            }}
+          />
+        )}
       </div>
     </Modal>
   );

@@ -6,6 +6,7 @@
 
 'use client';
 
+import { HelpChatPanel } from '@/components/ai/HelpChatPanel';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { AppointmentRealtimeSync } from '@/components/appointment/AppointmentRealtimeSync';
@@ -64,6 +65,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <OrganizationMembershipRealtimeSync />
       <MobileBottomNav />
       <PwaInstallPrompt />
+      <HelpChatPanel />
       <OnboardingReminderPrompt />
     </RefreshServerCacheProvider>
   );

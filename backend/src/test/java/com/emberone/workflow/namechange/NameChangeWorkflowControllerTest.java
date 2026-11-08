@@ -9,6 +9,7 @@ package com.emberone.workflow.namechange;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.emberone.platform.ai.extraction.DocumentExtractionService;
 import com.emberone.platform.security.TokenService;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.NameChangeWorkflowPayload;
@@ -26,12 +27,15 @@ class NameChangeWorkflowControllerTest {
 
     @Mock WorkflowService workflowService;
     @Mock TokenService tokenService;
+    @Mock DocumentExtractionService documentExtractionService;
 
     NameChangeWorkflowController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new NameChangeWorkflowController(workflowService, tokenService);
+        controller =
+                new NameChangeWorkflowController(
+                        workflowService, tokenService, documentExtractionService);
     }
 
     @Test

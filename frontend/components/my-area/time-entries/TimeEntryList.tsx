@@ -30,6 +30,7 @@ import { getOrganizationWallClockNow } from '@/lib/utils/date';
 import type { UserTimeEntryDto } from '@/types/timeEntry';
 import { TimeEntryCard } from './TimeEntryCard';
 import { ModePickerModal, TimeEntryFormModal } from './TimeEntryFormModal';
+import { useCreateIntent } from '@/hooks/useCreateIntent';
 
 type FormMode = 'stamp' | 'manual';
 
@@ -62,6 +63,7 @@ export function TimeEntryList() {
     setEditingEntry(null);
     setIsPickerOpen(true);
   };
+  useCreateIntent(canManageTimeEntries, openAddForm);
 
   const handleModeSelect = (mode: FormMode) => {
     setIsPickerOpen(false);

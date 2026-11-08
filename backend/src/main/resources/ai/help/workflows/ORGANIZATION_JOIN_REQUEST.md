@@ -1,0 +1,1 @@
+Request to join another organization ("{myArea}" > "{masterData}", organizations section): pick the target organization. The current main organization and the target organization approve (without a main organization only the target). Depending on configuration, onboarding steps follow under "{joining}"; membership starts after them. Only one open request per target organization.

@@ -39,6 +39,12 @@ export interface WorkflowBeginModalHostProps {
   userData: UserDto;
   /** Remounts the modal form when starting a new request. */
   modalKey?: number;
+  /**
+   * Catalog entry to pre-select for certification, training course and driving license requests
+   * (certification definition id, course type id, license class id). Ignored when it is not
+   * offered to the user right now.
+   */
+  presetCatalogId?: number | null;
 }
 
 /** Renders the self-service open modal for the given workflow type. */
@@ -48,6 +54,7 @@ export function WorkflowBeginModalHost({
   onClose,
   userData,
   modalKey = 0,
+  presetCatalogId = null,
 }: WorkflowBeginModalHostProps) {
   const { data: certStatus } = useMyCertificationStatus();
   const catalogDefinitionsEnabled =
@@ -94,6 +101,24 @@ export function WorkflowBeginModalHost({
   const drivingLicenseClassDefinitions = useMemo(
     () => availableDrivingDefinitions.filter((definition) => definition.active),
     [availableDrivingDefinitions],
+  );
+
+  const presetCertDefinitionId =
+    presetCatalogId != null &&
+    submittableCertItems.some((item) => item.tenantCertDefinitionId === presetCatalogId)
+      ? presetCatalogId
+      : undefined;
+  const presetTrainingTypeIds =
+    presetCatalogId != null && submittableTrainingTypes.some((type) => type.id === presetCatalogId)
+      ? [presetCatalogId]
+      : undefined;
+  const presetDrivingClasses = useMemo(
+    () =>
+      presetCatalogId != null &&
+      drivingLicenseClassDefinitions.some((definition) => definition.id === presetCatalogId)
+        ? [{ tenantDrivingLicenseDefinitionId: presetCatalogId }]
+        : undefined,
+    [drivingLicenseClassDefinitions, presetCatalogId],
   );
 
   if (workflowTypeId === WORKFLOW_TYPE_IDS.NAME_CHANGE) {
@@ -180,6 +205,7 @@ export function WorkflowBeginModalHost({
         isOpen={isOpen}
         onClose={onClose}
         submittableItems={submittableCertItems}
+        presetDefinitionId={presetCertDefinitionId}
       />
     );
   }
@@ -191,6 +217,7 @@ export function WorkflowBeginModalHost({
         isOpen={isOpen}
         onClose={onClose}
         submittableTypes={submittableTrainingTypes}
+        presetTypeIds={presetTrainingTypeIds}
       />
     );
   }
@@ -202,6 +229,7 @@ export function WorkflowBeginModalHost({
         isOpen={isOpen}
         onClose={onClose}
         classDefinitions={drivingLicenseClassDefinitions}
+        presetClasses={presetDrivingClasses}
         renewal={drivingLicense != null}
       />
     );

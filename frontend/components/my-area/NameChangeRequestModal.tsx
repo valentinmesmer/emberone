@@ -8,12 +8,14 @@
 
 import { useMemo, useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readString } from '@/lib/ai/extractionFields';
 import { ApiRequestError } from '@/lib/api/client';
 import { workflowsApi } from '@/lib/api/workflows';
 import { useSubmitNameChangeWorkflow, useUpdateWorkflowPayload } from '@/lib/store';
@@ -230,6 +232,32 @@ export function NameChangeRequestModal({
           required={!isEdit || existingAttachmentIds.length === 0}
           removeFileLabel={t('common.attachments.removeFile')}
         />
+
+        {isEdit ? null : (
+          <AiExtractionAssist
+            proofType="NAME_CHANGE"
+            files={files}
+            disabled={pending}
+            fieldLabels={{
+              firstName: t('setup.user.firstName'),
+              lastName: t('setup.user.lastName'),
+            }}
+            onApply={(fields) => {
+              const applied: string[] = [];
+              const suggestedFirstName = readString(fields, 'firstName');
+              if (suggestedFirstName) {
+                setFirstName(suggestedFirstName);
+                applied.push('firstName');
+              }
+              const suggestedLastName = readString(fields, 'lastName');
+              if (suggestedLastName) {
+                setLastName(suggestedLastName);
+                applied.push('lastName');
+              }
+              return applied;
+            }}
+          />
+        )}
       </div>
     </Modal>
   );
