@@ -26,6 +26,7 @@ import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateCourseOffering,
   useOrganizationById,
+  useOfferableCourseTypes,
   useOrganizationCourseOfferings,
   useOrgCourseOfferingListState,
 } from '@/lib/store';
@@ -79,6 +80,9 @@ export function CourseOfferingListView({ organizationId }: Props) {
 
   const offerings = data ?? [];
 
+  const { data: offerableTypes } = useOfferableCourseTypes(organizationId, canWrite);
+  const canOffer = canWrite && (offerableTypes?.length ?? 0) > 0;
+
   const createDraft = useCreateCourseOffering(organizationId);
 
   const [dialog, setDialog] = useState<'add' | 'templates' | 'create' | null>(null);
@@ -112,14 +116,16 @@ export function CourseOfferingListView({ organizationId }: Props) {
               >
                 {t('courseOfferings.templates.title')}
               </Button>
-              <Button
-                variant="primary"
-                size="xs"
-                fullWidth="responsive"
-                onClick={() => setDialog('add')}
-              >
-                {t('common.add')}
-              </Button>
+              {canOffer ? (
+                <Button
+                  variant="primary"
+                  size="xs"
+                  fullWidth="responsive"
+                  onClick={() => setDialog('add')}
+                >
+                  {t('common.add')}
+                </Button>
+              ) : null}
             </SectionActions>
           ) : null
         }

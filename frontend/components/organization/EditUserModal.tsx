@@ -9,9 +9,9 @@
 import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
-import { useToast } from '@/components/ui/toast';
 import { UserBasicInfoForm } from '@/components/user/UserBasicInfoForm';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import { isValidDateOfBirth } from '@/lib/validation/dateOfBirth';
 import { Salutation } from '@/types/enums/salutation';
 import type { UpdatePersonalDataRequest, UserDto } from '@/types/user';
@@ -31,7 +31,6 @@ function EditUserModalForm({
   isLoading,
 }: Omit<EditUserModalProps, 'isOpen'> & { user: UserDto }) {
   const t = useTranslation();
-  const { showError } = useToast();
   const [formData, setFormData] = useState<UpdatePersonalDataRequest>({
     firstName: user.firstName || '',
     lastName: user.lastName || '',
@@ -40,16 +39,7 @@ function EditUserModalForm({
   });
 
   const handleUpdate = async () => {
-    // Validate form
-    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.dateOfBirth) {
-      showError(t('common.validation.fillRequired'));
-      return;
-    }
-
-    if (!isValidDateOfBirth(formData.dateOfBirth)) {
-      showError(t('common.validation.invalidDateOfBirth'));
-      return;
-    }
+    if (blockers.length > 0) return;
 
     try {
       await onUpdate(formData);
@@ -64,13 +54,12 @@ function EditUserModalForm({
     onClose();
   };
 
-  const isValid = () => {
-    return (
-      formData.firstName.trim() !== '' &&
-      formData.lastName.trim() !== '' &&
-      isValidDateOfBirth(formData.dateOfBirth)
-    );
-  };
+  const blockers = formBlockers([
+    [t('setup.user.salutation'), Boolean(formData.salutation)],
+    [t('setup.user.firstName'), formData.firstName.trim() !== ''],
+    [t('setup.user.lastName'), formData.lastName.trim() !== ''],
+    [t('setup.user.dateOfBirth'), isValidDateOfBirth(formData.dateOfBirth)],
+  ]);
 
   return (
     <Modal
@@ -82,7 +71,7 @@ function EditUserModalForm({
         <ModalFooter
           onCancel={handleClose}
           onSave={handleUpdate}
-          isValid={isValid()}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

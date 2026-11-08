@@ -17,6 +17,7 @@ import {
   type TenantTrainingCourseTypeDto,
   tenantTrainingCourseTypesApi,
 } from '@/lib/api/tenantTrainingCourseTypes';
+import { formBlockers } from '@/lib/utils';
 
 export interface AdminTenantTrainingCourseTypeEditModalProps {
   isOpen: boolean;
@@ -56,8 +57,13 @@ function AdminTenantTrainingCourseTypeEditModalBody({
   const [name, setName] = useState(() => type?.name ?? '');
   const [active, setActive] = useState(() => type?.active ?? true);
 
+  const blockers = formBlockers([
+    [t('admin.tenantStandards.trainingCourses.abbreviationLabel'), abbreviation.trim() !== ''],
+    [t('admin.standards.name'), name.trim() !== ''],
+  ]);
+
   const handleSave = async () => {
-    if (!name.trim() || !abbreviation.trim()) return;
+    if (blockers.length > 0) return;
     setBusy(true);
     try {
       const payload = {
@@ -97,7 +103,7 @@ function AdminTenantTrainingCourseTypeEditModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={name.trim().length > 0 && abbreviation.trim().length > 0}
+          blockers={blockers}
           isLoading={busy}
         />
       }

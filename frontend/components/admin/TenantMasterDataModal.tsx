@@ -12,10 +12,10 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreateTenantRequest, TenantAdminPatchRequest } from '@/lib/api/admin';
 import type { FederalState } from '@/lib/federal-state';
+import { formBlockers } from '@/lib/utils';
 import { TenantMasterDataFormFields } from './TenantMasterDataFormFields';
 import type { TenantMasterDataFormState } from './tenantMasterDataFormModel';
 import {
-  isTenantFormComplete,
   masterDataFormToCreateRequest,
   masterDataFormToPatchRequest,
 } from './tenantMasterDataFormModel';
@@ -45,10 +45,15 @@ export function TenantMasterDataModal(props: TenantMasterDataModalProps) {
   const [form, setForm] = useState<TenantMasterDataFormState>(() => ({ ...props.initialValues }));
 
   const isCreate = props.mode === 'create';
-  const formComplete = isTenantFormComplete(form);
+  const blockers = formBlockers([
+    [t('admin.tenantForm.name'), form.name.trim() !== ''],
+    ...(isCreate
+      ? ([[t('admin.tenantForm.abbreviation'), form.abbreviation.trim() !== '']] as const)
+      : []),
+  ]);
 
   const handleSave = async () => {
-    if (!formComplete) return;
+    if (blockers.length > 0) return;
     if (props.mode === 'create') {
       await props.onCreate(masterDataFormToCreateRequest(form));
     } else {
@@ -66,7 +71,7 @@ export function TenantMasterDataModal(props: TenantMasterDataModalProps) {
         <ModalFooter
           onCancel={props.onClose}
           onSave={() => void handleSave()}
-          isValid={formComplete}
+          blockers={blockers}
           isLoading={props.isLoading}
           saveText={isCreate ? t('common.add') : t('common.save')}
         />

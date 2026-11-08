@@ -30,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type StandardContentItemDto, standardsApi } from '@/lib/api/standards';
 import { getAdminStandardPermissionGroupPath } from '@/lib/navigation/adminWorkspace';
+import { formBlockers } from '@/lib/utils';
 
 interface StandardPermissionGroupManagementProps {
   state: StandardContentState;
@@ -78,8 +79,10 @@ export function StandardPermissionGroupManagement({
     setEditingItem(null);
   };
 
+  const blockers = formBlockers([[t('admin.standards.name'), name.trim() !== '']]);
+
   const handleSave = async () => {
-    if (!name.trim()) return;
+    if (blockers.length > 0) return;
     const ok = await runMutation(
       () =>
         editingItem
@@ -213,7 +216,7 @@ export function StandardPermissionGroupManagement({
             <ModalFooter
               onCancel={closeForm}
               onSave={() => void handleSave()}
-              isValid={name.trim().length > 0}
+              blockers={blockers}
               isLoading={busy}
             />
           }

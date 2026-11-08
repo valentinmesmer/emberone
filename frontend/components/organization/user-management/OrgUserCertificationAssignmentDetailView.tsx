@@ -9,10 +9,11 @@
 import { Trash2, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { DetailCardAction, DetailCardHeader } from '@/components/ui/detail-card-header';
+import { DetailCardHeader } from '@/components/ui/detail-card-header';
 import { FieldDisplay } from '@/components/ui/field-display';
 import { ListContainer, ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
@@ -98,15 +99,6 @@ export function OrgUserCertificationAssignmentDetailView({
             </div>
           }
           title={title}
-          actions={
-            canWrite ? (
-              <DetailCardAction
-                label={t('certifications.removeIndividual')}
-                icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                onClick={() => setConfirmOpen(true)}
-              />
-            ) : undefined
-          }
         />
 
         <div className="mt-3 space-y-3 border-t border-[var(--border-color)]/30 pt-3">
@@ -155,6 +147,17 @@ export function OrgUserCertificationAssignmentDetailView({
             />
           </ListContainer>
         </section>
+      ) : null}
+
+      {canWrite ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('certifications.removeIndividual')}
+            subtitle={t('common.deleteHint')}
+            onClick={() => setConfirmOpen(true)}
+          />
+        </ActionsSection>
       ) : null}
 
       <ConfirmDialog

@@ -13,9 +13,8 @@ import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { validateRequiredFields } from '@/lib/utils';
+import { formBlockers } from '@/lib/utils';
 import { courseSessionTypeLabelKey } from '@/lib/utils/courseOffering';
 import { isEndStrictlyBeforeStart, syncEndLocalDateTimeWithStartChange } from '@/lib/utils/date';
 import type {
@@ -60,7 +59,6 @@ export function CourseSessionFormModal({
   onSave,
 }: CourseSessionFormModalProps) {
   const t = useTranslation();
-  const { showError } = useToast();
   const [form, setForm] = useState<SessionForm>(() =>
     session ? formFromSession(session) : emptyForm(),
   );
@@ -70,20 +68,13 @@ export function CourseSessionFormModal({
       ? t('common.validation.endNotBeforeStart')
       : undefined;
 
-  const isValid = form.start !== '' && form.end !== '' && !scheduleError;
+  const blockers = formBlockers([
+    [t('courseOfferings.sessions.start'), form.start !== ''],
+    [t('courseOfferings.sessions.end'), form.end !== '' && !scheduleError],
+  ]);
 
   const save = async () => {
-    if (
-      !validateRequiredFields(
-        { start: form.start, end: form.end },
-        t,
-        showError,
-        'common.validation.fillRequired',
-      )
-    ) {
-      return;
-    }
-    if (!isValid) return;
+    if (blockers.length > 0) return;
     await onSave({
       type: form.type,
       start: form.start,
@@ -111,7 +102,7 @@ export function CourseSessionFormModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void save()}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={isSaving}
         />
       }
@@ -124,7 +115,6 @@ export function CourseSessionFormModal({
             setForm((prev) => ({ ...prev, type: e.target.value as CourseSessionType }))
           }
           options={typeOptions}
-          required
         />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <DateTimePicker

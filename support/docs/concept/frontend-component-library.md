@@ -29,6 +29,8 @@ cn() + CSS-Vars + lucide-react
 
 - **Controls:** `button`, `input`, `textarea`, `select`, `checkbox`, `switch`, `file-input`, `date-picker`, `date-time-picker`, `date-field-segment` (gemeinsames Segment-Styling für beide Date-Picker), …
 - **Feedback:** `toast`, `loading`, `message-cards` (`NoticeCard`), `confirm-dialog`, `badge`
+  - **`actions-section`:** Gesperrte Aktionen als `ActionRow` mit `blockers` (Liste der Gründe, gleiche Idee wie bei `modal-footer`): Zeile gedimmt, nicht klickbar, die Gründe ersetzen den Untertitel (einer pro Zeile).
+  - **`modal-footer`:** Speichern sperrt über `blockers` (Labels fehlender oder ungültiger Felder, gebaut mit `formBlockers([[label, erfüllt], …])`); eine Hinweiszeile über den Buttons nennt sie („Noch offen: …“). Jedes Feld mit Blocker trägt `required` (roter Stern) und umgekehrt - kein separates `isValid`.
   - **`confirm-dialog`:** Standard ist `variant="danger"` (destruktiv). `warning` hebt heikle Bestätigungen hervor. `variant="info"` für neutrale Bestätigungen (z. B. Rolle ändern, optional importieren) - Bestätigen wie `ModalFooter` Primary (`--fire-red`), nicht Blau.
 - **Surfaces:** `card`, `modal`, `list` (`ListRow` / `ListContainer`), `field-display`, `actions-section` (`ActionsSection`)
 - **Page-Chrome:** `page-header`, `page-content-section`, `back-button`, `section-header` (`SectionHeader` / `SectionActions` / `SectionEditAction`), `detail-card-header` (`DetailCardHeader` / `DetailCardAction`)
@@ -62,7 +64,7 @@ Pro Intent genau ein UI-Muster ([`AGENTS.md`](../../../AGENTS.md)):
 | **Navigate** | `href` / Chevron oder Hub-Tiles |
 | **Selten / destruktiv / Admin-Lifecycle** | `ActionsSection` + `ListRow` (optional `leading={<ActionRowIcon icon={…} />}`, Untertitel als Hinweis; kein Tone-Akzent, kein Chevron) |
 
-Keine zweite Variante für denselben Intent. Detail-Routen: [Frontend Detail-Page-Routing](frontend-detail-routing.md).
+Keine zweite Variante für denselben Intent. Regeln für Detailseiten (Container-Icon vs. Seiten-Aktion): [Frontend-Aktionen](frontend-actions.md). Detail-Routen: [Frontend Detail-Page-Routing](frontend-detail-routing.md).
 
 ## Mobile Aktualisierung
 

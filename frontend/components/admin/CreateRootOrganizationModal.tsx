@@ -10,12 +10,11 @@ import { useCallback, useMemo } from 'react';
 import { OrganizationFormFields } from '@/components/organization/OrganizationFormFields';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
-import { useToast } from '@/components/ui/toast';
 import { useFormModal } from '@/hooks/useFormModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SetupOrganizationRequest } from '@/lib/api/admin';
 import type { OrganizationTypeDto } from '@/lib/api/organizationTypes';
-import { normalizeOrganizationCode, validateRequiredFields } from '@/lib/utils';
+import { formBlockers, normalizeOrganizationCode } from '@/lib/utils';
 import { isValidOrganizationCode } from '@/lib/validation/organization';
 
 export interface CreateRootOrganizationModalProps {
@@ -34,7 +33,6 @@ export function CreateRootOrganizationModal({
   organizationTypes,
 }: CreateRootOrganizationModalProps) {
   const t = useTranslation();
-  const { showError } = useToast();
 
   const activeTypes = useMemo(
     () => organizationTypes.filter((type) => type.active),
@@ -59,21 +57,14 @@ export function CreateRootOrganizationModal({
     onClose();
   };
 
+  const blockers = formBlockers([
+    [t('setup.organization.code'), isValidOrganizationCode(organizationCode)],
+    [t('setup.organization.name'), name.trim() !== ''],
+    [t('setup.organization.type'), organizationTypeId > 0],
+  ]);
+
   const handleSave = async () => {
-    if (
-      !validateRequiredFields(
-        { organizationCode, name },
-        t,
-        showError,
-        'common.validation.fillRequired',
-      )
-    ) {
-      return;
-    }
-    if (!isValidOrganizationCode(organizationCode)) {
-      showError(t('common.validation.invalidOrganizationCode'));
-      return;
-    }
+    if (blockers.length > 0) return;
     const data: SetupOrganizationRequest = {
       organizationCode: normalizeOrganizationCode(organizationCode),
       name: name.trim(),
@@ -98,11 +89,7 @@ export function CreateRootOrganizationModal({
         <ModalFooter
           onCancel={handleClose}
           onSave={() => void handleSave()}
-          isValid={
-            isValidOrganizationCode(organizationCode) &&
-            name.trim().length > 0 &&
-            organizationTypeId > 0
-          }
+          blockers={blockers}
           isLoading={isLoading}
           saveText={t('common.save')}
         />

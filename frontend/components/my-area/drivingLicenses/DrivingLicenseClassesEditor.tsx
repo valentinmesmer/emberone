@@ -22,6 +22,7 @@ export interface DrivingLicenseClassesEditorProps {
   disabled?: boolean;
   /** When true, explains that deselected classes are marked invalid (org edit only). */
   showArchiveHint?: boolean;
+  required?: boolean;
 }
 
 export function DrivingLicenseClassesEditor({
@@ -30,6 +31,7 @@ export function DrivingLicenseClassesEditor({
   onChange,
   disabled = false,
   showArchiveHint = false,
+  required = false,
 }: DrivingLicenseClassesEditorProps) {
   const t = useTranslation();
   const selectedIds = useMemo(
@@ -68,6 +70,7 @@ export function DrivingLicenseClassesEditor({
     <div className="space-y-3">
       <p className="text-sm font-medium text-[var(--text-primary)]">
         {t('drivingLicense.classes.label')}
+        {required && <span className="text-[var(--fire-red)] ml-1">*</span>}
       </p>
       {showArchiveHint ? (
         <p className="text-sm text-[var(--text-secondary)]">

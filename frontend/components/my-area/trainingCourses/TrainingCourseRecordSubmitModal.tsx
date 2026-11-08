@@ -20,6 +20,7 @@ import {
   useSubmitTrainingCourseRecordWorkflow,
   useUpdateWorkflowPayload,
 } from '@/lib/store/queries/workflows';
+import { formBlockers } from '@/lib/utils';
 import { getTodayIsoDate, isEndStrictlyBeforeStart } from '@/lib/utils/date';
 import {
   type TrainingCourseRecordWorkflowPayload,
@@ -157,18 +158,17 @@ export function TrainingCourseRecordSubmitModal({
 
   const hasAttachments = existingAttachmentIds.length > 0 || files.length > 0;
 
-  const canSubmit =
-    selectedTypeIds.length > 0 &&
-    (!requiresName || name.trim().length > 0) &&
-    startDate.trim().length > 0 &&
-    endDate.trim().length > 0 &&
-    !dateOrderInvalid &&
-    location.trim().length > 0 &&
-    hasAttachments &&
-    !pending;
+  const blockers = formBlockers([
+    [t('trainingCourse.submit.typeLabel'), selectedTypeIds.length > 0],
+    [t('trainingCourse.submissionName.label'), !requiresName || name.trim().length > 0],
+    [t('trainingCourse.submit.startDateLabel'), startDate.trim().length > 0],
+    [t('trainingCourse.submit.endDateLabel'), endDate.trim().length > 0 && !dateOrderInvalid],
+    [t('trainingCourse.submit.locationLabel'), location.trim().length > 0],
+    [t('trainingCourse.submit.attachmentsLabel'), hasAttachments],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     try {
       const parsedHours = hours.trim() ? Number.parseFloat(hours) : null;
       if (isEdit) {
@@ -246,7 +246,7 @@ export function TrainingCourseRecordSubmitModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('trainingCourse.submit.action')

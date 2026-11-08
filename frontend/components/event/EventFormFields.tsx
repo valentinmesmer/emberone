@@ -199,7 +199,6 @@ export function EventFormFields({
             { value: 'false', label: t('common.no') },
             { value: 'true', label: t('common.yes') },
           ]}
-          required
           disabled={isLoading}
         />
         {renderLocationField()}

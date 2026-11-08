@@ -12,6 +12,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import { getTodayIsoDate, isEndStrictlyBeforeStart } from '@/lib/utils/date';
 import { statusDangerSolidCtaClass } from '@/lib/utils/statusActionClasses';
 
@@ -37,7 +38,9 @@ function QualificationOrgDecisionRevokeModalOpen({
   const [endDate, setEndDate] = useState(() => currentEndDate?.trim() || getTodayIsoDate());
 
   const dateInvalid = isEndStrictlyBeforeStart(intervalStartDate, endDate);
-  const isValid = endDate.trim().length > 0 && !dateInvalid;
+  const blockers = formBlockers([
+    [t('qualifications.orgDecision.endDateLabel'), endDate.trim().length > 0 && !dateInvalid],
+  ]);
 
   const endDateMinValue = useMemo(() => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(intervalStartDate)) return undefined;
@@ -49,7 +52,7 @@ function QualificationOrgDecisionRevokeModalOpen({
   }, [intervalStartDate]);
 
   const handleConfirm = async () => {
-    if (!isValid) return;
+    if (blockers.length > 0) return;
     await onConfirm({ endDate });
   };
 
@@ -64,7 +67,7 @@ function QualificationOrgDecisionRevokeModalOpen({
         <ModalFooter
           onCancel={onClose}
           onSave={handleConfirm}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={isLoading}
           saveText={t('qualifications.orgDecision.revoke')}
           saveButtonClassName={statusDangerSolidCtaClass}

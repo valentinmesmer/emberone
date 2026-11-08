@@ -77,7 +77,7 @@ services:
       <<: *default-env
       RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
     ports:
-      - "${EMBERONE_REDIS_COMMANDER_PORT:-8081}:5540"
+      - "${EMBERONE_REDIS_COMMANDER_PORT:-5540}:5540"
     volumes:
       - redisinsight_data:/data
     depends_on:

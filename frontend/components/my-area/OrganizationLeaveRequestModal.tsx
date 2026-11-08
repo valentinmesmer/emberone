@@ -29,6 +29,7 @@ import {
   useUpdateWorkflowPayload,
   useWorkflowOpenState,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { findMainOrganizationInTree } from '@/lib/utils/organizationTree';
 import { resolveWorkflowErrorMessage } from '@/lib/utils/workflowErrors';
 import type { UserDto } from '@/types/user';
@@ -161,14 +162,13 @@ export function OrganizationLeaveRequestModal({
     selectedOrganizationId === resolvedMainOrganizationId;
 
   const trimmedReason = reason.trim();
-  const canSubmit =
-    organizationId.trim().length > 0 &&
-    trimmedReason.length > 0 &&
-    !pending &&
-    (isEdit || (!targetsLoading && organizationOptions.length > 1));
+  const blockers = formBlockers([
+    [t('myArea.organizationLeaveRequest.organizationLabel'), organizationId.trim().length > 0],
+    [t('common.request.reasonLabel'), trimmedReason.length > 0],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     const selectedOrganizationId = Number(organizationId);
     if (!Number.isFinite(selectedOrganizationId) || selectedOrganizationId <= 0) return;
 
@@ -241,7 +241,7 @@ export function OrganizationLeaveRequestModal({
           <ModalFooter
             onCancel={onClose}
             onSave={() => void handleSubmit()}
-            isValid={canSubmit}
+            blockers={blockers}
             isLoading={pending}
             saveText={
               isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('common.request.submit')

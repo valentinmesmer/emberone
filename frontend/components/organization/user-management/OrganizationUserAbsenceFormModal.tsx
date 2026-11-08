@@ -19,6 +19,7 @@ import {
   ABSENCE_REASON_OPTION_VALUES,
   getAbsenceReasonLabelKey,
 } from '@/lib/my-area/absenceReasonOptions';
+import { formBlockers } from '@/lib/utils';
 import {
   isEndStrictlyBeforeStart,
   laterOfDateStrings,
@@ -67,8 +68,13 @@ export function OrganizationUserAbsenceFormModal({
     [t],
   );
 
-  const isFormValid =
-    !!startDate.trim() && !!endDate.trim() && !isEndStrictlyBeforeStart(startDate, endDate);
+  const blockers = formBlockers([
+    [t('myArea.absence.fields.startDate'), !!startDate.trim()],
+    [
+      t('myArea.absence.fields.endDate'),
+      !!endDate.trim() && !isEndStrictlyBeforeStart(startDate, endDate),
+    ],
+  ]);
 
   const endDateMinValue = useMemo(() => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return undefined;
@@ -103,7 +109,7 @@ export function OrganizationUserAbsenceFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) return;
+    if (blockers.length > 0) return;
 
     const payload: CreateUserAbsenceRequest = {
       organizationIds: [organizationId],
@@ -141,7 +147,7 @@ export function OrganizationUserAbsenceFormModal({
             const form = document.getElementById('org-user-absence-form') as HTMLFormElement;
             form?.requestSubmit();
           }}
-          isValid={isFormValid}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

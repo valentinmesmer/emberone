@@ -12,6 +12,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import { getTodayIsoDate, isEndStrictlyBeforeStart } from '@/lib/utils/date';
 
 export interface QualificationOrgDecisionGrantModalProps {
@@ -33,7 +34,10 @@ function QualificationOrgDecisionGrantModalOpen({
   const [endDate, setEndDate] = useState('');
 
   const dateInvalid = !!endDate.trim() && isEndStrictlyBeforeStart(startDate, endDate);
-  const isValid = startDate.trim().length > 0 && !dateInvalid;
+  const blockers = formBlockers([
+    [t('qualifications.orgDecision.startDateLabel'), startDate.trim().length > 0],
+    [t('qualifications.orgDecision.endDateLabel'), !dateInvalid],
+  ]);
 
   const endDateMinValue = useMemo(() => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return undefined;
@@ -45,7 +49,7 @@ function QualificationOrgDecisionGrantModalOpen({
   }, [startDate]);
 
   const handleConfirm = async () => {
-    if (!isValid) return;
+    if (blockers.length > 0) return;
     await onConfirm({
       startDate,
       endDate: endDate.trim() ? endDate : undefined,
@@ -63,7 +67,7 @@ function QualificationOrgDecisionGrantModalOpen({
         <ModalFooter
           onCancel={onClose}
           onSave={handleConfirm}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={isLoading}
           saveText={t('qualifications.orgDecision.grant')}
         />

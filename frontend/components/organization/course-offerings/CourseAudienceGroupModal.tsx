@@ -12,6 +12,7 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { Select } from '@/components/ui/select';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useCourseAudienceOptions } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { courseAudienceKindLabelKey } from '@/lib/utils/courseOffering';
 import type {
   CourseAudienceEntryDto,
@@ -60,6 +61,11 @@ export function CourseAudienceGroupModal({
     kind === 'ORG_TYPE' ? (options?.organizationTypes ?? []) : (options?.organizations ?? [])
   ).filter((target) => !taken.some((e) => e.kind === kind && e.refId === target.id));
 
+  const targetLabel =
+    kind === 'ORG_TYPE'
+      ? t('courseOfferings.audience.orgType')
+      : t('courseOfferings.audience.organization');
+
   return (
     <Modal
       isOpen
@@ -69,7 +75,7 @@ export function CourseAudienceGroupModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => onSave({ kind, refId, quota: null })}
-          isValid={refId != null}
+          blockers={formBlockers([[targetLabel, refId != null]])}
           isLoading={isSaving}
         />
       }
@@ -90,14 +96,9 @@ export function CourseAudienceGroupModal({
             value,
             label: t(courseAudienceKindLabelKey(value)),
           }))}
-          required
         />
         <Select
-          label={
-            kind === 'ORG_TYPE'
-              ? t('courseOfferings.audience.orgType')
-              : t('courseOfferings.audience.organization')
-          }
+          label={targetLabel}
           value={refId != null ? String(refId) : ''}
           onChange={(e) => setRefId(e.target.value === '' ? null : Number(e.target.value))}
           options={targets.map((target) => ({

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { DrivingLicenseRecordFormFields } from '@/components/my-area/drivingLicenses/DrivingLicenseRecordFormFields';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { Modal } from '@/components/ui/modal';
@@ -23,6 +23,7 @@ import {
   useSubmitDrivingLicenseRecordWorkflow,
   useUpdateWorkflowPayload,
 } from '@/lib/store/queries/workflows';
+import { formBlockers } from '@/lib/utils';
 import { getTodayIsoDate } from '@/lib/utils/date';
 import {
   type DrivingLicenseRecordWorkflowPayload,
@@ -148,26 +149,16 @@ function DrivingLicenseRecordSubmitModalBody({
 
   const hasAttachments = existingAttachmentIds.length > 0 || files.length > 0;
 
-  const canSubmit = useMemo(
-    () =>
-      issueDate.trim().length > 0 &&
-      licenseNumber.trim().length > 0 &&
-      issuingAuthority.trim().length > 0 &&
-      classes.length > 0 &&
-      classDefinitions.length > 0 &&
-      hasAttachments,
-    [
-      issueDate,
-      licenseNumber,
-      issuingAuthority,
-      classes.length,
-      classDefinitions.length,
-      hasAttachments,
-    ],
-  );
+  const blockers = formBlockers([
+    [t('drivingLicense.record.issueDateLabel'), issueDate.trim().length > 0],
+    [t('drivingLicense.record.licenseNumberLabel'), licenseNumber.trim().length > 0],
+    [t('drivingLicense.record.issuingAuthorityLabel'), issuingAuthority.trim().length > 0],
+    [t('drivingLicense.classes.label'), classes.length > 0],
+    [t('drivingLicense.submit.attachmentsLabel'), hasAttachments],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     const payload: Omit<DrivingLicenseRecordWorkflowPayload, 'attachmentIds'> = {
       issueDate,
       documentExpirationDate: documentExpirationDate.trim() || null,
@@ -241,7 +232,7 @@ function DrivingLicenseRecordSubmitModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit

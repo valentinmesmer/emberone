@@ -10,9 +10,9 @@ import { useState } from 'react';
 import { AddressInput } from '@/components/ui/address-input';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
-import { useToast } from '@/components/ui/toast';
 import { UserBasicInfoForm } from '@/components/user/UserBasicInfoForm';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import { isValidDateOfBirth } from '@/lib/validation/dateOfBirth';
 import { isValidEmail } from '@/lib/validation/email';
 import { Salutation } from '@/types/enums/salutation';
@@ -39,34 +39,10 @@ function CreateUserModalForm({
   isLoading,
 }: Omit<CreateUserModalProps, 'isOpen'>) {
   const t = useTranslation();
-  const { showError } = useToast();
   const [formData, setFormData] = useState<CreateUserRequest>(initialCreateUserForm);
 
   const handleCreate = async () => {
-    // Validate form
-    if (
-      !formData.firstName.trim() ||
-      !formData.lastName.trim() ||
-      !formData.privateEmail.trim() ||
-      !formData.dateOfBirth ||
-      !formData.street?.trim() ||
-      !formData.city?.trim() ||
-      !formData.postalCode?.trim() ||
-      !formData.country?.trim()
-    ) {
-      showError(t('common.validation.fillRequired'));
-      return;
-    }
-
-    if (!isValidEmail(formData.privateEmail.trim())) {
-      showError(t('common.validation.invalidEmail'));
-      return;
-    }
-
-    if (!isValidDateOfBirth(formData.dateOfBirth)) {
-      showError(t('common.validation.invalidDateOfBirth'));
-      return;
-    }
+    if (blockers.length > 0) return;
 
     try {
       await onCreate(formData);
@@ -81,20 +57,22 @@ function CreateUserModalForm({
     onClose();
   };
 
-  const isValid = () => {
-    const emailTrimmed = formData.privateEmail.trim();
-    return (
-      formData.firstName.trim() !== '' &&
-      formData.lastName.trim() !== '' &&
-      emailTrimmed !== '' &&
-      isValidEmail(emailTrimmed) &&
-      isValidDateOfBirth(formData.dateOfBirth) &&
-      formData.street?.trim() !== '' &&
-      formData.city?.trim() !== '' &&
-      formData.postalCode?.trim() !== '' &&
-      formData.country?.trim() !== ''
-    );
-  };
+  const blockers = formBlockers([
+    [t('setup.user.salutation'), Boolean(formData.salutation)],
+    [t('setup.user.firstName'), formData.firstName.trim() !== ''],
+    [t('setup.user.lastName'), formData.lastName.trim() !== ''],
+    [t('setup.user.email'), isValidEmail(formData.privateEmail.trim())],
+    [t('setup.user.dateOfBirth'), isValidDateOfBirth(formData.dateOfBirth)],
+    [
+      t('setup.user.street'),
+      Boolean(
+        formData.street?.trim() &&
+          formData.city?.trim() &&
+          formData.postalCode?.trim() &&
+          formData.country?.trim(),
+      ),
+    ],
+  ]);
 
   const emailFieldError =
     formData.privateEmail.trim() && !isValidEmail(formData.privateEmail.trim())
@@ -111,7 +89,7 @@ function CreateUserModalForm({
         <ModalFooter
           onCancel={handleClose}
           onSave={handleCreate}
-          isValid={isValid()}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

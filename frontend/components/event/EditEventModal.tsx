@@ -9,7 +9,6 @@
 import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
-import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatToLocalDateTime } from '@/lib/utils/date';
 import type {
@@ -22,7 +21,7 @@ import type {
 } from '@/types/event';
 import { EventType as EventTypeEnum } from '@/types/event';
 import { EventFormFields } from './EventFormFields';
-import { isEventFormValid, validateEventFormForSubmit } from './eventFormUtils';
+import { getEventFormBlockers } from './eventFormUtils';
 
 export interface EditEventModalProps {
   isOpen: boolean;
@@ -80,22 +79,15 @@ function EditEventModalForm({
   isLoading,
 }: EditEventModalFormProps) {
   const t = useTranslation();
-  const { showError } = useToast();
 
   const [formData, setFormData] = useState<EventFormState>(() =>
     getInitialFormData(event, eventType),
   );
 
+  const blockers = getEventFormBlockers(formData, eventType, t);
+
   const handleUpdate = async () => {
-    const validation = validateEventFormForSubmit(formData, eventType);
-    if (validation === 'required') {
-      showError(t('common.validation.fillRequired'));
-      return;
-    }
-    if (validation === 'endBeforeStart') {
-      showError(t('common.validation.endNotBeforeStart'));
-      return;
-    }
+    if (blockers.length > 0) return;
 
     const resolvedLocation = formData.location.trim();
 
@@ -150,7 +142,7 @@ function EditEventModalForm({
         <ModalFooter
           onCancel={onClose}
           onSave={handleUpdate}
-          isValid={isEventFormValid(formData, eventType)}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

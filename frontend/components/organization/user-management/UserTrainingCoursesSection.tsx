@@ -42,6 +42,7 @@ import {
   useUserTrainingCoursePendingSubmissions,
   useUserTrainingCourseRecordList,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import {
   getTodayIsoDate,
   isEndStrictlyBeforeStart,
@@ -103,14 +104,15 @@ function UserTrainingCourseAddModal({
     }
   }, [startDate]);
 
-  const canSubmit =
-    selectedTypeIds.length > 0 &&
-    (!requiresName || name.trim().length > 0) &&
-    startDate.trim().length > 0 &&
-    endDate.trim().length > 0 &&
-    !dateOrderInvalid &&
-    location.trim().length > 0 &&
-    typeOptions.length > 0;
+  const blockers = formBlockers([
+    [t('trainingCourse.submit.typeLabel'), selectedTypeIds.length > 0],
+    ...(requiresName
+      ? [[t('trainingCourse.submissionName.label'), name.trim().length > 0] as const]
+      : []),
+    [t('trainingCourse.record.startDateLabel'), startDate.trim().length > 0],
+    [t('trainingCourse.record.endDateLabel'), endDate.trim().length > 0 && !dateOrderInvalid],
+    [t('trainingCourse.record.locationLabel'), location.trim().length > 0],
+  ]);
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
@@ -130,7 +132,7 @@ function UserTrainingCourseAddModal({
   };
 
   const handleCreate = async () => {
-    if (!canSubmit || selectedTypeIds.length === 0 || !startDate || !endDate) return;
+    if (blockers.length > 0) return;
     try {
       let userDocumentIds: number[] | undefined;
       if (files.length > 0) {
@@ -172,7 +174,7 @@ function UserTrainingCourseAddModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleCreate()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={createRecord.isPending || uploadDocument.isPending}
           saveText={t('trainingCourse.record.createAction')}
           showSave

@@ -294,21 +294,27 @@ export function AppointmentFormFields({
             </p>
           ) : (
             <fieldset
-              className="flex flex-wrap gap-2 pt-1"
+              className="space-y-2 pt-1"
               aria-label={t('appointments.fields.audienceGroups')}
             >
-              {organizationGroups.map((group) => (
-                <SelectablePill
-                  key={group.id}
-                  label={getGroupDisplayName(group)}
-                  selected={form.audienceGroupIds.includes(group.id)}
-                  onChange={() =>
-                    update({
-                      audienceGroupIds: toggleAudienceGroupId(form.audienceGroupIds, group.id),
-                    })
-                  }
-                />
-              ))}
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                {t('appointments.fields.audienceGroups')}
+                <span className="text-[var(--fire-red)] ml-1">*</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {organizationGroups.map((group) => (
+                  <SelectablePill
+                    key={group.id}
+                    label={getGroupDisplayName(group)}
+                    selected={form.audienceGroupIds.includes(group.id)}
+                    onChange={() =>
+                      update({
+                        audienceGroupIds: toggleAudienceGroupId(form.audienceGroupIds, group.id),
+                      })
+                    }
+                  />
+                ))}
+              </div>
             </fieldset>
           ))}
       </FormSubsection>
@@ -506,6 +512,7 @@ export function AppointmentFormFields({
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-[var(--text-primary)]">
                           {t('appointments.recurrence.monthlyWeekday')}
+                          <span className="text-[var(--fire-red)] ml-1">*</span>
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {ICAL_WEEKDAYS.map((day) => {
@@ -536,6 +543,7 @@ export function AppointmentFormFields({
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-[var(--text-primary)]">
                           {t('appointments.recurrence.monthlyPositions')}
+                          <span className="text-[var(--fire-red)] ml-1">*</span>
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {MONTHLY_POSITIONS.map((position) => (

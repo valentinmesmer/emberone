@@ -17,6 +17,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { ApiRequestError } from '@/lib/api/client';
 import { workflowsApi } from '@/lib/api/workflows';
 import { useSubmitNameChangeWorkflow, useUpdateWorkflowPayload } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import type { UserDto } from '@/types/user';
 import {
   type NameChangeWorkflowPayload,
@@ -106,15 +107,15 @@ export function NameChangeRequestModal({
 
   const hasAttachments = existingAttachmentIds.length > 0 || files.length > 0;
 
-  const canSubmit =
-    firstName.trim().length > 0 &&
-    lastName.trim().length > 0 &&
-    hasAttachments &&
-    !namesUnchanged &&
-    !pending;
+  const blockers = formBlockers([
+    [t('setup.user.firstName'), firstName.trim().length > 0],
+    [t('setup.user.lastName'), lastName.trim().length > 0],
+    [t('myArea.nameChange.blockerChangedName'), !namesUnchanged],
+    [t('myArea.nameChange.attachmentsLabel'), hasAttachments],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     try {
       if (isEdit) {
         if (editWorkflowId == null) return;
@@ -170,7 +171,7 @@ export function NameChangeRequestModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('common.request.submit')

@@ -13,10 +13,9 @@ import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useOfferableCourseTypes } from '@/lib/store';
-import { validateRequiredFields } from '@/lib/utils';
+import { formBlockers } from '@/lib/utils';
 import type { CreateCourseOfferingRequest } from '@/types/courseOffering';
 
 interface Props {
@@ -35,7 +34,6 @@ export function CreateCourseOfferingModal({
   isLoading = false,
 }: Props) {
   const t = useTranslation();
-  const { showError } = useToast();
   const { data: types = [], isLoading: typesLoading } = useOfferableCourseTypes(
     isOpen ? organizationId : null,
     isOpen,
@@ -55,7 +53,10 @@ export function CreateCourseOfferingModal({
   }, [isOpen]);
 
   const maxNum = parseInt(maxParticipants, 10);
-  const isValid = trainingCourseTypeId !== '' && Number.isFinite(maxNum) && maxNum >= 1;
+  const blockers = formBlockers([
+    [t('courseOfferings.fields.trainingCourseType'), trainingCourseTypeId !== ''],
+    [t('courseOfferings.fields.maxParticipants'), Number.isFinite(maxNum) && maxNum >= 1],
+  ]);
 
   const maxParticipantsError =
     maxParticipants.trim() && (!Number.isFinite(maxNum) || maxNum < 1)
@@ -63,20 +64,7 @@ export function CreateCourseOfferingModal({
       : undefined;
 
   const handleSave = async () => {
-    if (
-      !validateRequiredFields(
-        {
-          trainingCourseTypeId,
-          maxParticipants,
-        },
-        t,
-        showError,
-        'common.validation.fillRequired',
-      )
-    ) {
-      return;
-    }
-    if (!isValid) return;
+    if (blockers.length > 0) return;
     await onSubmit({
       trainingCourseTypeId: parseInt(trainingCourseTypeId, 10),
       content: content.trim() || null,
@@ -98,7 +86,7 @@ export function CreateCourseOfferingModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }
@@ -107,22 +95,16 @@ export function CreateCourseOfferingModal({
         <LoadingState variant="embedded" size="sm" />
       ) : (
         <div className="space-y-4">
-          {types.length === 0 ? (
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t('courseOfferings.create.noOfferableTypes')}
-            </p>
-          ) : (
-            <Select
-              label={t('courseOfferings.fields.trainingCourseType')}
-              value={trainingCourseTypeId}
-              onChange={(e) => setTrainingCourseTypeId(e.target.value)}
-              options={types.map((type) => ({
-                value: String(type.id),
-                label: type.name,
-              }))}
-              required
-            />
-          )}
+          <Select
+            label={t('courseOfferings.fields.trainingCourseType')}
+            value={trainingCourseTypeId}
+            onChange={(e) => setTrainingCourseTypeId(e.target.value)}
+            options={types.map((type) => ({
+              value: String(type.id),
+              label: type.name,
+            }))}
+            required
+          />
           <Input
             label={t('courseOfferings.fields.maxParticipants')}
             type="number"

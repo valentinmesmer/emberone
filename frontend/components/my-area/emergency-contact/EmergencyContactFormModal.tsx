@@ -19,6 +19,7 @@ import {
   EMERGENCY_CONTACT_RELATIONSHIP_OPTIONS,
   getEmergencyContactRelationshipLabelKey,
 } from '@/lib/my-area/emergencyContactOptions';
+import { formBlockers } from '@/lib/utils';
 import { isValidEmail } from '@/lib/validation/email';
 import { isValidRequiredPhone } from '@/lib/validation/phone';
 import type {
@@ -47,20 +48,6 @@ type EmergencyContactFormData = {
   email: string;
 };
 
-function isEmergencyContactFormValid(formData: EmergencyContactFormData): boolean {
-  return (
-    formData.relationship !== '' &&
-    formData.firstName.trim() !== '' &&
-    formData.lastName.trim() !== '' &&
-    formData.street.trim() !== '' &&
-    formData.city.trim() !== '' &&
-    formData.postalCode.trim() !== '' &&
-    formData.country.trim() !== '' &&
-    isValidRequiredPhone(formData.phone) &&
-    isValidEmail(formData.email)
-  );
-}
-
 function EmergencyContactFormModalContent({
   onClose,
   contact,
@@ -87,7 +74,17 @@ function EmergencyContactFormModalContent({
     label: t(getEmergencyContactRelationshipLabelKey(value)),
   }));
 
-  const isFormValid = useMemo(() => isEmergencyContactFormValid(formData), [formData]);
+  const blockers = formBlockers([
+    [t('myArea.emergencyContact.fields.relationship'), formData.relationship !== ''],
+    [t('myArea.emergencyContact.fields.firstName'), formData.firstName.trim() !== ''],
+    [t('myArea.emergencyContact.fields.lastName'), formData.lastName.trim() !== ''],
+    [t('setup.user.street'), formData.street.trim() !== ''],
+    [t('setup.user.postalCode'), formData.postalCode.trim() !== ''],
+    [t('setup.user.city'), formData.city.trim() !== ''],
+    [t('setup.user.country'), formData.country.trim() !== ''],
+    [t('myArea.emergencyContact.fields.phone'), isValidRequiredPhone(formData.phone)],
+    [t('myArea.emergencyContact.fields.email'), isValidEmail(formData.email)],
+  ]);
 
   const emailFieldError = useMemo(() => {
     const trimmed = formData.email.trim();
@@ -100,7 +97,7 @@ function EmergencyContactFormModalContent({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isFormValid || formData.relationship === '') {
+    if (blockers.length > 0 || formData.relationship === '') {
       return;
     }
 
@@ -146,7 +143,7 @@ function EmergencyContactFormModalContent({
             const form = document.getElementById('emergency-contact-form') as HTMLFormElement;
             form?.requestSubmit();
           }}
-          isValid={isFormValid}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

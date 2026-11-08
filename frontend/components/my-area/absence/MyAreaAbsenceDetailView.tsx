@@ -9,10 +9,12 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DetailCardAction, DetailCardHeader } from '@/components/ui/detail-card-header';
 import { FieldDisplay } from '@/components/ui/field-display';
+import { ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { NotFoundState } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
@@ -97,18 +99,11 @@ export function MyAreaAbsenceDetailView({ absenceId }: MyAreaAbsenceDetailViewPr
           title={title}
           actions={
             canManageAbsences ? (
-              <>
-                <DetailCardAction
-                  label={t('myArea.absence.editTitle')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={() => setIsEditOpen(true)}
-                />
-                <DetailCardAction
-                  label={t('myArea.absence.delete')}
-                  icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                  onClick={() => setIsDeleteOpen(true)}
-                />
-              </>
+              <DetailCardAction
+                label={t('myArea.absence.editTitle')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => setIsEditOpen(true)}
+              />
             ) : undefined
           }
         />
@@ -138,6 +133,17 @@ export function MyAreaAbsenceDetailView({ absenceId }: MyAreaAbsenceDetailViewPr
           />
         </div>
       </Card>
+
+      {canManageAbsences ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('myArea.absence.delete')}
+            subtitle={t('common.deleteHint')}
+            onClick={() => setIsDeleteOpen(true)}
+          />
+        </ActionsSection>
+      ) : null}
 
       {canManageAbsences ? (
         <>

@@ -96,7 +96,7 @@ Sonderfall **`CERTIFICATION_EVENT_GRANT`**: Backend liefert bereits den Org-Even
 
 - React-Query-Hooks aus `@/lib/store`
 - Listen oft im Cache → Detail sucht per ID
-- Toast für Erfolg/Fehler; Edit/Delete über Modals bzw. `DetailCardAction` / `ActionsSection`
+- Toast für Erfolg/Fehler; Edit über `DetailCardAction` (Icon), alles auf Entitätsebene (Löschen, Archivieren, Beenden, …) über `ActionsSection` - siehe [Frontend-Aktionen](frontend-actions.md)
 - Nach Delete: `router.push` auf Listen-Pfad
 
 Siehe auch: [Frontend API-Client](frontend-api-client.md), [Frontend Auth](frontend-auth.md), [Frontend Component-Library](frontend-component-library.md).

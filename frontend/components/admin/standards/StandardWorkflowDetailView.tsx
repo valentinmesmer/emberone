@@ -28,6 +28,7 @@ import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
+import { formBlockers } from '@/lib/utils';
 
 interface StandardWorkflowDetailViewProps {
   state: StandardContentState;
@@ -63,6 +64,10 @@ export function StandardWorkflowDetailView({ state, configKey }: StandardWorkflo
     setSelfApproveAllowed(a.selfApproveAllowed === 'true');
     setEditOpen(true);
   };
+
+  const blockers = formBlockers([
+    [t('admin.standards.approverLabel'), Boolean(approverOrgGroupConfigKey)],
+  ]);
 
   const handleSave = async () => {
     const ok = await runMutation(
@@ -129,7 +134,7 @@ export function StandardWorkflowDetailView({ state, configKey }: StandardWorkflo
             <ModalFooter
               onCancel={() => setEditOpen(false)}
               onSave={() => void handleSave()}
-              isValid={Boolean(approverOrgGroupConfigKey)}
+              blockers={blockers}
               isLoading={busy}
             />
           }

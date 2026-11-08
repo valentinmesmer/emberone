@@ -19,6 +19,7 @@ import {
   tenantRanksApi,
   type UpdateTenantRankRequest,
 } from '@/lib/api/tenantRanks';
+import { formBlockers } from '@/lib/utils';
 
 interface Props {
   tenantId: number;
@@ -47,8 +48,16 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
     setActive(editing?.active ?? true);
   }, [isOpen, editing]);
 
+  const blockers = formBlockers([
+    ...(editing
+      ? []
+      : ([[t('admin.tenantStandards.ranks.configKey'), configKey.trim() !== '']] as const)),
+    [t('common.name'), name.trim() !== ''],
+    [t('admin.tenantStandards.ranks.abbreviation'), abbreviation.trim() !== ''],
+  ]);
+
   const handleSave = async () => {
-    if (!name.trim() || !abbreviation.trim()) return;
+    if (blockers.length > 0) return;
     setBusy(true);
     try {
       if (editing) {
@@ -60,7 +69,6 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
         };
         await tenantRanksApi.updateRank(tenantId, editing.configKey, payload);
       } else {
-        if (!configKey.trim()) return;
         const payload: CreateTenantRankRequest = {
           configKey: configKey.trim(),
           name: name.trim(),
@@ -93,7 +101,7 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={Boolean(name.trim() && abbreviation.trim() && (editing || configKey.trim()))}
+          blockers={blockers}
           isLoading={busy}
         />
       }
@@ -105,6 +113,7 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
             value={configKey}
             onChange={(e) => setConfigKey(e.target.value)}
             disabled={busy}
+            required
           />
         ) : null}
         <Input
@@ -112,12 +121,14 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={busy}
+          required
         />
         <Input
           label={t('admin.tenantStandards.ranks.abbreviation')}
           value={abbreviation}
           onChange={(e) => setAbbreviation(e.target.value)}
           disabled={busy}
+          required
         />
         <Input
           label={t('admin.tenantStandards.ranks.sortOrder')}

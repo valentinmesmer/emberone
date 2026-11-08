@@ -11,15 +11,9 @@ import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Select } from '@/components/ui/select';
-import { useToast } from '@/components/ui/toast';
 import { useFormModal } from '@/hooks/useFormModal';
 import { useTranslation } from '@/hooks/useTranslation';
-import {
-  getMembershipTypeOptions,
-  validateDateRange,
-  validateRequiredFields,
-  validateStartNotInFuture,
-} from '@/lib/utils';
+import { formBlockers, getMembershipTypeOptions } from '@/lib/utils';
 import {
   formatToLocalDateTime,
   getOrganizationWallClockNow,
@@ -48,7 +42,6 @@ export function UpdateMembershipModal({
   isLoading = false,
 }: UpdateMembershipModalProps) {
   const t = useTranslation();
-  const { showError } = useToast();
 
   const getInitialData = useCallback((): UpdateUserOrganizationGroupMembershipRequest => {
     return {
@@ -68,26 +61,7 @@ export function UpdateMembershipModal({
   const handleUpdate = async () => {
     if (!membership) return;
 
-    if (
-      !validateRequiredFields(
-        {
-          membershipType: formData.membershipType || '',
-          startDate: formData.startDate || '',
-        },
-        t,
-        showError,
-        'common.validation.fillRequired',
-      )
-    ) {
-      return;
-    }
-
-    if (!validateDateRange(formData.startDate, formData.endDate, t, showError)) {
-      return;
-    }
-    if (!validateStartNotInFuture(formData.startDate, t, showError)) {
-      return;
-    }
+    if (blockers.length > 0) return;
 
     try {
       await onUpdate({
@@ -117,11 +91,17 @@ export function UpdateMembershipModal({
     ? t('common.validation.startNotInFuture')
     : undefined;
 
-  const isValid = () =>
-    formData.membershipType !== undefined &&
-    formData.startDate.trim() !== '' &&
-    !isStartInTheFuture(formData.startDate) &&
-    (!formData.endDate || !isEndNotAfterStart(formData.startDate, formData.endDate));
+  const blockers = formBlockers([
+    [t('userManagement.groupMembership.membershipType'), formData.membershipType !== undefined],
+    [
+      t('userManagement.groupMembership.startDate'),
+      formData.startDate.trim() !== '' && !isStartInTheFuture(formData.startDate),
+    ],
+    [
+      t('userManagement.groupMembership.endDate'),
+      !formData.endDate || !isEndNotAfterStart(formData.startDate, formData.endDate),
+    ],
+  ]);
 
   const typeChanged = formData.membershipType !== membership?.membershipType;
   const membershipTypeOptions = getMembershipTypeOptions(t);
@@ -136,7 +116,7 @@ export function UpdateMembershipModal({
         <ModalFooter
           onCancel={handleClose}
           onSave={handleUpdate}
-          isValid={isValid()}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

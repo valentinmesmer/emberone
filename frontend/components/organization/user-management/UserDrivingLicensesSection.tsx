@@ -46,6 +46,7 @@ import {
   useUserDrivingLicense,
   useUserDrivingLicensePendingWorkflow,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { getTodayIsoDate } from '@/lib/utils/date';
 import { PermissionTypeEnum } from '@/types/permission';
 
@@ -86,15 +87,15 @@ function UserDrivingLicenseAddModal({
   const [classes, setClasses] = useState<DrivingLicenseClassInput[]>([]);
   const [files, setFiles] = useState<File[]>([]);
 
-  const canSubmit =
-    issueDate.trim().length > 0 &&
-    licenseNumber.trim().length > 0 &&
-    issuingAuthority.trim().length > 0 &&
-    classes.length > 0 &&
-    classOptions.length > 0;
+  const blockers = formBlockers([
+    [t('drivingLicense.record.issueDateLabel'), issueDate.trim().length > 0],
+    [t('drivingLicense.record.licenseNumberLabel'), licenseNumber.trim().length > 0],
+    [t('drivingLicense.record.issuingAuthorityLabel'), issuingAuthority.trim().length > 0],
+    [t('drivingLicense.classes.label'), classes.length > 0],
+  ]);
 
   const handleCreate = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0) return;
     try {
       let userDocumentIds: number[] | undefined;
       if (files.length > 0) {
@@ -149,7 +150,7 @@ function UserDrivingLicenseAddModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleCreate()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={createLicense.isPending || updateLicense.isPending || uploadDocument.isPending}
           saveText={
             renewal

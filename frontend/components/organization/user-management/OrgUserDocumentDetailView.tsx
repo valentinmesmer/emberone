@@ -9,12 +9,14 @@
 import { Download, Eye, FolderOpen, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { UserDocumentFormModal } from '@/components/my-area/documents/UserDocumentFormModal';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { AppLinkNavigateButton } from '@/components/ui/app-link-navigate-button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { DetailCardAction, DetailCardHeader } from '@/components/ui/detail-card-header';
 import { FieldDisplay } from '@/components/ui/field-display';
 import { FormLabel } from '@/components/ui/form-label';
+import { ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { NotFoundState } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
@@ -109,29 +111,13 @@ export function OrgUserDocumentDetailView({
           }
           title={doc.title}
           actions={
-            <>
-              {isViewableAttachmentMediaType(doc.contentType) ? (
-                <DetailCardAction
-                  label={t('myArea.documents.view')}
-                  icon={<Eye className="h-4 w-4" aria-hidden />}
-                  onClick={() => void handleView()}
-                  disabled={viewing}
-                />
-              ) : null}
+            canWrite ? (
               <DetailCardAction
-                label={t('common.attachments.download')}
-                icon={<Download className="h-4 w-4" aria-hidden />}
-                onClick={() => void handleDownload()}
-                disabled={downloading}
+                label={t('myArea.documents.editTitle')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => setIsEditOpen(true)}
               />
-              {canWrite ? (
-                <DetailCardAction
-                  label={t('myArea.documents.editTitle')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={() => setIsEditOpen(true)}
-                />
-              ) : null}
-            </>
+            ) : undefined
           }
         />
 
@@ -176,6 +162,23 @@ export function OrgUserDocumentDetailView({
           </div>
         ) : null}
       </Card>
+
+      <ActionsSection>
+        {isViewableAttachmentMediaType(doc.contentType) ? (
+          <ListRow
+            leading={<ActionRowIcon icon={Eye} />}
+            title={t('myArea.documents.view')}
+            subtitle={t('myArea.documents.viewHint')}
+            onClick={viewing ? undefined : () => void handleView()}
+          />
+        ) : null}
+        <ListRow
+          leading={<ActionRowIcon icon={Download} />}
+          title={t('common.attachments.download')}
+          subtitle={t('myArea.documents.downloadHint')}
+          onClick={downloading ? undefined : () => void handleDownload()}
+        />
+      </ActionsSection>
 
       {canWrite ? (
         <UserDocumentFormModal

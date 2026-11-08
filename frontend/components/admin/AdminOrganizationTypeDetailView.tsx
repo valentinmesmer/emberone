@@ -14,6 +14,7 @@ import {
   StandardDetailAction,
   StandardDetailCardHeader,
 } from '@/components/admin/standards/StandardDetailCardHeader';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -137,20 +138,12 @@ export function AdminOrganizationTypeDetailView({
             </Badge>
           }
           actions={
-            <>
-              <StandardDetailAction
-                label={t('common.delete')}
-                icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                onClick={() => setDeleteOpen(true)}
-                disabled={busy}
-              />
-              <StandardDetailAction
-                label={t('common.edit')}
-                icon={<Pencil className="h-4 w-4" aria-hidden />}
-                onClick={() => setEditOpen(true)}
-                disabled={busy}
-              />
-            </>
+            <StandardDetailAction
+              label={t('common.edit')}
+              icon={<Pencil className="h-4 w-4" aria-hidden />}
+              onClick={() => setEditOpen(true)}
+              disabled={busy}
+            />
           }
         />
       </Card>
@@ -171,6 +164,15 @@ export function AdminOrganizationTypeDetailView({
           ))}
         </ListContainer>
       )}
+
+      <ActionsSection>
+        <ListRow
+          leading={<ActionRowIcon icon={Trash2} />}
+          title={t('common.delete')}
+          subtitle={t('common.deleteHint')}
+          onClick={busy ? undefined : () => setDeleteOpen(true)}
+        />
+      </ActionsSection>
 
       <AdminOrganizationTypeEditModal
         key={organizationType.id}

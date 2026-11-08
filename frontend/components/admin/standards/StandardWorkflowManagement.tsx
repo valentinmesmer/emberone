@@ -29,6 +29,7 @@ import { WorkflowOpenScopeListSections } from '@/components/workflow/WorkflowOpe
 import { useTranslation } from '@/hooks/useTranslation';
 import { type StandardContentItemDto, standardsApi } from '@/lib/api/standards';
 import { getAdminStandardWorkflowPath } from '@/lib/navigation/adminWorkspace';
+import { formBlockers } from '@/lib/utils';
 
 interface StandardWorkflowManagementProps {
   state: StandardContentState;
@@ -97,6 +98,10 @@ export function StandardWorkflowManagement({
     setEditOpen(false);
     setEditingItem(null);
   };
+
+  const blockers = formBlockers([
+    [t('admin.standards.approverLabel'), Boolean(approverOrgGroupConfigKey)],
+  ]);
 
   const handleSave = async () => {
     if (!editingItem) return;
@@ -179,7 +184,7 @@ export function StandardWorkflowManagement({
             <ModalFooter
               onCancel={closeEdit}
               onSave={() => void handleSave()}
-              isValid={Boolean(approverOrgGroupConfigKey)}
+              blockers={blockers}
               isLoading={busy}
             />
           }

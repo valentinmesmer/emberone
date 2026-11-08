@@ -11,6 +11,7 @@ import {
   formValueToMinutes,
   minutesToFormValue,
 } from '@/lib/utils/responseDeadline';
+import { formBlockers, type TranslationFunction } from '@/lib/utils/validation';
 import {
   type AppointmentDto,
   AppointmentResponseMode,
@@ -66,46 +67,57 @@ export function toggleAudienceGroupId(groupIds: number[], groupId: number): numb
     : [...groupIds, groupId];
 }
 
-export function isAppointmentFormValid(
+/** Labels of missing or invalid fields, in form order; empty when the form can be saved. */
+export function getAppointmentFormBlockers(
   form: AppointmentFormState,
+  t: TranslationFunction,
   policy?: AppointmentFormValidityPolicy,
-): boolean {
-  if (!form.name.trim() || !form.start || !form.end || !form.type) {
-    return false;
-  }
-  if (form.end < form.start) {
-    return false;
-  }
-  if (policy?.mode === 'create' && !isAppointmentEndInFuture(form.end)) {
-    return false;
-  }
-  if (
-    policy?.mode === 'edit' &&
-    !isAppointmentStartValidForEdit(form.start, policy.originalStart)
-  ) {
-    return false;
-  }
-  if (!form.responseMode || !form.audienceScope) {
-    return false;
-  }
-  if (form.audienceScope === AudienceScope.SELECTED_GROUPS && form.audienceGroupIds.length === 0) {
-    return false;
-  }
-  if (form.responseDeadlineBeforeAmount < 0) {
-    return false;
-  }
-  if (
-    form.recurrence.enabled &&
-    form.recurrence.frequency === 'MONTHLY' &&
-    form.recurrence.monthlyType === 'NTH_WEEKDAY' &&
-    (form.recurrence.monthlyPositions.length === 0 || form.recurrence.monthlyWeekdays.length === 0)
-  ) {
-    return false;
-  }
-  if (form.recurrence.enabled && form.recurrence.interval < 1) {
-    return false;
-  }
-  return true;
+): string[] {
+  const { recurrence } = form;
+  const monthlyNthWeekday =
+    recurrence.frequency === 'MONTHLY' && recurrence.monthlyType === 'NTH_WEEKDAY';
+  return formBlockers([
+    [t('appointments.fields.name'), !!form.name.trim()],
+    [
+      t('appointments.fields.start'),
+      !!form.start &&
+        (policy?.mode !== 'edit' ||
+          isAppointmentStartValidForEdit(form.start, policy.originalStart)),
+    ],
+    [
+      t('appointments.fields.end'),
+      !!form.end &&
+        form.end >= form.start &&
+        (policy?.mode !== 'create' || isAppointmentEndInFuture(form.end)),
+    ],
+    [t('appointments.fields.responseMode'), !!form.responseMode],
+    [
+      t('appointments.fields.audienceGroups'),
+      form.audienceScope !== AudienceScope.SELECTED_GROUPS || form.audienceGroupIds.length > 0,
+    ],
+    [t('appointments.fields.responseDeadlineAmount'), form.responseDeadlineBeforeAmount >= 0],
+    [t('appointments.fields.responseDeadlineUnit'), !!form.responseDeadlineBeforeUnit],
+    [t('appointments.recurrence.frequency'), !recurrence.enabled || !!recurrence.frequency],
+    [t('appointments.recurrence.interval'), !recurrence.enabled || recurrence.interval >= 1],
+    [
+      t('appointments.recurrence.monthlyType'),
+      !recurrence.enabled || recurrence.frequency !== 'MONTHLY' || !!recurrence.monthlyType,
+    ],
+    [
+      t('appointments.recurrence.monthlyWeekday'),
+      !recurrence.enabled || !monthlyNthWeekday || recurrence.monthlyWeekdays.length > 0,
+    ],
+    [
+      t('appointments.recurrence.monthlyPositions'),
+      !recurrence.enabled || !monthlyNthWeekday || recurrence.monthlyPositions.length > 0,
+    ],
+    [
+      t('appointments.recurrence.endsAt'),
+      !recurrence.enabled ||
+        recurrence.seriesEnd == null ||
+        recurrence.seriesEnd.slice(0, 10).length > 0,
+    ],
+  ]);
 }
 
 function formatLocationFromForm(form: Pick<AppointmentFormState, 'location'>): string | undefined {

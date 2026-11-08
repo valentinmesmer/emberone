@@ -26,9 +26,11 @@ import { StandardRankSelectionManagement } from '@/components/admin/standards/St
 import { StandardTrainingCourseTypeSelectionManagement } from '@/components/admin/standards/StandardTrainingCourseTypeSelectionManagement';
 import { StandardWorkflowManagement } from '@/components/admin/standards/StandardWorkflowManagement';
 import { useStandardContent } from '@/components/admin/standards/useStandardContent';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { Modal } from '@/components/ui/modal';
@@ -37,6 +39,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
+import { formBlockers } from '@/lib/utils';
 
 function StandardDetailInner() {
   const params = useParams();
@@ -70,8 +73,11 @@ function StandardDetailInner() {
     setCloneOpen(true);
   }
 
+  const cloneBlockers = formBlockers([[t('admin.standards.name'), cloneName.trim() !== '']]);
+  const detailsBlockers = formBlockers([[t('admin.standards.name'), detailsName.trim() !== '']]);
+
   async function submitClone() {
-    if (!state.standard || !cloneName.trim()) return;
+    if (!state.standard || cloneBlockers.length > 0) return;
     setCloneBusy(true);
     try {
       const cloned = await standardsApi.cloneStandard(state.tenantId, {
@@ -90,7 +96,7 @@ function StandardDetailInner() {
   }
 
   async function submitDetails() {
-    if (!state.standard || !detailsName.trim()) return;
+    if (!state.standard || detailsBlockers.length > 0) return;
     setDetailsBusy(true);
     try {
       const updated = await standardsApi.updateStandard(state.tenantId, state.standard.id, {
@@ -133,14 +139,7 @@ function StandardDetailInner() {
                     onClick={openDetailsEdit}
                     disabled={state.busy}
                   />
-                ) : (
-                  <StandardDetailAction
-                    label={t('admin.standards.clone')}
-                    icon={<Copy className="h-4 w-4" aria-hidden />}
-                    onClick={openClone}
-                    disabled={state.busy || cloneBusy}
-                  />
-                )
+                ) : undefined
               }
             />
             {!state.editable ? (
@@ -193,6 +192,17 @@ function StandardDetailInner() {
           <Card className="p-3 sm:p-4">
             <StandardFunctionSelectionManagement state={state} embedded />
           </Card>
+
+          {!state.editable ? (
+            <ActionsSection>
+              <ListRow
+                leading={<ActionRowIcon icon={Copy} />}
+                title={t('admin.standards.clone')}
+                subtitle={t('admin.standards.cloneHint')}
+                onClick={state.busy || cloneBusy ? undefined : openClone}
+              />
+            </ActionsSection>
+          ) : null}
         </div>
       )}
 
@@ -205,7 +215,7 @@ function StandardDetailInner() {
             <ModalFooter
               onCancel={() => setCloneOpen(false)}
               onSave={() => void submitClone()}
-              isValid={cloneName.trim().length > 0}
+              blockers={cloneBlockers}
               isLoading={cloneBusy}
             />
           }
@@ -219,6 +229,7 @@ function StandardDetailInner() {
               value={cloneName}
               onChange={(e) => setCloneName(e.target.value)}
               disabled={cloneBusy}
+              required
             />
             <Textarea
               label={t('admin.standards.description')}
@@ -239,7 +250,7 @@ function StandardDetailInner() {
             <ModalFooter
               onCancel={() => setEditingDetails(false)}
               onSave={() => void submitDetails()}
-              isValid={detailsName.trim().length > 0}
+              blockers={detailsBlockers}
               isLoading={detailsBusy}
             />
           }
@@ -250,6 +261,7 @@ function StandardDetailInner() {
               value={detailsName}
               onChange={(e) => setDetailsName(e.target.value)}
               disabled={state.busy}
+              required
             />
             <Textarea
               label={t('admin.standards.description')}

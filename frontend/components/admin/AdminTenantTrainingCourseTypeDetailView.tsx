@@ -14,10 +14,12 @@ import {
   StandardDetailAction,
   StandardDetailCardHeader,
 } from '@/components/admin/standards/StandardDetailCardHeader';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { FieldDisplay } from '@/components/ui/field-display';
+import { ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
@@ -153,39 +155,14 @@ export function AdminTenantTrainingCourseTypeDetailView({
             )
           }
           actions={
-            type.archived ? (
+            !type.archived ? (
               <StandardDetailAction
-                label={t('common.unarchive')}
-                icon={<RotateCcw className="h-4 w-4" aria-hidden />}
-                onClick={() => setUnarchiveOpen(true)}
+                label={t('common.edit')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => setEditOpen(true)}
                 disabled={busy}
               />
-            ) : (
-              <>
-                {type.deletable ? (
-                  <StandardDetailAction
-                    label={t('common.delete')}
-                    icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                    onClick={() => setDeleteOpen(true)}
-                    disabled={busy}
-                  />
-                ) : null}
-                {type.archivable ? (
-                  <StandardDetailAction
-                    label={t('common.archive')}
-                    icon={<Archive className="h-4 w-4" aria-hidden />}
-                    onClick={() => setArchiveOpen(true)}
-                    disabled={busy}
-                  />
-                ) : null}
-                <StandardDetailAction
-                  label={t('common.edit')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={() => setEditOpen(true)}
-                  disabled={busy}
-                />
-              </>
-            )
+            ) : undefined
           }
         />
 
@@ -196,6 +173,33 @@ export function AdminTenantTrainingCourseTypeDetailView({
           />
         </div>
       </Card>
+
+      <ActionsSection>
+        {type.archived ? (
+          <ListRow
+            leading={<ActionRowIcon icon={RotateCcw} />}
+            title={t('common.unarchive')}
+            subtitle={t('common.unarchiveHint')}
+            onClick={busy ? undefined : () => setUnarchiveOpen(true)}
+          />
+        ) : null}
+        {!type.archived && type.archivable ? (
+          <ListRow
+            leading={<ActionRowIcon icon={Archive} />}
+            title={t('common.archive')}
+            subtitle={t('common.archiveHint')}
+            onClick={busy ? undefined : () => setArchiveOpen(true)}
+          />
+        ) : null}
+        {!type.archived && type.deletable ? (
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('common.delete')}
+            subtitle={t('common.deleteHint')}
+            onClick={busy ? undefined : () => setDeleteOpen(true)}
+          />
+        ) : null}
+      </ActionsSection>
 
       <AdminTenantTrainingCourseTypeEditModal
         key={type.configKey}

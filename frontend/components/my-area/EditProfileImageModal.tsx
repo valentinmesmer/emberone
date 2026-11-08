@@ -17,6 +17,7 @@ import { useToast } from '@/components/ui/toast';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useDeleteProfileImage, useUploadProfileImage } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 
 const modalAvatarClassName = 'h-48 w-48 text-4xl';
@@ -109,6 +110,7 @@ function EditProfileImageModalForm({
   };
 
   const displayImageUrl = previewUrl || currentImageUrl;
+  const blockers = formBlockers([[t('myArea.image.selectImage'), !!selectedFile]]);
 
   return (
     <Modal
@@ -119,7 +121,7 @@ function EditProfileImageModalForm({
         <ModalFooter
           onCancel={onClose}
           onSave={handleUpload}
-          isValid={!!selectedFile}
+          blockers={blockers}
           isLoading={saving}
         />
       }
@@ -175,6 +177,7 @@ function EditProfileImageModalForm({
 
         <FileInput
           label={t('myArea.image.selectImage')}
+          required
           hint={t('myArea.image.fileRequirements')}
           accept="image/*"
           files={selectedFile ? [selectedFile] : []}

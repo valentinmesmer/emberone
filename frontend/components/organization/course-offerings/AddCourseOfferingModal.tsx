@@ -15,6 +15,7 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useInstantiateCourseOfferingTemplate } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import type { CourseOfferingDto } from '@/types/courseOffering';
 
 interface Props {
@@ -69,7 +70,9 @@ export function AddCourseOfferingModal({ organizationId, onClose, onCreateNew, o
           <ModalFooter
             onCancel={onClose}
             onSave={() => void handleInstantiate()}
-            isValid={firstSessionDate !== ''}
+            blockers={formBlockers([
+              [t('courseOfferings.templates.firstSessionDate'), firstSessionDate !== ''],
+            ])}
             isLoading={instantiate.isPending}
           />
         ) : undefined

@@ -617,9 +617,6 @@ public class CourseOfferingService {
 
     private void validatePublishable(CourseOffering offering) {
         requireValidQuotas(offering);
-        if (offering.getRegistrationStart() == null || offering.getRegistrationEnd() == null) {
-            throw new CourseOfferingValidationException("Registration period is required");
-        }
         if (offering.getSessions().isEmpty()) {
             throw new CourseOfferingValidationException("At least one session is required");
         }
@@ -628,7 +625,8 @@ public class CourseOfferingService {
                         .map(CourseSession::getStart)
                         .min(Comparator.naturalOrder())
                         .orElseThrow();
-        if (offering.getRegistrationEnd().isAfter(firstStart)) {
+        if (offering.getRegistrationEnd() != null
+                && offering.getRegistrationEnd().isAfter(firstStart)) {
             throw new CourseOfferingValidationException(
                     "Registration must end before the first session starts");
         }

@@ -17,6 +17,7 @@ import {
   type TenantDrivingLicenseDefinitionDto,
   tenantDrivingLicenseDefinitionsApi,
 } from '@/lib/api/tenantDrivingLicenseDefinitions';
+import { formBlockers } from '@/lib/utils';
 
 export interface AdminTenantDrivingLicenseDefinitionEditModalProps {
   isOpen: boolean;
@@ -56,8 +57,13 @@ function AdminTenantDrivingLicenseDefinitionEditModalBody({
   const [name, setName] = useState(() => definition?.name ?? '');
   const [active, setActive] = useState(() => definition?.active ?? true);
 
+  const blockers = formBlockers([
+    [t('admin.tenantStandards.drivingLicenses.abbreviationLabel'), abbreviation.trim() !== ''],
+    [t('admin.standards.name'), name.trim() !== ''],
+  ]);
+
   const handleSave = async () => {
-    if (!name.trim() || !abbreviation.trim()) return;
+    if (blockers.length > 0) return;
     setBusy(true);
     try {
       const payload = {
@@ -101,7 +107,7 @@ function AdminTenantDrivingLicenseDefinitionEditModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={name.trim().length > 0 && abbreviation.trim().length > 0}
+          blockers={blockers}
           isLoading={busy}
         />
       }

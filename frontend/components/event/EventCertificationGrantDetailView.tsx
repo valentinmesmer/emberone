@@ -10,6 +10,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { EventCertificationGrantModal } from '@/components/event/EventCertificationGrantModal';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -115,18 +116,11 @@ export function EventCertificationGrantDetailView({
           }
           actions={
             canWrite ? (
-              <>
-                <DetailCardAction
-                  label={t('common.edit')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={() => setEditOpen(true)}
-                />
-                <DetailCardAction
-                  label={t('events.certificationGrant.remove')}
-                  icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                  onClick={() => setDeleteOpen(true)}
-                />
-              </>
+              <DetailCardAction
+                label={t('common.edit')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => setEditOpen(true)}
+              />
             ) : undefined
           }
         />
@@ -180,6 +174,17 @@ export function EventCertificationGrantDetailView({
             </ListContainer>
           )}
         </Card>
+      ) : null}
+
+      {canWrite ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('events.certificationGrant.remove')}
+            subtitle={t('common.deleteHint')}
+            onClick={() => setDeleteOpen(true)}
+          />
+        </ActionsSection>
       ) : null}
 
       {editOpen ? (

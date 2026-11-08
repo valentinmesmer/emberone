@@ -17,6 +17,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { ApiRequestError } from '@/lib/api/client';
 import { workflowsApi } from '@/lib/api/workflows';
 import { useSubmitAddressChangeWorkflow, useUpdateWorkflowPayload } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import type { UserDto } from '@/types/user';
 import {
   type AddressChangeWorkflowPayload,
@@ -130,16 +131,16 @@ export function AddressChangeRequestModal({
     contact?.country,
   ]);
 
-  const canSubmit =
-    street.trim().length > 0 &&
-    city.trim().length > 0 &&
-    postalCode.trim().length > 0 &&
-    country.trim().length > 0 &&
-    !addressUnchanged &&
-    !pending;
+  const blockers = formBlockers([
+    [t('setup.user.street'), street.trim().length > 0],
+    [t('setup.user.postalCode'), postalCode.trim().length > 0],
+    [t('setup.user.city'), city.trim().length > 0],
+    [t('setup.user.country'), country.trim().length > 0],
+    [t('myArea.addressChange.blockerChangedAddress'), !addressUnchanged],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     try {
       if (isEdit) {
         if (editWorkflowId == null) return;
@@ -208,7 +209,7 @@ export function AddressChangeRequestModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('common.request.submit')

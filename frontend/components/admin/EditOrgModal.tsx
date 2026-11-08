@@ -10,11 +10,10 @@ import { useCallback } from 'react';
 import { OrganizationFormFields } from '@/components/organization/OrganizationFormFields';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
-import { useToast } from '@/components/ui/toast';
 import { useFormModal } from '@/hooks/useFormModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AdminOrganizationDetailDto } from '@/lib/api/admin';
-import { normalizeOrganizationCode, validateRequiredFields } from '@/lib/utils';
+import { formBlockers, normalizeOrganizationCode } from '@/lib/utils';
 import { isValidOrganizationCode } from '@/lib/validation/organization';
 import type { UpdateOrganizationRequest } from '@/types/organization';
 
@@ -34,7 +33,6 @@ export function EditOrgModal({
   isLoading = false,
 }: EditOrgModalProps) {
   const t = useTranslation();
-  const { showError } = useToast();
 
   const getInitialData = useCallback(
     () => ({ organizationCode: org?.organizationCode ?? '', name: org?.name ?? '' }),
@@ -54,21 +52,13 @@ export function EditOrgModal({
     onClose();
   };
 
+  const blockers = formBlockers([
+    [t('setup.organization.code'), isValidOrganizationCode(organizationCode)],
+    [t('setup.organization.name'), name.trim() !== ''],
+  ]);
+
   const handleSave = async () => {
-    if (
-      !validateRequiredFields(
-        { organizationCode, name },
-        t,
-        showError,
-        'common.validation.fillRequired',
-      )
-    ) {
-      return;
-    }
-    if (!isValidOrganizationCode(organizationCode)) {
-      showError(t('common.validation.invalidOrganizationCode'));
-      return;
-    }
+    if (blockers.length > 0) return;
     try {
       await onSave({
         organizationCode: normalizeOrganizationCode(organizationCode),
@@ -90,7 +80,7 @@ export function EditOrgModal({
         <ModalFooter
           onCancel={handleClose}
           onSave={() => void handleSave()}
-          isValid={isValidOrganizationCode(organizationCode) && name.trim().length > 0}
+          blockers={blockers}
           isLoading={isLoading}
           saveText={t('common.save')}
         />

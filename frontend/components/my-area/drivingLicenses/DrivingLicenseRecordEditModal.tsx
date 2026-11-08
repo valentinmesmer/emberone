@@ -17,6 +17,7 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DrivingLicenseClassInput, DrivingLicenseDto } from '@/lib/api/drivingLicenses';
 import { useOrgDrivingLicenseCatalog, useUpdateDrivingLicense } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 
 function mapClassesFromLicense(license: DrivingLicenseDto): DrivingLicenseClassInput[] {
   return (license.classes ?? []).map((licenseClass) => ({
@@ -73,13 +74,14 @@ function DrivingLicenseRecordEditModalBody({
     [catalog?.definitions],
   );
 
-  const canSubmit =
-    issueDate.trim().length > 0 &&
-    licenseNumber.trim().length > 0 &&
-    issuingAuthority.trim().length > 0;
+  const blockers = formBlockers([
+    [t('drivingLicense.record.issueDateLabel'), issueDate.trim().length > 0],
+    [t('drivingLicense.record.licenseNumberLabel'), licenseNumber.trim().length > 0],
+    [t('drivingLicense.record.issuingAuthorityLabel'), issuingAuthority.trim().length > 0],
+  ]);
 
   const handleSave = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0) return;
     try {
       await updateLicense.mutateAsync({
         issueDate,
@@ -110,7 +112,7 @@ function DrivingLicenseRecordEditModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={updateLicense.isPending}
           showSave
         />

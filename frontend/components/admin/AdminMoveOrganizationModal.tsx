@@ -81,6 +81,8 @@ export function AdminMoveOrganizationModal({
     ];
   }, [treeRoots, excludedIds, t]);
 
+  const blockers = loadingTree || loadFailed ? [t('admin.orgMove.parentLabel')] : [];
+
   const handleSave = () => {
     const newParent = parentValue === ROOT_VALUE ? null : Number.parseInt(parentValue, 10);
     if (newParent !== null && !Number.isFinite(newParent)) return;
@@ -98,7 +100,7 @@ export function AdminMoveOrganizationModal({
           onCancel={onClose}
           onSave={handleSave}
           isLoading={isLoading}
-          isValid={!loadingTree && !loadFailed}
+          blockers={blockers}
           cancelText={t('common.cancel')}
           saveText={t('admin.orgMove.confirmButton')}
         />

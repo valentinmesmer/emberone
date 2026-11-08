@@ -9,11 +9,13 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DetailCardAction, DetailCardHeader } from '@/components/ui/detail-card-header';
 import { FieldDisplay } from '@/components/ui/field-display';
+import { ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { NotFoundState } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
@@ -117,19 +119,12 @@ export function MyAreaTimeEntryDetailView({ entryId }: MyAreaTimeEntryDetailView
           }
           actions={
             canManageTimeEntries ? (
-              <>
-                <DetailCardAction
-                  label={t('myArea.timeEntries.editTitle')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={() => setIsEditOpen(true)}
-                  disabled={updateEntry.isPending}
-                />
-                <DetailCardAction
-                  label={t('myArea.timeEntries.delete')}
-                  icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                  onClick={() => setIsDeleteOpen(true)}
-                />
-              </>
+              <DetailCardAction
+                label={t('myArea.timeEntries.editTitle')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => setIsEditOpen(true)}
+                disabled={updateEntry.isPending}
+              />
             ) : undefined
           }
         />
@@ -168,6 +163,17 @@ export function MyAreaTimeEntryDetailView({ entryId }: MyAreaTimeEntryDetailView
           />
         </div>
       </Card>
+
+      {canManageTimeEntries ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('myArea.timeEntries.delete')}
+            subtitle={t('common.deleteHint')}
+            onClick={() => setIsDeleteOpen(true)}
+          />
+        </ActionsSection>
+      ) : null}
 
       {canManageTimeEntries ? (
         <>

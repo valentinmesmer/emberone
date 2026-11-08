@@ -16,9 +16,11 @@ import { EventAttendanceSection } from '@/components/event/EventAttendanceSectio
 import { EventCertificationGrantSection } from '@/components/event/EventCertificationGrantSection';
 import { EventDetailPanel } from '@/components/event/EventDetailPanel';
 import { getOperationEventDetailTitle, getServiceEventLabel } from '@/components/event/eventLabels';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DetailCardAction, DetailCardHeader } from '@/components/ui/detail-card-header';
+import { ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
@@ -194,18 +196,11 @@ export function EventDetailView({
           title={getEventTitle(event, eventType)}
           actions={
             canWrite ? (
-              <>
-                <DetailCardAction
-                  label={t('common.edit')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={() => setEditOpen(true)}
-                />
-                <DetailCardAction
-                  label={t('common.delete')}
-                  icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                  onClick={() => setDeleteConfirmOpen(true)}
-                />
-              </>
+              <DetailCardAction
+                label={t('common.edit')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => setEditOpen(true)}
+              />
             ) : undefined
           }
         />
@@ -231,6 +226,17 @@ export function EventDetailView({
           canRead={canReadCertGrant}
           canWrite={canWriteCertGrant}
         />
+      ) : null}
+
+      {canWrite ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('common.delete')}
+            subtitle={t('common.deleteHint')}
+            onClick={() => setDeleteConfirmOpen(true)}
+          />
+        </ActionsSection>
       ) : null}
 
       <EditEventModal

@@ -7,7 +7,6 @@
 'use client';
 
 import { Check, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils/cn';
@@ -19,7 +18,6 @@ interface QualificationOrgDecisionActionsProps {
   isRevokePending?: boolean;
   onGrant: () => void;
   onRevoke: () => void;
-  variant?: 'icon' | 'button';
   className?: string;
 }
 
@@ -30,7 +28,6 @@ export function QualificationOrgDecisionActions({
   isRevokePending = false,
   onGrant,
   onRevoke,
-  variant = 'icon',
   className,
 }: QualificationOrgDecisionActionsProps) {
   const t = useTranslation();
@@ -40,49 +37,6 @@ export function QualificationOrgDecisionActions({
   }
 
   const pending = isGrantPending || isRevokePending;
-  const actionCount = (canGrant ? 1 : 0) + (canRevoke ? 1 : 0);
-
-  if (variant === 'button') {
-    return (
-      <div
-        className={cn(
-          'grid w-full gap-2',
-          actionCount > 1 ? 'grid-cols-2' : 'grid-cols-1',
-          'sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end',
-          className,
-        )}
-      >
-        {canGrant ? (
-          <Button
-            type="button"
-            size="xs"
-            variant="secondary"
-            fullWidth="responsive"
-            icon={<Check className="h-3.5 w-3.5" aria-hidden />}
-            onClick={onGrant}
-            disabled={pending}
-            isLoading={isGrantPending}
-          >
-            {t('qualifications.orgDecision.grant')}
-          </Button>
-        ) : null}
-        {canRevoke ? (
-          <Button
-            type="button"
-            size="xs"
-            variant="outline"
-            fullWidth="responsive"
-            icon={<X className="h-3.5 w-3.5" aria-hidden />}
-            onClick={onRevoke}
-            disabled={pending}
-            isLoading={isRevokePending}
-          >
-            {t('qualifications.orgDecision.revoke')}
-          </Button>
-        ) : null}
-      </div>
-    );
-  }
 
   return (
     <div className={cn('flex shrink-0 items-center gap-1', className)}>

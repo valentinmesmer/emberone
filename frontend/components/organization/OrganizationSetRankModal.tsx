@@ -16,6 +16,7 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { OrganizationRankMemberDto } from '@/lib/api/ranks';
 import { useOrganizationAvailableRanks, useSetUserRank } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { getTodayIsoDate } from '@/lib/utils/date';
 
 interface Props {
@@ -47,9 +48,14 @@ export function OrganizationSetRankModal({ organizationId, member, isOpen, onClo
     [ranks],
   );
 
+  const blockers = formBlockers([
+    [t('ranks.setRank.rank'), Boolean(tenantRankId)],
+    [t('ranks.setRank.startDate'), Boolean(startDate)],
+  ]);
+
   const handleSave = async () => {
     const parsedRankId = Number.parseInt(tenantRankId, 10);
-    if (!Number.isFinite(parsedRankId) || !startDate) {
+    if (blockers.length > 0 || !Number.isFinite(parsedRankId)) {
       return;
     }
     const trimmedReason = reason.trim();
@@ -75,7 +81,7 @@ export function OrganizationSetRankModal({ organizationId, member, isOpen, onClo
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={Boolean(tenantRankId && startDate)}
+          blockers={blockers}
           isLoading={setRank.isPending}
         />
       }
@@ -86,6 +92,7 @@ export function OrganizationSetRankModal({ organizationId, member, isOpen, onClo
           value={tenantRankId}
           onChange={(e) => setTenantRankId(e.target.value)}
           options={rankOptions}
+          required
           disabled={setRank.isPending}
         />
         <DatePicker

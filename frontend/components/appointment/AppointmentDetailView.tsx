@@ -14,10 +14,11 @@ import { AppointmentDetailPanel } from '@/components/appointment/AppointmentDeta
 import { EditAppointmentModal } from '@/components/appointment/EditAppointmentModal';
 import { SeriesEditDialog } from '@/components/appointment/SeriesEditDialog';
 import { CreateEventModal } from '@/components/event/CreateEventModal';
-import { Button } from '@/components/ui/button';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DetailCardAction, DetailCardHeader } from '@/components/ui/detail-card-header';
+import { ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
@@ -236,7 +237,7 @@ export function AppointmentDetailView({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
       <Card className="p-3 sm:p-4">
         <DetailCardHeader
           className="mb-2"
@@ -249,47 +250,12 @@ export function AppointmentDetailView({
             ) : undefined
           }
           actions={
-            canWrite || promoteEventAllowed ? (
-              <>
-                {promoteEventAllowed ? (
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="secondary"
-                    disabled={!promoteStartOk}
-                    title={
-                      promoteStartOk
-                        ? t('appointments.promoteToEvent')
-                        : t('appointments.promoteToEventAfterStart')
-                    }
-                    onClick={() => promoteStartOk && setCreateEventOpen(true)}
-                  >
-                    <CalendarPlus className="h-3.5 w-3.5 sm:mr-1" aria-hidden />
-                    <span className="hidden sm:inline">{t('appointments.promoteToEvent')}</span>
-                  </Button>
-                ) : null}
-                {canWrite && !isArchived ? (
-                  <>
-                    <DetailCardAction
-                      label={t('common.edit')}
-                      icon={<Pencil className="h-4 w-4" aria-hidden />}
-                      onClick={() => openEdit(appointment)}
-                    />
-                    <DetailCardAction
-                      label={t('common.delete')}
-                      icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                      onClick={() => openDelete(appointment)}
-                    />
-                  </>
-                ) : null}
-                {canWrite && isArchived ? (
-                  <DetailCardAction
-                    label={t('common.delete')}
-                    icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                    onClick={() => openDelete(appointment)}
-                  />
-                ) : null}
-              </>
+            canWrite && !isArchived ? (
+              <DetailCardAction
+                label={t('common.edit')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => openEdit(appointment)}
+              />
             ) : undefined
           }
         />
@@ -301,6 +267,31 @@ export function AppointmentDetailView({
           canWrite={canWrite && !isArchived}
         />
       </Card>
+
+      {promoteEventAllowed || canWrite ? (
+        <ActionsSection>
+          {promoteEventAllowed ? (
+            <ListRow
+              leading={<ActionRowIcon icon={CalendarPlus} />}
+              title={t('appointments.promoteToEvent')}
+              subtitle={
+                promoteStartOk
+                  ? t('appointments.promoteToEventHint')
+                  : t('appointments.promoteToEventAfterStart')
+              }
+              onClick={promoteStartOk ? () => setCreateEventOpen(true) : undefined}
+            />
+          ) : null}
+          {canWrite ? (
+            <ListRow
+              leading={<ActionRowIcon icon={Trash2} />}
+              title={t('common.delete')}
+              subtitle={t('common.deleteHint')}
+              onClick={() => openDelete(appointment)}
+            />
+          ) : null}
+        </ActionsSection>
+      ) : null}
 
       <EditAppointmentModal
         isOpen={editOpen}

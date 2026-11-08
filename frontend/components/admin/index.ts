@@ -16,11 +16,11 @@ export { CreateChildOrgModal } from './CreateChildOrgModal';
 export { CreateRootOrganizationModal } from './CreateRootOrganizationModal';
 export { EditOrgModal } from './EditOrgModal';
 export { OrgTreeSection } from './OrgTreeSection';
+export { TenantMasterDataFormFields } from './TenantMasterDataFormFields';
+export { TenantMasterDataModal } from './TenantMasterDataModal';
 export { TenantNameEditModal } from './TenantNameEditModal';
 export { TenantPurgeModal } from './TenantPurgeModal';
 export { TenantSetupStatusCard } from './TenantSetupStatusCard';
-export { TenantMasterDataFormFields } from './TenantMasterDataFormFields';
-export { TenantMasterDataModal } from './TenantMasterDataModal';
 export type { TenantMasterDataFormState } from './tenantMasterDataFormModel';
 export {
   emptyTenantMasterDataForm,

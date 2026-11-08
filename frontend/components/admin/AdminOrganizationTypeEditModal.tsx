@@ -14,6 +14,7 @@ import { SwitchField } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type OrganizationTypeDto, organizationTypesApi } from '@/lib/api/organizationTypes';
+import { formBlockers } from '@/lib/utils';
 
 interface AdminOrganizationTypeEditModalProps {
   isOpen: boolean;
@@ -57,9 +58,11 @@ function AdminOrganizationTypeEditModalBody({
   const [active, setActive] = useState(() => organizationType?.active ?? true);
   const [busy, setBusy] = useState(false);
 
+  const blockers = formBlockers([[t('admin.organizationTypes.nameLabel'), name.trim() !== '']]);
+
   async function handleSave() {
+    if (blockers.length > 0) return;
     const trimmed = name.trim();
-    if (!trimmed) return;
     setBusy(true);
     try {
       if (isCreate) {
@@ -98,7 +101,7 @@ function AdminOrganizationTypeEditModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={name.trim().length > 0}
+          blockers={blockers}
           isLoading={busy}
           saveText={t('common.save')}
         />

@@ -9,6 +9,7 @@
 import { useMemo } from 'react';
 import { QualificationDetailStatusCard } from '@/components/my-area/qualifications/QualificationDetailStatusCard';
 import { QualificationPrerequisiteSection } from '@/components/my-area/qualifications/QualificationPrerequisiteSection';
+import { QualificationOrgDecisionActionsSection } from '@/components/organization/user-management/QualificationOrgDecisionActionsSection';
 import { QualificationOrgDecisionPanel } from '@/components/organization/user-management/QualificationOrgDecisionPanel';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/ui/loading';
@@ -205,16 +206,7 @@ export function OrgUserQualificationDetailView({
         status={item.status}
         statusLabel={statusLabel}
         showStatusBadge={!item.requiresOrgDecision}
-        footer={
-          <QualificationOrgDecisionPanel
-            item={item}
-            canWrite={canWrite}
-            isGrantPending={grant.isPending}
-            isEndDatePending={updateOrgDecision.isPending}
-            onGrant={(params) => void handleGrant(params)}
-            onSetEndDate={(params) => void handleSetEndDate(params)}
-          />
-        }
+        footer={<QualificationOrgDecisionPanel item={item} />}
       />
 
       {(item.trainingCourseDetails.length > 0 ||
@@ -274,6 +266,15 @@ export function OrgUserQualificationDetailView({
           <EmptyState>{t('qualifications.detail.noPrerequisites')}</EmptyState>
         </section>
       ) : null}
+
+      <QualificationOrgDecisionActionsSection
+        item={item}
+        canWrite={canWrite}
+        isGrantPending={grant.isPending}
+        isEndDatePending={updateOrgDecision.isPending}
+        onGrant={(params) => void handleGrant(params)}
+        onSetEndDate={(params) => void handleSetEndDate(params)}
+      />
     </div>
   );
 }

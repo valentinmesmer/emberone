@@ -41,6 +41,7 @@ import {
 } from '@/lib/api/standards';
 import { compareText } from '@/lib/i18n/locale';
 import { hasCustomStandard, isStandardsReadyForOrgCreation } from '@/lib/standards/readiness';
+import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 
 function StandardsPageInner() {
@@ -142,8 +143,10 @@ function StandardsPageInner() {
     setCloneDescription('');
   }
 
+  const cloneBlockers = formBlockers([[t('admin.standards.name'), cloneName.trim() !== '']]);
+
   async function submitClone() {
-    if (!cloneSource || !cloneName.trim()) return;
+    if (!cloneSource || cloneBlockers.length > 0) return;
     setBusy(true);
     try {
       await standardsApi.cloneStandard(tenantId, {
@@ -291,6 +294,14 @@ function StandardsPageInner() {
       setBusy(false);
     }
   }
+
+  const addOverrideBlockers = formBlockers([
+    [
+      t('admin.standards.overridesSection.orgLabel'),
+      !addOverrideOrgsLoading && Boolean(addOverrideOrgId) && addOverrideCandidates.length > 0,
+    ],
+    [t('admin.standards.orgOverride.selectLabel'), Boolean(addOverrideStandardId)],
+  ]);
 
   async function submitAddOverride() {
     const organizationId = Number.parseInt(addOverrideOrgId, 10);
@@ -631,7 +642,7 @@ function StandardsPageInner() {
               onCancel={() => setCloneSource(null)}
               onSave={() => void submitClone()}
               isLoading={busy}
-              isValid={cloneName.trim().length > 0}
+              blockers={cloneBlockers}
               cancelText={t('common.cancel')}
               saveText={t('common.save')}
             />
@@ -646,6 +657,7 @@ function StandardsPageInner() {
               value={cloneName}
               onChange={(e) => setCloneName(e.target.value)}
               disabled={busy}
+              required
             />
             <Textarea
               label={t('admin.standards.description')}
@@ -691,12 +703,7 @@ function StandardsPageInner() {
               onCancel={closeAddOverride}
               onSave={() => void submitAddOverride()}
               isLoading={busy}
-              isValid={
-                !addOverrideOrgsLoading &&
-                Boolean(addOverrideOrgId) &&
-                Boolean(addOverrideStandardId) &&
-                addOverrideCandidates.length > 0
-              }
+              blockers={addOverrideBlockers}
               cancelText={t('common.cancel')}
               saveText={t('common.save')}
             />
@@ -730,6 +737,7 @@ function StandardsPageInner() {
                   ]}
                   onChange={(e) => setAddOverrideOrgId(e.target.value)}
                   disabled={busy}
+                  required
                 />
                 <Select
                   label={t('admin.standards.orgOverride.selectLabel')}
@@ -740,6 +748,7 @@ function StandardsPageInner() {
                   }))}
                   onChange={(e) => setAddOverrideStandardId(e.target.value)}
                   disabled={busy || customStandards.length === 0}
+                  required
                 />
               </>
             )}

@@ -54,6 +54,7 @@ import {
   standardsApi,
 } from '@/lib/api/standards';
 import { getAdminStandardOrgGroupPath } from '@/lib/navigation/adminWorkspace';
+import { formBlockers } from '@/lib/utils';
 
 interface StandardOrgGroupManagementProps {
   state: StandardContentState;
@@ -157,8 +158,10 @@ export function StandardOrgGroupManagement({
     setGrantDraft(null);
   };
 
+  const blockers = formBlockers([[t('admin.standards.name'), name.trim() !== '']]);
+
   const handleSave = async () => {
-    if (!name.trim()) return;
+    if (blockers.length > 0) return;
     const trimmedName = name.trim();
     const ok = await runMutation(
       async () => {
@@ -331,7 +334,7 @@ export function StandardOrgGroupManagement({
             <ModalFooter
               onCancel={closeForm}
               onSave={() => void handleSave()}
-              isValid={name.trim().length > 0}
+              blockers={blockers}
               isLoading={busy}
             />
           }

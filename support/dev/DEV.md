@@ -12,7 +12,7 @@ Alle Befehle vom **Repository-Root** aus ausführen.
 | Bun | siehe `packageManager` in `frontend/package.json` | |
 | Python | 3.x | Git-Hooks und Repo-Checks |
 
-Freie Ports: `3000` (Frontend), `8080` (Backend), `5432` (Postgres), `6379` (Redis), `8333`/`9333` (S3), `9000`/`9443` (Authentik), `1025`/`8025` (Mailpit), `8081` (Redis Insight). Abweichende Ports in `support/dev/config/.env` setzen.
+Freie Ports: `3000` (Frontend), `8080` (Backend), `5432` (Postgres), `6379` (Redis), `8333`/`9333` (S3), `9000`/`9443` (Authentik), `1025`/`8025` (Mailpit), `5540` (Redis Insight). Abweichende Ports in `support/dev/config/.env` setzen.
 
 ## Schnellstart
 
@@ -48,7 +48,7 @@ Git-Hooks ohne Setup: `./support/scripts/install-git-hooks.sh`.
 |--------|-----|-------|
 | Authentik | <http://localhost:9000> | OIDC-IdP, Admin-Oberfläche |
 | Mailpit | <http://localhost:8025> | fängt alle Mails des Backends ab (SMTP `1025`, ohne Auth/TLS) |
-| Redis Insight | <http://localhost:8081> | Redis-UI, kein Login |
+| Redis Insight | <http://localhost:5540> | Redis-UI, kein Login |
 | SeaweedFS S3 | `http://localhost:8333` | Object Storage |
 
 Redis Insight: Verbindung einmalig anlegen, mit Hostnamen aus dem Docker-Netzwerk (nicht `localhost`):

@@ -22,6 +22,7 @@ import {
   useSubmitOrganizationJoinRequestWorkflow,
   useUpdateWorkflowPayload,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { isActiveOrganizationMembership } from '@/lib/utils/membership';
 import type { UserDto } from '@/types/user';
 import {
@@ -124,13 +125,15 @@ export function OrganizationJoinRequestModal({
     setFiles([]);
   }
 
-  const canSubmit =
-    targetOrganizationId.trim().length > 0 &&
-    !pending &&
-    (isEdit || (!joinableLoading && organizationOptions.length > 0));
+  const blockers = formBlockers([
+    [
+      t('myArea.organizationJoinRequest.targetOrganizationLabel'),
+      targetOrganizationId.trim().length > 0,
+    ],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     const organizationId = Number(targetOrganizationId);
     if (!Number.isFinite(organizationId) || organizationId <= 0) return;
 
@@ -201,7 +204,7 @@ export function OrganizationJoinRequestModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('common.request.submit')

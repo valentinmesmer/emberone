@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 
 export interface TenantNameEditModalProps {
   isOpen: boolean;
@@ -30,9 +31,11 @@ export function TenantNameEditModal({
   const t = useTranslation();
   const [name, setName] = useState(initialName);
 
+  const blockers = formBlockers([[t('admin.tenantForm.name'), name.trim() !== '']]);
+
   const handleSave = async () => {
+    if (blockers.length > 0) return;
     const trimmed = name.trim();
-    if (!trimmed) return;
     await onSave(trimmed);
   };
 
@@ -46,7 +49,7 @@ export function TenantNameEditModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={name.trim().length > 0}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

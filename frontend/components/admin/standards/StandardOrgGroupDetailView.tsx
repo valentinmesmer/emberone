@@ -26,6 +26,7 @@ import {
 import { syncStandardGroupMappings } from '@/components/admin/standards/syncStandardGroupMappings';
 import type { StandardContentState } from '@/components/admin/standards/useStandardContent';
 import { OrganizationManageSection } from '@/components/organization/OrganizationManageSection';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -49,6 +50,7 @@ import {
   getAdminStandardDetailPath,
   getAdminStandardPermissionGroupPath,
 } from '@/lib/navigation/adminWorkspace';
+import { formBlockers } from '@/lib/utils';
 
 interface StandardOrgGroupDetailViewProps {
   state: StandardContentState;
@@ -106,8 +108,10 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
     setEditOpen(true);
   };
 
+  const blockers = formBlockers([[t('admin.standards.name'), name.trim() !== '']]);
+
   const handleSave = async () => {
-    if (!name.trim()) return;
+    if (blockers.length > 0) return;
     const currentKeys = new Set(getMappedPermissionGroupKeys(items, configKey));
     const grantsBefore = readOrgGroupFunctionGrantsFromItems(items, configKey);
     const grantsAfter = grantDraft ?? grantsBefore;
@@ -180,22 +184,12 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
           subtitle={isSystemGroup ? t('admin.standards.systemOrgGroupRequiredHint') : undefined}
           actions={
             editable ? (
-              <>
-                <StandardDetailAction
-                  label={t('common.edit')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={openEdit}
-                  disabled={busy}
-                />
-                {!isSystemGroup ? (
-                  <StandardDetailAction
-                    label={t('admin.standards.deleteItem')}
-                    icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                    onClick={() => setDeleteOpen(true)}
-                    disabled={busy}
-                  />
-                ) : null}
-              </>
+              <StandardDetailAction
+                label={t('common.edit')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={openEdit}
+                disabled={busy}
+              />
             ) : undefined
           }
         />
@@ -239,6 +233,17 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
         </OrganizationManageSection>
       </Card>
 
+      {editable && !isSystemGroup ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('admin.standards.deleteItem')}
+            subtitle={t('common.deleteHint')}
+            onClick={busy ? undefined : () => setDeleteOpen(true)}
+          />
+        </ActionsSection>
+      ) : null}
+
       {editOpen ? (
         <Modal
           isOpen
@@ -249,7 +254,7 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
             <ModalFooter
               onCancel={() => setEditOpen(false)}
               onSave={() => void handleSave()}
-              isValid={name.trim().length > 0}
+              blockers={blockers}
               isLoading={busy}
             />
           }
@@ -260,6 +265,7 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={busy}
+              required
             />
             <Textarea
               label={t('admin.standards.description')}

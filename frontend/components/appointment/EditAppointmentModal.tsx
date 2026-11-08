@@ -24,7 +24,7 @@ import { AppointmentFormFields } from './AppointmentFormFields';
 import {
   buildAppointmentPayloadFields,
   formFromAppointment,
-  isAppointmentFormValid,
+  getAppointmentFormBlockers,
 } from './appointmentFormUtils';
 
 interface EditAppointmentModalProps {
@@ -71,13 +71,13 @@ function EditAppointmentModalBody({
 
   const showSeriesRecurrence = !!appointment.seriesId && scope === SeriesEditScope.ENTIRE_SERIES;
 
-  const isValid = isAppointmentFormValid(form, {
+  const blockers = getAppointmentFormBlockers(form, t, {
     mode: 'edit',
     originalStart: initialOccurrenceStart,
   });
 
   const handleSubmit = async () => {
-    if (!isValid) return;
+    if (blockers.length > 0) return;
 
     const payload: UpdateAppointmentRequest = {
       name: form.name.trim(),
@@ -112,7 +112,7 @@ function EditAppointmentModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={handleSubmit}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

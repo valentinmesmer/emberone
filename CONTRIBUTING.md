@@ -25,6 +25,12 @@ python3 support/scripts/add-copyright-headers.py --check
 
 Verhalten sich APIs, Berechtigungen oder Lebenszyklen anders, passen die Docs unter `support/docs/` an.
 
+## Branches und Releases
+
+- Standard-Branch ist `development`. Daraus entstehen Prereleases `vX.Y.Z-dev.N` mit den Image-Tags `:X.Y.Z-dev.N` und `:dev`.
+- Stabile GitHub-Releases und die Image-Tags `:latest`, `:X` und `:X.Y` entstehen nur auf `main`, per Merge-Commit aus `development` (kein Squash).
+- Produktion pinnt den unveränderlichen Versions-Tag. Alte GHCR-Versionen werden nicht gelöscht.
+
 ## Verhaltenskodex
 
 [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)

@@ -21,6 +21,7 @@ import {
   useSubmitCertificationRecordWorkflow,
   useUpdateWorkflowPayload,
 } from '@/lib/store/queries/workflows';
+import { formBlockers } from '@/lib/utils';
 import {
   type CertificationRecordWorkflowPayload,
   WORKFLOW_CLIENT_ERROR_CODES,
@@ -129,14 +130,14 @@ export function CertificationRecordSubmitModal({
 
   const hasAttachments = existingAttachmentIds.length > 0 || files.length > 0;
 
-  const canSubmit =
-    selectedDefinitionId > 0 &&
-    completedDate.trim().length > 0 &&
-    (!attachmentRequired || hasAttachments) &&
-    !pending;
+  const blockers = formBlockers([
+    [t('certifications.submit.definitionLabel'), selectedDefinitionId > 0],
+    [t('certifications.submit.completedDateLabel'), completedDate.trim().length > 0],
+    [t('certifications.submit.attachmentsLabel'), !attachmentRequired || hasAttachments],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     try {
       if (isEdit) {
         if (editWorkflowId == null) return;
@@ -212,7 +213,7 @@ export function CertificationRecordSubmitModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('certifications.submit.action')

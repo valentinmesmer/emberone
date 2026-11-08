@@ -26,7 +26,7 @@ import {
   withOnboardingAttachmentFileNames,
 } from '@/lib/onboarding/attachmentUtils';
 import { readCertifications, readNoneDeclared } from '@/lib/onboarding/stepPayloads';
-import { formatDateLong } from '@/lib/utils';
+import { formatDateLong, formBlockers } from '@/lib/utils';
 import { getTodayIsoDate } from '@/lib/utils/date';
 import type {
   OnboardingCertificationDraft,
@@ -137,13 +137,11 @@ export const OnboardingCertificationsStep = forwardRef<
   const attachmentRequired = requiresSubmissionAttachment(selectedDefinition?.evidenceTypes);
   const hasAttachment = hasOnboardingAttachments(storedFileNames, files);
 
-  const isValid = useMemo(
-    () =>
-      draft.tenantCertDefinitionId > 0 &&
-      draft.completedDate.trim() !== '' &&
-      (!attachmentRequired || hasAttachment),
-    [attachmentRequired, draft, hasAttachment],
-  );
+  const blockers = formBlockers([
+    [t('certifications.submit.definitionLabel'), draft.tenantCertDefinitionId > 0],
+    [t('certifications.submit.completedDateLabel'), draft.completedDate.trim() !== ''],
+    [t('certifications.submit.attachmentsLabel'), !attachmentRequired || hasAttachment],
+  ]);
 
   const definitionName = (id: number) =>
     definitions.find((definition) => definition.id === id)?.name ?? `#${id}`;
@@ -270,7 +268,7 @@ export const OnboardingCertificationsStep = forwardRef<
             <ModalFooter
               onCancel={() => setFormOpen(false)}
               onSave={async () => {
-                if (!isValid || uploading) return;
+                if (blockers.length > 0 || uploading) return;
                 const savedDraft = await uploadPendingFiles();
                 if (savedDraft == null) return;
                 const next =
@@ -283,7 +281,7 @@ export const OnboardingCertificationsStep = forwardRef<
                 setNoneDeclared(false);
                 setFormOpen(false);
               }}
-              isValid={isValid && !uploading}
+              blockers={blockers}
               isLoading={uploading}
             />
           }

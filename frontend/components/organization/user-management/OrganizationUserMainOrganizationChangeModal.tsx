@@ -17,6 +17,7 @@ import {
   useMemberMainOrganizationChangeTargets,
   useOpenOrganizationUserMainOrganizationChangeWorkflow,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { resolveWorkflowErrorMessage } from '@/lib/utils/workflowErrors';
 export interface OrganizationUserMainOrganizationChangeModalProps {
   isOpen: boolean;
@@ -66,11 +67,15 @@ export function OrganizationUserMainOrganizationChangeModal({
     }
   }
 
-  const canSubmit =
-    newMainOrganizationId.trim().length > 0 && !targetsLoading && !openWorkflow.isPending;
+  const blockers = formBlockers([
+    [
+      t('userManagement.mainOrganizationChange.targetLabel'),
+      newMainOrganizationId.trim().length > 0,
+    ],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0) return;
     try {
       const workflow = await openWorkflow.mutateAsync({
         newMainOrganizationId: Number(newMainOrganizationId),
@@ -96,7 +101,7 @@ export function OrganizationUserMainOrganizationChangeModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={openWorkflow.isPending}
           saveText={t('userManagement.mainOrganizationChange.submit')}
         />

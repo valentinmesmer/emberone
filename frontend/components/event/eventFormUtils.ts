@@ -5,6 +5,7 @@
  */
 
 import { isEndStrictlyBeforeStart } from '@/lib/utils/date';
+import { formBlockers, type TranslationFunction } from '@/lib/utils/validation';
 import type { EventFormState, EventType } from '@/types/event';
 import { EventType as EventTypeEnum } from '@/types/event';
 
@@ -16,68 +17,30 @@ function hasLocation(formData: EventFormState): boolean {
   return Boolean(formData.location.trim());
 }
 
-function isServiceEventFormValid(formData: EventFormState): boolean {
-  if (!formData.start || !formData.end) return false;
-  if (isEndStrictlyBeforeStart(formData.start, formData.end)) return false;
-  if (!hasValidLeader(formData.leaderId)) return false;
-  if (!hasLocation(formData)) return false;
-  return Boolean(formData.topic?.trim());
-}
-
-function isOperationEventFormValid(formData: EventFormState): boolean {
-  if (!formData.start || !formData.end) return false;
-  if (isEndStrictlyBeforeStart(formData.start, formData.end)) return false;
-  if (!hasValidLeader(formData.leaderId)) return false;
-  if (!hasLocation(formData)) return false;
-  return Boolean(formData.number?.trim() && formData.keyword?.trim() && formData.tag?.trim());
-}
-
-export function isEventFormValid(formData: EventFormState, eventType: EventType): boolean {
-  if (eventType === EventTypeEnum.SERVICE) {
-    return isServiceEventFormValid(formData);
-  }
-  if (eventType === EventTypeEnum.OPERATION) {
-    return isOperationEventFormValid(formData);
-  }
-  return true;
-}
-
-export function validateEventFormForSubmit(
+/** Labels of missing or invalid fields, in form order; empty when the form can be saved. */
+export function getEventFormBlockers(
   formData: EventFormState,
   eventType: EventType,
-): 'ok' | 'required' | 'endBeforeStart' {
-  if (!formData.start) return 'required';
-  if (formData.end && isEndStrictlyBeforeStart(formData.start, formData.end)) {
-    return 'endBeforeStart';
-  }
+  t: TranslationFunction,
+): string[] {
+  const isService = eventType === EventTypeEnum.SERVICE;
+  const isOperation = eventType === EventTypeEnum.OPERATION;
+  if (!isService && !isOperation) return [];
 
-  const resolvedLocation = formData.location.trim();
-
-  if (eventType === EventTypeEnum.SERVICE) {
-    if (
-      !formData.end ||
-      !formData.topic?.trim() ||
-      !resolvedLocation ||
-      !hasValidLeader(formData.leaderId)
-    ) {
-      return 'required';
-    }
-    return 'ok';
-  }
-
-  if (eventType === EventTypeEnum.OPERATION) {
-    if (
-      !formData.end ||
-      !formData.number?.trim() ||
-      !formData.keyword?.trim() ||
-      !formData.tag?.trim() ||
-      !resolvedLocation ||
-      !hasValidLeader(formData.leaderId)
-    ) {
-      return 'required';
-    }
-    return 'ok';
-  }
-
-  return 'ok';
+  return formBlockers([
+    [t('events.fields.start'), !!formData.start],
+    [
+      t('events.fields.end'),
+      !!formData.end && !isEndStrictlyBeforeStart(formData.start, formData.end),
+    ],
+    ...(isService
+      ? [[t('events.fields.topic'), Boolean(formData.topic?.trim())] as const]
+      : [
+          [t('events.fields.number'), Boolean(formData.number?.trim())] as const,
+          [t('events.fields.keyword'), Boolean(formData.keyword?.trim())] as const,
+          [t('events.fields.tag'), Boolean(formData.tag?.trim())] as const,
+        ]),
+    [t('events.fields.location'), hasLocation(formData)],
+    [t('events.fields.leader'), hasValidLeader(formData.leaderId)],
+  ]);
 }

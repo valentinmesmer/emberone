@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { CheckboxControl } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
@@ -20,6 +20,7 @@ import {
   type TenantCertDefinitionDto,
   tenantCertificationsApi,
 } from '@/lib/api/tenantCertifications';
+import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 import { isOptionalPositiveInteger } from '@/lib/utils/validation';
 
@@ -76,14 +77,12 @@ function AdminTenantCertificationEditModalBody({
   const intervalInvalid = interval.trim() !== '' && !isOptionalPositiveInteger(interval);
   const reminderInvalid = reminder.trim() !== '' && !isOptionalPositiveInteger(reminder);
 
-  const isValid = useMemo(
-    () =>
-      name.trim().length > 0 &&
-      abbreviation.trim().length > 0 &&
-      !intervalInvalid &&
-      !reminderInvalid,
-    [abbreviation, intervalInvalid, name, reminderInvalid],
-  );
+  const blockers = formBlockers([
+    [t('admin.tenantStandards.certifications.abbreviationLabel'), abbreviation.trim() !== ''],
+    [t('admin.standards.name'), name.trim() !== ''],
+    [t('admin.tenantStandards.certifications.intervalDaysLabel'), !intervalInvalid],
+    [t('admin.tenantStandards.certifications.reminderDaysLabel'), !reminderInvalid],
+  ]);
 
   const toggleEvidenceType = (type: CertEvidenceType) => {
     setEvidenceTypes((prev) => {
@@ -98,7 +97,7 @@ function AdminTenantCertificationEditModalBody({
   };
 
   const handleSave = async () => {
-    if (!isValid) return;
+    if (blockers.length > 0) return;
     setBusy(true);
     try {
       const payload = {
@@ -142,7 +141,7 @@ function AdminTenantCertificationEditModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={busy}
         />
       }

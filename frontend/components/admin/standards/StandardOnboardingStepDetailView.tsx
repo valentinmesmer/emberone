@@ -26,9 +26,11 @@ import {
   StandardOnboardingStepConfigModal,
 } from '@/components/admin/standards/StandardOnboardingStepConfigModal';
 import type { StandardContentState } from '@/components/admin/standards/useStandardContent';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { FieldDisplay } from '@/components/ui/field-display';
+import { ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { NotFoundState } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
@@ -192,22 +194,14 @@ export function StandardOnboardingStepDetailView({
           subtitle={t(`admin.standards.onboardingSteps.${stepKey}.subtitle`)}
           actions={
             editable ? (
-              <>
-                {configurable ? (
-                  <StandardDetailAction
-                    label={t('admin.standards.onboardingSteps.editConfig')}
-                    icon={<Pencil className="h-4 w-4" aria-hidden />}
-                    onClick={openEdit}
-                    disabled={saving}
-                  />
-                ) : null}
+              configurable ? (
                 <StandardDetailAction
-                  label={t('admin.standards.onboardingSteps.removeStep')}
-                  icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                  onClick={() => setDeleteOpen(true)}
+                  label={t('admin.standards.onboardingSteps.editConfig')}
+                  icon={<Pencil className="h-4 w-4" aria-hidden />}
+                  onClick={openEdit}
                   disabled={saving}
                 />
-              </>
+              ) : null
             ) : undefined
           }
         />
@@ -246,6 +240,17 @@ export function StandardOnboardingStepDetailView({
           ) : null}
         </div>
       </Card>
+
+      {editable ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('admin.standards.onboardingSteps.removeStep')}
+            subtitle={t('common.deleteHint')}
+            onClick={saving ? undefined : () => setDeleteOpen(true)}
+          />
+        </ActionsSection>
+      ) : null}
 
       {configDraft && editOpen ? (
         <StandardOnboardingStepConfigModal

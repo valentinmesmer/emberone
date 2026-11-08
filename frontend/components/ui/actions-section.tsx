@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils/cn';
 
 export interface ActionsSectionProps {
   children: ReactNode;
-  /** Section heading; defaults to `admin.userDetail.actionsSection`. */
+  /** Section heading; defaults to `common.actionsSection`. */
   title?: string;
   /** Accessible label for the list; defaults to `title`. */
   label?: string;
@@ -22,7 +22,7 @@ export interface ActionsSectionProps {
 }
 
 function isActionListRow(child: ReactElement): child is ReactElement<ListRowProps> {
-  return child.type === ListRow || child.type === ListItem;
+  return child.type === ListRow || child.type === ListItem || child.type === ActionRow;
 }
 
 /** Uniform leading icon for an action row: neutral tile, no tone. Pass via `ListRow.leading`. */
@@ -37,6 +37,36 @@ export function ActionRowIcon({ icon: Icon }: { icon: LucideIcon }) {
   );
 }
 
+/**
+ * One action. While `blockers` is non-empty the action is not clickable, dimmed, and the reasons
+ * replace the subtitle (one per line) so the user sees why without hovering.
+ */
+export function ActionRow({
+  blockers = [],
+  subtitle,
+  onClick,
+  className,
+  ...rest
+}: ListRowProps & { blockers?: string[] }) {
+  const blocked = blockers.length > 0;
+  return (
+    <ListRow
+      {...rest}
+      subtitle={
+        blocked
+          ? blockers.map((reason) => (
+              <span key={reason} className="block">
+                {reason}
+              </span>
+            ))
+          : subtitle
+      }
+      onClick={blocked ? undefined : onClick}
+      className={cn(className, blocked && 'opacity-60')}
+    />
+  );
+}
+
 /** Action rows keep an optional leading icon (`ActionRowIcon`); no navigation chevron, no tone accent. */
 function normalizeActionRow(child: ReactNode): ReactNode {
   if (!isValidElement(child) || !isActionListRow(child)) {
@@ -47,12 +77,12 @@ function normalizeActionRow(child: ReactNode): ReactNode {
 
 /**
  * Page-bottom block for rare, structural, or destructive operations.
- * Each child should be a `ListRow`.
+ * Each child should be an `ActionRow` (or a `ListRow`).
  * Rows are normalized to a uniform look: optional `ActionRowIcon` + title/subtitle - no chevron, no tone.
  */
 export function ActionsSection({ children, title, label, className }: ActionsSectionProps) {
   const t = useTranslation();
-  const sectionTitle = title ?? t('admin.userDetail.actionsSection');
+  const sectionTitle = title ?? t('common.actionsSection');
   const containerLabel = label ?? sectionTitle;
 
   // Children.toArray drops false/null/undefined, so conditionally omitted actions do not count.

@@ -22,6 +22,7 @@ import {
   useSubmitOrganizationGroupJoinRequestWorkflow,
   useUpdateWorkflowPayload,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import type { UserDto } from '@/types/user';
 import {
   type OrganizationGroupJoinRequestWorkflowPayload,
@@ -147,11 +148,13 @@ export function OrganizationGroupJoinRequestModal({
     ];
   }, [joinTargets, initialPayload, isEdit, organizationId, t]);
 
-  const canSubmit =
-    organizationId.trim().length > 0 &&
-    organizationGroupId.trim().length > 0 &&
-    !pending &&
-    (isEdit || (!targetsLoading && joinTargets.length > 0));
+  const blockers = formBlockers([
+    [t('myArea.organizationGroupJoinRequest.organizationLabel'), organizationId.trim().length > 0],
+    [
+      t('myArea.organizationGroupJoinRequest.organizationGroupLabel'),
+      organizationGroupId.trim().length > 0,
+    ],
+  ]);
 
   const handleOrganizationChange = (value: string) => {
     setOrganizationId(value);
@@ -159,7 +162,7 @@ export function OrganizationGroupJoinRequestModal({
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     const selectedOrganizationId = Number(organizationId);
     const selectedGroupId = Number(organizationGroupId);
     if (
@@ -243,7 +246,7 @@ export function OrganizationGroupJoinRequestModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('common.request.submit')

@@ -25,6 +25,7 @@ import {
   tenantQualificationsApi,
 } from '@/lib/api/tenantQualifications';
 import { tenantTrainingCourseTypesApi } from '@/lib/api/tenantTrainingCourseTypes';
+import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 
 export interface AdminTenantQualificationEditModalProps {
@@ -139,16 +140,20 @@ function AdminTenantQualificationEditModalBody({
     return next;
   };
 
-  const isValid =
-    name.trim().length > 0 &&
-    abbreviation.trim().length > 0 &&
-    (selectedTraining.size > 0 ||
-      selectedCerts.size > 0 ||
-      selectedDrivingLicenses.size > 0 ||
-      requiresOrgDecision);
+  const blockers = formBlockers([
+    [t('admin.tenantStandards.qualifications.abbreviationLabel'), abbreviation.trim() !== ''],
+    [t('admin.standards.name'), name.trim() !== ''],
+    [
+      t('admin.tenantStandards.qualifications.requirementsLabel'),
+      selectedTraining.size > 0 ||
+        selectedCerts.size > 0 ||
+        selectedDrivingLicenses.size > 0 ||
+        requiresOrgDecision,
+    ],
+  ]);
 
   const handleSave = async () => {
-    if (!isValid) return;
+    if (blockers.length > 0) return;
     setBusy(true);
     try {
       const payload = {
@@ -198,7 +203,7 @@ function AdminTenantQualificationEditModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={busy}
         />
       }

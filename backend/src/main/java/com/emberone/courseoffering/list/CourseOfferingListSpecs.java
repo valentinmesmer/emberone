@@ -62,7 +62,12 @@ public final class CourseOfferingListSpecs {
 
     /** Registration has not ended yet (still open or opening later). */
     public static Specification<CourseOffering> registrationNotEnded(Instant now) {
-        return (root, query, cb) -> cb.greaterThan(root.get("registrationEnd"), now);
+        return (root, query, cb) ->
+                cb.greaterThan(
+                        cb.coalesce(
+                                root.<Instant>get("registrationEnd"),
+                                root.get("firstSessionStart")),
+                        now);
     }
 
     public static Specification<CourseOffering> withTrainingCourseTypeIds(
@@ -118,8 +123,10 @@ public final class CourseOfferingListSpecs {
     public static Specification<CourseOffering> registrationOpen(Instant now) {
         return (root, query, cb) ->
                 cb.and(
-                        cb.lessThanOrEqualTo(root.get("registrationStart"), now),
-                        cb.greaterThan(root.get("registrationEnd"), now));
+                        cb.or(
+                                cb.isNull(root.get("registrationStart")),
+                                cb.lessThanOrEqualTo(root.get("registrationStart"), now)),
+                        registrationNotEnded(now).toPredicate(root, query, cb));
     }
 
     public static Specification<CourseOffering> eligibleFor(CourseAudienceScope scope) {

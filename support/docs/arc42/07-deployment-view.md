@@ -10,7 +10,7 @@
 |--------|-----------------|------------------|-------|
 | **postgres** | `postgres:18-alpine` | 5432 | EmberOne-DB |
 | **redis** | `redis:8-alpine` | 6379 | App-Cache |
-| **redisinsight** | Redis Insight | 8081→5540 | Cache-UI (Dev) |
+| **redisinsight** | Redis Insight | 5540→5540 | Cache-UI (Dev) |
 | **seaweedfs** | SeaweedFS S3 | 8333, 9333 | Object Storage |
 | **mailpit** | Mailpit | 1025 (SMTP), 8025 (UI) | Mail-Catcher (Dev) |
 | **authentik-server** | Authentik | 9000 / 9443 | IdP (HTTP/HTTPS nur hier exponiert) |

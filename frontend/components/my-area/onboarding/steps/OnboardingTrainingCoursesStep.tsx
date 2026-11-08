@@ -7,7 +7,7 @@
 'use client';
 
 import { Download, FileText, MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 import { TrainingCourseRecordFormFields } from '@/components/my-area/trainingCourses/TrainingCourseRecordFormFields';
 import { formatGrantedTrainingCourseTypeNames } from '@/components/my-area/trainingCourses/TrainingCourseTypeSelectionField';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import {
   withOnboardingAttachmentFileNames,
 } from '@/lib/onboarding/attachmentUtils';
 import { readNoneDeclared, readTrainingCourses } from '@/lib/onboarding/stepPayloads';
+import { formBlockers } from '@/lib/utils';
 import { formatDateLong, getTodayIsoDate, isEndStrictlyBeforeStart } from '@/lib/utils/date';
 import type {
   OnboardingInvitationAccess,
@@ -137,17 +138,17 @@ export const OnboardingTrainingCoursesStep = forwardRef<
     isEndStrictlyBeforeStart(draft.startDate, draft.endDate);
   const hasAttachment = hasOnboardingAttachments(readOnboardingAttachmentFileNames(draft), files);
 
-  const isValid = useMemo(
-    () =>
-      draft.tenantTrainingCourseTypeIds.length > 0 &&
-      (!requiresName || (draft.name?.trim() ?? '').length > 0) &&
-      draft.startDate.trim() !== '' &&
-      draft.endDate.trim() !== '' &&
-      !dateOrderInvalid &&
-      draft.location.trim() !== '' &&
-      hasAttachment,
-    [dateOrderInvalid, draft, hasAttachment, requiresName],
-  );
+  const blockers = formBlockers([
+    [t('trainingCourse.submit.typeLabel'), draft.tenantTrainingCourseTypeIds.length > 0],
+    [
+      t('trainingCourse.submissionName.label'),
+      !requiresName || (draft.name?.trim() ?? '').length > 0,
+    ],
+    [t('trainingCourse.submit.startDateLabel'), draft.startDate.trim() !== ''],
+    [t('trainingCourse.submit.endDateLabel'), draft.endDate.trim() !== '' && !dateOrderInvalid],
+    [t('trainingCourse.submit.locationLabel'), draft.location.trim() !== ''],
+    [t('trainingCourse.submit.attachmentsLabel'), hasAttachment],
+  ]);
 
   const openCreate = () => {
     setEditingIndex(null);
@@ -298,7 +299,7 @@ export const OnboardingTrainingCoursesStep = forwardRef<
             <ModalFooter
               onCancel={() => setFormOpen(false)}
               onSave={async () => {
-                if (!isValid || uploading) return;
+                if (blockers.length > 0 || uploading) return;
                 const savedDraft = await uploadPendingFiles();
                 if (savedDraft == null) return;
                 const nextRecord = {
@@ -315,7 +316,7 @@ export const OnboardingTrainingCoursesStep = forwardRef<
                 setNoneDeclared(false);
                 setFormOpen(false);
               }}
-              isValid={isValid && !uploading}
+              blockers={blockers}
               isLoading={uploading}
             />
           }

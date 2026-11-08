@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import { statusDangerSolidCtaClass } from '@/lib/utils/statusActionClasses';
 
 export interface DestructiveTwoStepConfirmModalProps {
@@ -49,6 +50,8 @@ export function DestructiveTwoStepConfirmModal({
   const confirmationMatches =
     confirmation.trim().length > 0 && confirmation.trim() === expectedConfirmation;
 
+  const blockers = formBlockers([[confirmationLabel, confirmationMatches]]);
+
   useEffect(() => {
     if (!isOpen) {
       setStep(1);
@@ -74,10 +77,10 @@ export function DestructiveTwoStepConfirmModal({
           <ModalFooter
             onCancel={handleClose}
             onSave={() => {
-              if (confirmationMatches) setStep(2);
+              if (blockers.length === 0) setStep(2);
             }}
             isLoading={isLoading}
-            isValid={confirmationMatches}
+            blockers={blockers}
             cancelText={t('common.cancel')}
             saveText={t('common.continue')}
           />
@@ -86,7 +89,6 @@ export function DestructiveTwoStepConfirmModal({
             onCancel={() => setStep(1)}
             onSave={() => void onConfirm()}
             isLoading={isLoading}
-            isValid={!isLoading}
             cancelText={t('common.back')}
             saveText={confirmButtonText}
             saveButtonClassName={statusDangerSolidCtaClass}
@@ -105,6 +107,7 @@ export function DestructiveTwoStepConfirmModal({
               onChange={(event) => setConfirmation(event.target.value)}
               autoComplete="off"
               disabled={isLoading}
+              required
             />
           </>
         ) : (

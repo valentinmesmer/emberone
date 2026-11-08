@@ -1,40 +1,59 @@
 # AGENTS.md
 
-For humans: [`CONTRIBUTING.md`](CONTRIBUTING.md). Docs: [`support/docs/concept/`](support/docs/concept/00-index.md), [`support/docs/arc42/`](support/docs/arc42/00-index.md).
+EmberOne: multi-tenant management platform for fire departments. Spring Boot monolith (`backend/`) + Next.js (`frontend/`). OIDC via Authentik. Postgres with FORCE RLS.
 
-Multi-tenant fire-service app. Spring Boot monolith + Next.js. OIDC via Authentik. Postgres FORCE RLS.
+Before working on a domain, read its concept doc: [`support/docs/concept/00-index.md`](support/docs/concept/00-index.md).
 
-**Code / commits: English.** Docs: German. Conventional Commits. Do not invent IdP or deploy behavior.
+## Commands
 
-Reuse existing patterns (same package, API surface, concept doc). No second way, no workarounds; if blocked, ask.
+Run only what the change touches. Tests need no running containers.
 
-## Rules
+```bash
+cd backend && ./gradlew test --tests '*FooServiceTest'    # targeted test
+cd backend && ./gradlew spotlessApply                     # format Java
+cd frontend && bun run lint                               # lint (Biome)
+cd frontend && bun run format                             # format TS/CSS/JSON
+python3 support/scripts/add-copyright-headers.py --check  # headers on new files
+```
 
-- New domain tables: FORCE RLS. Tenant via `TenantContextHolder` → GUC `app.tenant_id`. Org authz via `SecurityService`, not a JWT claim or query filter:
+Full check, same as CI: `cd backend && ./gradlew build` and `cd frontend && bun run build`.
+
+## Conventions
+
+- Code, identifiers, commits: English, Conventional Commits. Docs: German.
+- Reuse the existing pattern (same package, API surface, concept doc). No second way, no workarounds. If blocked, ask.
+- Do not guess Authentik or deploy behavior: check the concept doc or ask.
+- New source files get the Elastic-2.0 header (`add-copyright-headers.py`).
+
+### Backend
+
+- New domain tables use FORCE RLS. The tenant flows from `TenantContextHolder` into the GUC `app.tenant_id`, so never add `WHERE tenant_id = :tenantId`.
+- Org authorization goes through `SecurityService` in `@PreAuthorize`, never through JWT claims or query filters:
 
   ```java
-  // RLS uses the session GUC. Do not add WHERE tenant_id = :tenantId
   @PreAuthorize("@securityService.hasUserWritePermission(#organizationId)")
   ```
 
-- Keep Self / Org / Admin APIs and UI routes separate (`/api/v1/self` ↔ `/my-area`, `/api/v1/auth/organizations/{id}` ↔ `/organizations/[id]`, `/api/v1/auth/admin` ↔ `/admin`).
-- Default branch is `development` (prereleases `vX.Y.Z-dev.N`). Stable GitHub releases and `:latest` / `:X` / `:X.Y` images only from `main` (merge commit from `development`, no squash). Prereleases tag `:X.Y.Z-dev.N` and `:dev` only. Pin production to the immutable version tag; do not delete old GHCR versions.
-- New `PermissionType`: same numeric id in backend **and** frontend.
-- Workflows: handler per type, do not fork `WorkflowService`.
-- Frontend: `useTranslation` + `locales/de.json`; UI via `components/ui/*`; data via store hooks; thin `page.tsx`.
-- List GETs: paginated (`ListQuery` + `ListDefinition` + `Specification`); exception only `@BoundedList`. Frontend: `defineList` + `useListState` + `ListControls`. No client `.filter`/`.sort` on paginated data; no legacy params like `openOnly` or `archived`.
-- Frontend actions (one pattern per intent): create → labeled `Button` in `PageHeader` / `SectionHeader` (`SectionActions layout="inline"`); edit current surface → `SectionEditAction` (section cards) or `DetailCardHeader` + `DetailCardAction` (entity detail cards); row edit/delete → `ListRow.actions`; navigate → `href`/chevron or hub tiles; rare/destructive/admin lifecycle → `ActionsSection` + `ListRow` (uniform look; no tone accents).
-- API/permission/lifecycle change → update the concept doc. Security/tenant/RLS → `*SecurityTest`. Elastic-2.0 headers on new sources (`add-copyright-headers.py`).
-- AI agents never run `git commit` or `git push`; the maintainer does.
+- Keep the API surfaces separate: `/api/v1/self`, `/api/v1/auth/organizations/{id}`, `/api/v1/auth/admin`.
+- List GETs are paginated with `ListQuery` + `ListDefinition` + `Specification`; the only exception is `@BoundedList`. No legacy params such as `openOnly` or `archived` (`support/scripts/check-list-legacy-params.sh`).
+- Workflows: add a handler per type; do not fork `WorkflowService`.
+- A new `PermissionType` needs the same numeric id in `PermissionType.java` and `frontend/types/permission.ts`.
 
-## Check
+### Frontend
 
-Run only what the change touches. Full suite before a PR: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Routes mirror the API surfaces: `/my-area`, `/organizations/[id]`, `/admin`. Keep `page.tsx` thin.
+- Text via `useTranslation` + `locales/de.json`; UI from `components/ui/*`; data via the store hooks in `lib/`.
+- Lists use `defineList` + `useListState` + `ListControls`. Never `.filter` or `.sort` paginated data on the client.
+- Before adding a button or action, read [`frontend-actions.md`](support/docs/concept/frontend-actions.md). Entity-wide actions (delete, archive, status, …) go into `ActionsSection` at the page bottom, never into a header icon.
 
-```bash
-python3 support/scripts/add-copyright-headers.py --check   # new sources
-cd backend && ./gradlew test --tests '*FooServiceTest'
-cd frontend && bun lint
-```
+## Done means
 
-No secrets. No copyrighted or incompatibly licensed code. Vulnerabilities: [`SECURITY.md`](SECURITY.md).
+- The checks for the touched area pass.
+- Security, tenant or RLS change → covered by a `*SecurityTest`.
+- API, permission or lifecycle change → concept doc updated in the same change.
+
+## Boundaries
+
+- Never run `git commit` or `git push`; the maintainer does. Base branch is `development`.
+- Ask first before adding dependencies or changing Flyway migrations, CI, or Authentik blueprints.
+- No secrets, no copyrighted or incompatibly licensed code. Vulnerabilities: [`SECURITY.md`](SECURITY.md).

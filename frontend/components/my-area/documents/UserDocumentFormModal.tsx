@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import type { UploadUserDocumentParams, UserDocumentDto } from '@/types/userDocument';
 import { DocumentTagInput } from './DocumentTagInput';
 
@@ -63,8 +64,12 @@ function UserDocumentFormBody({
   const t = useTranslation();
   const [values, setValues] = useState<FormValues>(() => buildInitialValues(mode, initialDocument));
 
+  const blockers = formBlockers([
+    [t('myArea.documents.fileLabel'), mode !== 'upload' || !!values.file],
+  ]);
+
   const handleSubmit = async () => {
-    if (mode === 'upload' && !values.file) {
+    if (blockers.length > 0) {
       return;
     }
     await onSubmit({
@@ -118,7 +123,7 @@ function UserDocumentFormBody({
           onCancel={onClose}
           onSave={() => void handleSubmit()}
           isLoading={isLoading}
-          isValid={mode !== 'upload' || !!values.file}
+          blockers={blockers}
           saveText={mode === 'upload' ? t('myArea.documents.upload') : t('common.save')}
         />
       </div>

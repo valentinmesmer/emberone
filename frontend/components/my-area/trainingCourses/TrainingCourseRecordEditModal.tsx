@@ -18,6 +18,7 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { TrainingCourseUserRecordDto } from '@/lib/api/trainingCourses';
 import { useUpdateTrainingCourseRecord } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import {
   isEndStrictlyBeforeStart,
   laterOfDateStrings,
@@ -78,13 +79,12 @@ export function TrainingCourseRecordEditModal({
     }
   }, [startDate]);
 
-  const canSave =
-    (!requiresName || name.trim().length > 0) &&
-    startDate.trim().length > 0 &&
-    endDate.trim().length > 0 &&
-    !dateOrderInvalid &&
-    location.trim().length > 0 &&
-    !updateRecord.isPending;
+  const blockers = formBlockers([
+    [t('trainingCourse.submissionName.label'), !requiresName || name.trim().length > 0],
+    [t('trainingCourse.record.startDateLabel'), startDate.trim().length > 0],
+    [t('trainingCourse.record.endDateLabel'), endDate.trim().length > 0 && !dateOrderInvalid],
+    [t('trainingCourse.record.locationLabel'), location.trim().length > 0],
+  ]);
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
@@ -104,7 +104,7 @@ export function TrainingCourseRecordEditModal({
   };
 
   const handleSave = async () => {
-    if (!canSave) return;
+    if (blockers.length > 0 || updateRecord.isPending) return;
     try {
       const parsedHours = hours.trim() ? Number.parseFloat(hours) : null;
       await updateRecord.mutateAsync({
@@ -139,7 +139,7 @@ export function TrainingCourseRecordEditModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={canSave}
+          blockers={blockers}
           isLoading={updateRecord.isPending}
           showSave
         />

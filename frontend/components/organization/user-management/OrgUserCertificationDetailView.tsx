@@ -48,7 +48,7 @@ import {
   useUserCertificationRecords,
   useUserCertificationStatus,
 } from '@/lib/store';
-import { formatDateLong } from '@/lib/utils';
+import { formatDateLong, formBlockers } from '@/lib/utils';
 import { PermissionTypeEnum } from '@/types/permission';
 
 export interface OrgUserCertificationDetailViewProps {
@@ -132,8 +132,13 @@ export function OrgUserCertificationDetailView({
     setIsCreateOpen(true);
   };
 
+  const createBlockers = formBlockers([
+    [t('certifications.record.completedDateLabel'), Boolean(completedDate)],
+    [t('certifications.submit.attachmentsLabel'), !attachmentRequired || files.length > 0],
+  ]);
+
   const handleCreateRecord = async () => {
-    if (!item || !completedDate || (attachmentRequired && files.length === 0)) return;
+    if (!item || createBlockers.length > 0) return;
     try {
       const uploadedDocuments =
         files.length > 0
@@ -314,12 +319,7 @@ export function OrgUserCertificationDetailView({
           <ModalFooter
             onCancel={() => setIsCreateOpen(false)}
             onSave={() => void handleCreateRecord()}
-            isValid={
-              !!completedDate &&
-              (!attachmentRequired || files.length > 0) &&
-              !createRecord.isPending &&
-              !uploadDocument.isPending
-            }
+            blockers={createBlockers}
             isLoading={createRecord.isPending || uploadDocument.isPending}
             saveText={t('certifications.record.createAction')}
             showSave

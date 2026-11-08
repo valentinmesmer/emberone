@@ -18,6 +18,7 @@ import {
   type TenantFunctionDto,
   tenantFunctionsApi,
 } from '@/lib/api/tenantFunctions';
+import { formBlockers } from '@/lib/utils';
 
 interface Props {
   tenantId: number;
@@ -52,8 +53,16 @@ export function AdminTenantFunctionEditModal({
     setActive(editing?.active ?? true);
   }, [isOpen, editing]);
 
+  const blockers = formBlockers([
+    ...(editing
+      ? []
+      : ([[t('admin.tenantStandards.functions.configKey'), configKey.trim() !== '']] as const)),
+    [t('common.name'), name.trim() !== ''],
+    [t('admin.tenantStandards.functions.abbreviation'), abbreviation.trim() !== ''],
+  ]);
+
   const handleSave = async () => {
-    if (!name.trim() || !abbreviation.trim()) return;
+    if (blockers.length > 0) return;
     setBusy(true);
     try {
       const payload: CreateTenantFunctionRequest = {
@@ -66,7 +75,6 @@ export function AdminTenantFunctionEditModal({
       if (editing) {
         await tenantFunctionsApi.update(tenantId, editing.configKey, payload);
       } else {
-        if (!configKey.trim()) return;
         await tenantFunctionsApi.create(tenantId, payload);
       }
       showSuccess(t('admin.tenantStandards.functions.saved'));
@@ -92,7 +100,7 @@ export function AdminTenantFunctionEditModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={Boolean(name.trim() && abbreviation.trim() && (editing || configKey.trim()))}
+          blockers={blockers}
           isLoading={busy}
         />
       }
@@ -104,6 +112,7 @@ export function AdminTenantFunctionEditModal({
             value={configKey}
             onChange={(e) => setConfigKey(e.target.value)}
             disabled={busy}
+            required
           />
         ) : null}
         <Input
@@ -111,12 +120,14 @@ export function AdminTenantFunctionEditModal({
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={busy}
+          required
         />
         <Input
           label={t('admin.tenantStandards.functions.abbreviation')}
           value={abbreviation}
           onChange={(e) => setAbbreviation(e.target.value)}
           disabled={busy}
+          required
         />
         <Input
           label={t('admin.tenantStandards.functions.sortOrder')}

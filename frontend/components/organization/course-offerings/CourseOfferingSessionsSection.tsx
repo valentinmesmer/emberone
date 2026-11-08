@@ -9,11 +9,12 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { CourseSessionFormModal } from '@/components/organization/course-offerings/CourseSessionFormModal';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { IconButton } from '@/components/ui/icon-button';
 import { ListContainer, ListRow, ScheduleMetaRow } from '@/components/ui/list';
-import { SectionEditAction, SectionHeader } from '@/components/ui/section-header';
+import { SectionActions, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAddCourseSession, useDeleteCourseSession, useUpdateCourseSession } from '@/lib/store';
@@ -87,7 +88,16 @@ export function CourseOfferingSessionsSection({ organizationId, offering, canWri
         subtitle={t('courseOfferings.sessions.subtitle')}
         action={
           editable ? (
-            <SectionEditAction label={t('common.add')} onClick={() => setCreateOpen(true)} />
+            <SectionActions layout="inline">
+              <Button
+                variant="primary"
+                size="xs"
+                fullWidth="responsive"
+                onClick={() => setCreateOpen(true)}
+              >
+                {t('common.add')}
+              </Button>
+            </SectionActions>
           ) : null
         }
       />

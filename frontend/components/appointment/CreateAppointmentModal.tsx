@@ -23,8 +23,8 @@ import { AppointmentFormFields } from './AppointmentFormFields';
 import { AppointmentPendingAttachments } from './AppointmentPendingAttachments';
 import {
   buildAppointmentPayloadFields,
+  getAppointmentFormBlockers,
   getDefaultAppointmentForm,
-  isAppointmentFormValid,
 } from './appointmentFormUtils';
 
 interface CreateAppointmentModalProps {
@@ -52,7 +52,7 @@ export function CreateAppointmentModal({
   const [createdAppointmentId, setCreatedAppointmentId] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const isValid = isAppointmentFormValid(form, { mode: 'create' });
+  const blockers = getAppointmentFormBlockers(form, t, { mode: 'create' });
   const isAttachmentRetryStep = createdAppointmentId != null;
 
   const resetAndClose = () => {
@@ -75,7 +75,7 @@ export function CreateAppointmentModal({
   };
 
   const handleSubmit = async () => {
-    if (!isValid || isAttachmentRetryStep) return;
+    if (blockers.length > 0 || isAttachmentRetryStep) return;
 
     const payload: CreateAppointmentRequest = {
       organizationId,
@@ -135,7 +135,7 @@ export function CreateAppointmentModal({
           <ModalFooter
             onCancel={resetAndClose}
             onSave={handleSubmit}
-            isValid={isValid}
+            blockers={blockers}
             isLoading={isBusy}
           />
         )

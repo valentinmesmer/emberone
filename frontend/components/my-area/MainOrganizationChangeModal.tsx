@@ -21,6 +21,7 @@ import {
   useSubmitMainOrganizationChangeWorkflow,
   useUpdateWorkflowPayload,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { isActiveOrganizationMembership } from '@/lib/utils/membership';
 import { resolveWorkflowErrorMessage } from '@/lib/utils/workflowErrors';
 import type { UserDto } from '@/types/user';
@@ -120,13 +121,15 @@ export function MainOrganizationChangeModal({
     setFiles([]);
   }
 
-  const canSubmit =
-    newMainOrganizationId.trim().length > 0 &&
-    !pending &&
-    (isEdit || (!targetsLoading && organizationOptions.length > 0));
+  const blockers = formBlockers([
+    [
+      t('myArea.mainOrganizationChange.newMainOrganizationLabel'),
+      newMainOrganizationId.trim().length > 0,
+    ],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     const organizationId = Number(newMainOrganizationId);
     if (!Number.isFinite(organizationId) || organizationId <= 0) return;
 
@@ -194,7 +197,7 @@ export function MainOrganizationChangeModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('common.request.submit')

@@ -12,6 +12,7 @@ import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import { isValidEmail } from '@/lib/validation/email';
 import type { UserContactInformationDto } from '@/types/user';
 
@@ -33,20 +34,17 @@ function EditNotificationEmailModalForm({
   const [email, setEmail] = useState(contactInformation.privateEmail || '');
 
   const emailError = useMemo(() => {
-    if (!email.trim()) {
-      return t('common.validation.required');
+    if (!email.trim() || isValidEmail(email)) {
+      return undefined;
     }
-    if (!isValidEmail(email)) {
-      return t('common.validation.invalidEmail');
-    }
-    return undefined;
+    return t('common.validation.invalidEmail');
   }, [email, t]);
 
-  const formValid = emailError === undefined;
+  const blockers = formBlockers([[t('myArea.fields.notificationEmail'), isValidEmail(email)]]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formValid) {
+    if (blockers.length > 0) {
       return;
     }
     setIsLoading(true);
@@ -74,7 +72,7 @@ function EditNotificationEmailModalForm({
             const form = document.getElementById('notification-email-form') as HTMLFormElement;
             form?.requestSubmit();
           }}
-          isValid={formValid}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

@@ -20,6 +20,7 @@ import {
   getAbsenceReasonLabelKey,
 } from '@/lib/my-area/absenceReasonOptions';
 import { useMyOrganizations } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 import {
   isEndStrictlyBeforeStart,
@@ -41,16 +42,6 @@ function getLocalDateIsoString(date: Date = new Date()): string {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
-}
-
-function isAbsenceFormValid(params: {
-  selectedOrgIds: Set<number>;
-  startDate: string;
-  endDate: string;
-}): boolean {
-  if (params.selectedOrgIds.size < 1) return false;
-  if (!params.startDate.trim() || !params.endDate.trim()) return false;
-  return !isEndStrictlyBeforeStart(params.startDate, params.endDate);
 }
 
 function AbsenceFormModalContent({
@@ -109,10 +100,14 @@ function AbsenceFormModalContent({
     [t],
   );
 
-  const isFormValid = useMemo(
-    () => isAbsenceFormValid({ selectedOrgIds, startDate, endDate }),
-    [selectedOrgIds, startDate, endDate],
-  );
+  const blockers = formBlockers([
+    [t('myArea.absence.fields.startDate'), startDate.trim().length > 0],
+    [
+      t('myArea.absence.fields.endDate'),
+      endDate.trim().length > 0 && !isEndStrictlyBeforeStart(startDate, endDate),
+    ],
+    [t('myArea.absence.fields.organizations'), selectedOrgIds.size > 0],
+  ]);
 
   const endDateMinValue = useMemo(() => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return undefined;
@@ -159,7 +154,7 @@ function AbsenceFormModalContent({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) {
+    if (blockers.length > 0) {
       return;
     }
 
@@ -199,7 +194,7 @@ function AbsenceFormModalContent({
             const form = document.getElementById('absence-form') as HTMLFormElement;
             form?.requestSubmit();
           }}
-          isValid={isFormValid}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }
@@ -238,6 +233,7 @@ function AbsenceFormModalContent({
           <fieldset className="space-y-2">
             <legend className="text-sm font-semibold text-[var(--text-primary)]">
               {t('myArea.absence.fields.organizations')}
+              <span className="text-[var(--fire-red)] ml-1">*</span>
             </legend>
             <p className="text-xs text-[var(--text-secondary)]">
               {t('myArea.absence.organizationsHint')}

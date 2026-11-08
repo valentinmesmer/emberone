@@ -133,12 +133,14 @@ public class CourseOffering {
     @Builder.Default
     private List<CourseOfferingPrerequisite> prerequisites = new ArrayList<>();
 
-    /** Registration window contains {@code now} (start inclusive, end exclusive). */
+    /**
+     * Registration window contains {@code now} (start inclusive, end exclusive). Without a start
+     * registration opens on publishing; without an end it closes when the first session starts.
+     */
     public boolean isRegistrationOpen(Instant now) {
-        return registrationStart != null
-                && registrationEnd != null
-                && !now.isBefore(registrationStart)
-                && now.isBefore(registrationEnd);
+        Instant end = registrationEnd != null ? registrationEnd : firstSessionStart;
+        return (registrationStart == null || !now.isBefore(registrationStart))
+                && (end == null || now.isBefore(end));
     }
 
     public List<String> prerequisiteKeys(CoursePrerequisiteKind kind) {

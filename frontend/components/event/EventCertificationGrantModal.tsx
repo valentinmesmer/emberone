@@ -23,6 +23,7 @@ import {
   useEventCertificationGrantDetail,
   useUpdateEventCertificationGrant,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 import type { EventType } from '@/types/event';
 
@@ -108,14 +109,17 @@ export function EventCertificationGrantModal({
     });
   };
 
-  const canSave =
-    hydrated &&
-    (isEdit || typeof definitionId === 'number') &&
-    (recipientMode !== 'SPECIFIC' || selectedUserIds.size > 0) &&
-    !saving;
+  const blockers = formBlockers([
+    [t('events.certificationGrant.definitionLabel'), isEdit || typeof definitionId === 'number'],
+    [t('events.certificationGrant.recipientModeLabel'), !!recipientMode],
+    [
+      t('events.certificationGrant.selectRecipients'),
+      recipientMode !== 'SPECIFIC' || selectedUserIds.size > 0,
+    ],
+  ]);
 
   const handleSave = async () => {
-    if (!canSave) return;
+    if (blockers.length > 0 || !hydrated || saving) return;
     const payload = {
       recipientMode,
       notes: notes.trim() || undefined,
@@ -157,8 +161,8 @@ export function EventCertificationGrantModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={canSave}
-          isLoading={saving}
+          blockers={blockers}
+          isLoading={saving || !hydrated}
           showSave
         />
       }

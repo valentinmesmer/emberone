@@ -43,22 +43,14 @@ export function validateStartNotInFuture(
 }
 
 /**
- * Validates that all required fields are filled
- * @returns true if all required fields are filled, false otherwise
+ * Labels of the unmet requirements, in order. Pass the result to `ModalFooter` `blockers`: the
+ * save button stays disabled while it is non-empty and its hover text names these labels.
+ * Each entry is `[fieldLabel, met]`; use the same label as the field's `label` prop.
  */
-export function validateRequiredFields(
-  fields: Record<string, string | undefined>,
-  t: TranslationFunction,
-  showError: ShowErrorFunction,
-  errorKey: string,
-): boolean {
-  const emptyFields = Object.entries(fields).filter(([, value]) => !value?.trim());
-
-  if (emptyFields.length > 0) {
-    showError(t(errorKey));
-    return false;
-  }
-  return true;
+export function formBlockers(
+  requirements: ReadonlyArray<readonly [label: string, met: boolean]>,
+): string[] {
+  return requirements.filter(([, met]) => !met).map(([label]) => label);
 }
 
 /** Empty string is valid; otherwise must be a positive integer (e.g. days). */

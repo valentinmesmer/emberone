@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import { courseAudienceKindLabelKey } from '@/lib/utils/courseOffering';
 import type { CourseAudienceEntryDto, CourseAudienceEntryRequest } from '@/types/courseOffering';
 
@@ -68,7 +69,7 @@ export function CourseAudienceQuotaModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => (remaining > 0 ? setConfirmOpen(true) : save())}
-          isValid={isValid}
+          blockers={formBlockers([[t('courseOfferings.audience.quotaTitle'), isValid]])}
           isLoading={isSaving}
         />
       }

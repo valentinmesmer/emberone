@@ -39,6 +39,7 @@ import {
   useWorkflow,
   useWorkflowDocumentPromotionPreview,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import {
   buildSlotSubtitle,
   findDecisionForSlot,
@@ -393,7 +394,12 @@ export function WorkflowApprovalSlotDetailView({
           <ModalFooter
             onCancel={() => setRejectOpen(false)}
             onSave={() => void handleRejectSubmit()}
-            isValid={!wf.mapsRejectToInputChange || rejectComment.trim().length > 0}
+            blockers={formBlockers([
+              [
+                t('myArea.workflowDetail.requestInputChangeMessageLabel'),
+                !wf.mapsRejectToInputChange || rejectComment.trim().length > 0,
+              ],
+            ])}
             isLoading={decideMutation.isPending}
             saveText={t(
               wf.mapsRejectToInputChange

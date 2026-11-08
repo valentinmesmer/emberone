@@ -11,6 +11,7 @@ import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formBlockers } from '@/lib/utils';
 import { statusDangerSolidCtaClass } from '@/lib/utils/statusActionClasses';
 import type {
   EndUserOrganizationMembershipRequest,
@@ -46,10 +47,12 @@ export function EndOrganizationMembershipDialog({
   }
 
   const trimmedReason = reason.trim();
-  const canSubmit = trimmedReason.length > 0 && !isLoading;
+  const blockers = formBlockers([
+    [t('userManagement.organizationMembershipEndWorkflow.reasonLabel'), trimmedReason.length > 0],
+  ]);
 
   const handleEnd = async () => {
-    if (!membership || !canSubmit) return;
+    if (!membership || blockers.length > 0) return;
     try {
       await onEnd({ reason: trimmedReason });
       onClose();
@@ -70,7 +73,7 @@ export function EndOrganizationMembershipDialog({
         <ModalFooter
           onCancel={onClose}
           onSave={handleEnd}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={isLoading}
           cancelText={t('common.cancel')}
           saveText={t('userManagement.organizationMembershipEndWorkflow.submit')}

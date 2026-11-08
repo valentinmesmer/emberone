@@ -22,11 +22,13 @@ import {
   standardPermissionLabel,
 } from '@/components/admin/standards/standardContentUtils';
 import type { StandardContentState } from '@/components/admin/standards/useStandardContent';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { FieldDisplay } from '@/components/ui/field-display';
 import { Input } from '@/components/ui/input';
+import { ListRow } from '@/components/ui/list';
 import { NotFoundState } from '@/components/ui/message-cards';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
@@ -34,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
 import { getAdminStandardDetailPath } from '@/lib/navigation/adminWorkspace';
+import { formBlockers } from '@/lib/utils';
 
 interface StandardPermissionGroupDetailViewProps {
   state: StandardContentState;
@@ -75,8 +78,10 @@ export function StandardPermissionGroupDetailView({
     setEditOpen(true);
   };
 
+  const blockers = formBlockers([[t('admin.standards.name'), name.trim() !== '']]);
+
   const handleSave = async () => {
-    if (!name.trim()) return;
+    if (blockers.length > 0) return;
     const ok = await runMutation(
       () =>
         standardsApi.updatePermissionGroup(tenantId, standardId, configKey, {
@@ -126,22 +131,12 @@ export function StandardPermissionGroupDetailView({
           }
           actions={
             editable && !isAdminGroup ? (
-              <>
-                <StandardDetailAction
-                  label={t('common.edit')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={openEdit}
-                  disabled={busy}
-                />
-                {!isSystemGroup ? (
-                  <StandardDetailAction
-                    label={t('admin.standards.deleteItem')}
-                    icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                    onClick={() => setDeleteOpen(true)}
-                    disabled={busy}
-                  />
-                ) : null}
-              </>
+              <StandardDetailAction
+                label={t('common.edit')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={openEdit}
+                disabled={busy}
+              />
             ) : undefined
           }
         />
@@ -172,6 +167,17 @@ export function StandardPermissionGroupDetailView({
         </div>
       </Card>
 
+      {editable && !isAdminGroup && !isSystemGroup ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('admin.standards.deleteItem')}
+            subtitle={t('common.deleteHint')}
+            onClick={busy ? undefined : () => setDeleteOpen(true)}
+          />
+        </ActionsSection>
+      ) : null}
+
       {editOpen ? (
         <Modal
           isOpen
@@ -182,7 +188,7 @@ export function StandardPermissionGroupDetailView({
             <ModalFooter
               onCancel={() => setEditOpen(false)}
               onSave={() => void handleSave()}
-              isValid={name.trim().length > 0}
+              blockers={blockers}
               isLoading={busy}
             />
           }
@@ -193,6 +199,7 @@ export function StandardPermissionGroupDetailView({
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={busy}
+              required
             />
             <Textarea
               label={t('admin.standards.description')}

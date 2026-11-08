@@ -17,6 +17,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { workflowsApi } from '@/lib/api/workflows';
 import { useMyAvailableRanks, useSubmitRankRequestWorkflow } from '@/lib/store';
 import { useUpdateWorkflowPayload } from '@/lib/store/queries/workflows';
+import { formBlockers } from '@/lib/utils';
 import { type RankRequestWorkflowPayload, WORKFLOW_TYPE_IDS } from '@/types/workflow';
 
 export interface RankRequestSubmitModalProps {
@@ -119,6 +120,8 @@ function RankRequestSubmitModalBody({
     }
   };
 
+  const blockers = formBlockers([[t('ranks.request.rank'), Boolean(tenantRankId)]]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -128,7 +131,7 @@ function RankRequestSubmitModalBody({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSave()}
-          isValid={Boolean(tenantRankId)}
+          blockers={blockers}
           isLoading={pending}
         />
       }
@@ -141,6 +144,7 @@ function RankRequestSubmitModalBody({
           onChange={(e) => setTenantRankId(e.target.value)}
           options={ranks.map((rank) => ({ value: String(rank.id), label: rank.name }))}
           disabled={pending}
+          required
         />
         <PendingAttachments
           variant="field"

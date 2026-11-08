@@ -6,7 +6,6 @@
 
 'use client';
 
-import { useMemo } from 'react';
 import { onboardingStepTypeKey } from '@/components/admin/standards/onboardingStepUtils';
 import { StandardCatalogCheckboxList } from '@/components/admin/standards/StandardCatalogCheckboxList';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,7 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { OnboardingStepType } from '@/lib/api/standards';
 import type { TenantOnboardingDocumentDefinitionDto } from '@/lib/api/tenantOnboardingDocuments';
+import { formBlockers } from '@/lib/utils';
 
 export interface OnboardingStepConfigDraft {
   stepType: OnboardingStepType;
@@ -48,16 +48,25 @@ export function StandardOnboardingStepConfigModal({
   const t = useTranslation();
   const stepKey = onboardingStepTypeKey(draft.stepType);
 
-  const configValid = useMemo(() => {
-    if (draft.stepType === 'ENTRY_DOCUMENTS') {
-      return draft.documentKeys.length > 0;
-    }
-    if (draft.stepType === 'EMERGENCY_CONTACTS') {
-      const parsed = Number.parseInt(draft.minimumCount, 10);
-      return Number.isFinite(parsed) && parsed >= 1;
-    }
-    return true;
-  }, [draft]);
+  const parsedMinimumCount = Number.parseInt(draft.minimumCount, 10);
+  const blockers = formBlockers([
+    ...(draft.stepType === 'ENTRY_DOCUMENTS'
+      ? ([
+          [
+            t('admin.standards.onboardingSteps.entryDocuments.selectedDocuments'),
+            draft.documentKeys.length > 0,
+          ],
+        ] as const)
+      : []),
+    ...(draft.stepType === 'EMERGENCY_CONTACTS'
+      ? ([
+          [
+            t('admin.standards.onboardingSteps.emergencyContacts.minimumCountLabel'),
+            Number.isFinite(parsedMinimumCount) && parsedMinimumCount >= 1,
+          ],
+        ] as const)
+      : []),
+  ]);
 
   function toggleDocument(configKey: string) {
     const selected = new Set(draft.documentKeys);
@@ -73,7 +82,7 @@ export function StandardOnboardingStepConfigModal({
       title={t(`admin.standards.onboardingSteps.${stepKey}.title`)}
       size={draft.stepType === 'ENTRY_DOCUMENTS' ? 'lg' : 'sm'}
       footer={
-        <ModalFooter onCancel={onClose} onSave={onSave} isValid={configValid} isLoading={saving} />
+        <ModalFooter onCancel={onClose} onSave={onSave} blockers={blockers} isLoading={saving} />
       }
     >
       <div className="space-y-3">

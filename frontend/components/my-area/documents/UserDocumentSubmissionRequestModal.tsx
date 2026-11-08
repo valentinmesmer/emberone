@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { ApiRequestError } from '@/lib/api/client';
 import { workflowsApi } from '@/lib/api/workflows';
 import { useSubmitUserDocumentSubmissionWorkflow, useUpdateWorkflowPayload } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import {
   type UserDocumentSubmissionWorkflowPayload,
   WORKFLOW_CLIENT_ERROR_CODES,
@@ -107,13 +108,13 @@ export function UserDocumentSubmissionRequestModal({
 
   const hasAttachments = existingAttachmentIds.length > 0 || files.length > 0;
 
-  const canSubmit = useMemo(
-    () => title.trim().length > 0 && hasAttachments && !pending,
-    [title, hasAttachments, pending],
-  );
+  const blockers = formBlockers([
+    [t('myArea.documents.titleLabel'), title.trim().length > 0],
+    [t('myArea.documents.fileLabel'), hasAttachments],
+  ]);
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     try {
       const payloadBody = {
         title: title.trim(),
@@ -181,7 +182,7 @@ export function UserDocumentSubmissionRequestModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit

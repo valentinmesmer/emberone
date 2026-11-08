@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useCancelCourseOffering } from '@/lib/store';
-import { validateRequiredFields } from '@/lib/utils';
+import { formBlockers } from '@/lib/utils';
 
 interface CourseOfferingCancelDialogProps {
   organizationId: number;
@@ -37,7 +37,7 @@ export function CourseOfferingCancelDialog({
     return null;
   }
 
-  const valid = reason.trim().length > 0;
+  const blockers = formBlockers([[t('courseOfferings.cancel.reasonLabel'), reason.trim() !== '']]);
 
   return (
     <Modal isOpen onClose={onClose} title={t('courseOfferings.cancel.dialogTitle')}>
@@ -54,15 +54,10 @@ export function CourseOfferingCancelDialog({
       <ModalFooter
         onCancel={onClose}
         saveText={t('courseOfferings.cancel.confirm')}
-        isValid={valid}
+        blockers={blockers}
         isLoading={cancel.isPending}
         onSave={() => {
           void (async () => {
-            if (
-              !validateRequiredFields({ reason }, t, showError, 'common.validation.fillRequired')
-            ) {
-              return;
-            }
             try {
               await cancel.mutateAsync(reason.trim());
               showSuccess(t('courseOfferings.cancel.success'));

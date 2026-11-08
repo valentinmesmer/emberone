@@ -90,6 +90,7 @@ Prosa auf Deutsch; Identifier (Klassen, Enums, Properties, Pfade) auf Englisch w
 | [Frontend i18n](frontend-i18n.md) | `useTranslation`, Locale-Quelle, Key-Konventionen, `locales/de.json` |
 | [Frontend Component-Library](frontend-component-library.md) | `components/ui/*`, `ListControls` |
 | [Frontend Detail-Routing](frontend-detail-routing.md) | Dünne `page.tsx` → `*DetailView` |
+| [Frontend-Aktionen auf Detailseiten](frontend-actions.md) | Container-Icons vs. `ActionsSection`, Ausnahmen, Referenzseiten |
 | [Frontend PWA / Offline](frontend-pwa-offline.md) | Serwist, Precache, Offline-Fallback |
 | [Frontend API-Client](frontend-api-client.md) | `apiClient`, Runtime Config, Store-Hooks |
 | [Paginierung von Listen](pagination.md) | `ListQuery`, `defineList`, `ListControls`, `@BoundedList` |

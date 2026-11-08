@@ -128,17 +128,6 @@ export function GroupMembershipDetailContent({
         ) : null}
       </Card>
 
-      {canEditActive && activeMembership ? (
-        <ActionsSection>
-          <ListRow
-            leading={<ActionRowIcon icon={LogOut} />}
-            title={t('userManagement.groupMembership.end')}
-            subtitle={t('userManagement.groupMembership.endActionHint')}
-            onClick={() => setIsEndConfirmOpen(true)}
-          />
-        </ActionsSection>
-      ) : null}
-
       {history.length > 0 ? (
         <section>
           <h2 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
@@ -173,6 +162,17 @@ export function GroupMembershipDetailContent({
             ))}
           </ListContainer>
         </section>
+      ) : null}
+
+      {canEditActive && activeMembership ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={LogOut} />}
+            title={t('userManagement.groupMembership.end')}
+            subtitle={t('userManagement.groupMembership.endActionHint')}
+            onClick={() => setIsEndConfirmOpen(true)}
+          />
+        </ActionsSection>
       ) : null}
 
       {editTarget ? (

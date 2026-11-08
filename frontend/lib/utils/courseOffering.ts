@@ -199,10 +199,9 @@ export function canPublishCourseOffering(status: CourseOfferingStatus): boolean 
 
 /**
  * Why a draft cannot be published yet - mirrors backend {@code validatePublishable}.
- * {@code null} means the offering is ready to publish.
+ * An empty list means the offering is ready to publish.
  */
 export type CourseOfferingPublishBlockReason =
-  | 'registrationPeriod'
   | 'sessions'
   | 'registrationBeforeFirstSession'
   | 'examSession'
@@ -210,7 +209,7 @@ export type CourseOfferingPublishBlockReason =
   | 'quotasSum'
   | 'ownOrgQuota';
 
-export function courseOfferingPublishBlockReason(
+export function courseOfferingPublishBlockReasons(
   offering: Pick<
     CourseOfferingDto,
     | 'registrationStart'
@@ -220,39 +219,41 @@ export function courseOfferingPublishBlockReason(
     | 'audiences'
     | 'maxParticipants'
   >,
-): CourseOfferingPublishBlockReason | null {
+): CourseOfferingPublishBlockReason[] {
+  const reasons: CourseOfferingPublishBlockReason[] = [];
   const audiences = offering.audiences;
   const withQuota = audiences.filter((entry) => entry.quota != null);
   if (withQuota.length > 0) {
+    const sum = withQuota.reduce((total, entry) => total + (entry.quota ?? 0), 0);
     if (withQuota.length !== audiences.length) {
-      return 'quotasIncomplete';
+      reasons.push('quotasIncomplete');
     }
     if (audiences.some((entry) => entry.kind === 'OWN_ORG')) {
-      return 'ownOrgQuota';
+      reasons.push('ownOrgQuota');
     }
-    const sum = withQuota.reduce((total, entry) => total + (entry.quota ?? 0), 0);
     if (sum > offering.maxParticipants) {
-      return 'quotasSum';
+      reasons.push('quotasSum');
     }
   }
 
-  if (offering.registrationStart == null || offering.registrationEnd == null) {
-    return 'registrationPeriod';
-  }
   if (offering.sessions.length === 0) {
-    return 'sessions';
+    reasons.push('sessions');
   }
 
   const firstSessionStart = offering.sessions.map((session) => session.start).sort()[0];
-  if (firstSessionStart != null && offering.registrationEnd > firstSessionStart) {
-    return 'registrationBeforeFirstSession';
+  if (
+    firstSessionStart != null &&
+    offering.registrationEnd != null &&
+    offering.registrationEnd > firstSessionStart
+  ) {
+    reasons.push('registrationBeforeFirstSession');
   }
 
   if (offering.hasExam && !offering.sessions.some((session) => session.type === 'EXAM')) {
-    return 'examSession';
+    reasons.push('examSession');
   }
 
-  return null;
+  return reasons;
 }
 
 export function courseOfferingPublishBlockReasonLabelKey(
@@ -297,21 +298,18 @@ export function canSetCourseOfferingResults(
 
 export type CourseOfferingCompleteBlockReason = 'notStarted' | 'undecided';
 
-export function courseOfferingCompleteBlockReason(
+export function courseOfferingCompleteBlockReasons(
   offering: Pick<CourseOfferingDto, 'status' | 'firstSessionStart'>,
   undecidedCount: number,
   completionLoaded: boolean,
-): CourseOfferingCompleteBlockReason | null {
+): CourseOfferingCompleteBlockReason[] {
   if (offering.status !== 'PUBLISHED') {
-    return null;
+    return [];
   }
   if (!hasCourseOfferingStarted(offering)) {
-    return 'notStarted';
+    return ['notStarted'];
   }
-  if (!completionLoaded || undecidedCount > 0) {
-    return 'undecided';
-  }
-  return null;
+  return !completionLoaded || undecidedCount > 0 ? ['undecided'] : [];
 }
 
 export function courseOfferingCompleteBlockReasonLabelKey(

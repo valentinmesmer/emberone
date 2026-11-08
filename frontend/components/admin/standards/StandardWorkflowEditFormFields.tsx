@@ -58,6 +58,7 @@ export function StandardWorkflowEditFormFields({
           disabled={disabled}
           options={orgGroupItems.map((i) => ({ value: i.configKey, label: i.title }))}
           onChange={(e) => onApproverOrgGroupConfigKeyChange(e.target.value)}
+          required
         />
         <p className="text-xs text-[var(--text-secondary)]">
           {t('admin.standards.approverGroupHint')}

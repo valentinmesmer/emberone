@@ -22,6 +22,7 @@ import {
   useSubmitOrganizationGroupLeaveRequestWorkflow,
   useUpdateWorkflowPayload,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import type { UserDto } from '@/types/user';
 import {
   type OrganizationGroupLeaveRequestWorkflowPayload,
@@ -147,11 +148,13 @@ export function OrganizationGroupLeaveRequestModal({
     ];
   }, [initialPayload, isEdit, leaveTargets, organizationId, t]);
 
-  const canSubmit =
-    organizationId.trim().length > 0 &&
-    organizationGroupId.trim().length > 0 &&
-    !pending &&
-    (isEdit || (!targetsLoading && leaveTargets.length > 0));
+  const blockers = formBlockers([
+    [t('myArea.organizationGroupLeaveRequest.organizationLabel'), organizationId.trim().length > 0],
+    [
+      t('myArea.organizationGroupLeaveRequest.organizationGroupLabel'),
+      organizationGroupId.trim().length > 0,
+    ],
+  ]);
 
   const handleOrganizationChange = (value: string) => {
     setOrganizationId(value);
@@ -159,7 +162,7 @@ export function OrganizationGroupLeaveRequestModal({
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (blockers.length > 0 || pending) return;
     const selectedOrganizationId = Number(organizationId);
     const selectedGroupId = Number(organizationGroupId);
     if (
@@ -243,7 +246,7 @@ export function OrganizationGroupLeaveRequestModal({
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleSubmit()}
-          isValid={canSubmit}
+          blockers={blockers}
           isLoading={pending}
           saveText={
             isEdit ? t('myArea.workflowDetail.editInputSubmit') : t('common.request.submit')

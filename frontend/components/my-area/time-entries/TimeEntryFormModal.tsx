@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useMyOrganizationGroups, useMyOrganizations } from '@/lib/store';
-import { filterVisibleOrganizationGroups, getGroupDisplayName } from '@/lib/utils';
+import { filterVisibleOrganizationGroups, formBlockers, getGroupDisplayName } from '@/lib/utils';
 import {
   formatToLocalDateTime,
   getOrganizationWallClockNow,
@@ -177,7 +177,7 @@ function StampModalContent({ onClose, onSave, fixedOrganizationId }: StampModalP
         <ModalFooter
           onCancel={onClose}
           onSave={() => void handleStampIn()}
-          isValid={!!selectedOrgId}
+          blockers={formBlockers([[t('myArea.timeEntries.fields.organization'), !!selectedOrgId]])}
           isLoading={isLoading}
           saveText={t('myArea.timeEntries.stampIn')}
         />
@@ -282,12 +282,18 @@ function ManualModalContent({ onClose, entry, onSave, fixedOrganizationId }: Man
       ? t('common.validation.endNotBeforeStart')
       : undefined;
 
-  const isValid =
-    !!selectedOrgId && !!startTime && (!endTime || !isEndStrictlyBeforeStart(startTime, endTime));
+  const blockers = formBlockers([
+    [t('myArea.timeEntries.fields.organization'), !!selectedOrgId],
+    [t('myArea.timeEntries.fields.startTime'), !!startTime],
+    [
+      t('myArea.timeEntries.fields.endTime'),
+      !endTime || !isEndStrictlyBeforeStart(startTime, endTime),
+    ],
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || !selectedOrgId) return;
+    if (blockers.length > 0 || !selectedOrgId) return;
     const payload: CreateUserTimeEntryRequest = {
       organizationId: selectedOrgId,
       organizationGroupId: resolvedGroupId,
@@ -321,7 +327,7 @@ function ManualModalContent({ onClose, entry, onSave, fixedOrganizationId }: Man
             const form = document.getElementById('time-entry-form') as HTMLFormElement;
             form?.requestSubmit();
           }}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

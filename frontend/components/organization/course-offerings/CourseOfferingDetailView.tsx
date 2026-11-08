@@ -14,7 +14,7 @@ import { CourseOfferingCancelDialog } from '@/components/organization/course-off
 import { CourseOfferingParticipantsSection } from '@/components/organization/course-offerings/CourseOfferingParticipantsSection';
 import { CourseOfferingPrerequisitesEditor } from '@/components/organization/course-offerings/CourseOfferingPrerequisitesEditor';
 import { CourseOfferingSessionsSection } from '@/components/organization/course-offerings/CourseOfferingSessionsSection';
-import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
+import { ActionRow, ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -43,16 +43,16 @@ import {
   useSaveCourseOfferingAsTemplate,
   useUpdateCourseOffering,
 } from '@/lib/store';
-import { validateRequiredFields } from '@/lib/utils';
+import { formBlockers } from '@/lib/utils';
 import {
   canCancelCourseOffering,
   canDeleteCourseOffering,
   canEditCourseOffering,
   canPublishCourseOffering,
-  courseOfferingCompleteBlockReason,
   courseOfferingCompleteBlockReasonLabelKey,
-  courseOfferingPublishBlockReason,
+  courseOfferingCompleteBlockReasons,
   courseOfferingPublishBlockReasonLabelKey,
+  courseOfferingPublishBlockReasons,
   courseOfferingStatusLabelKey,
   getOrganizationCourseOfferingsPath,
   isCourseOfferingTemplate,
@@ -137,17 +137,17 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
 
   const editable = canWrite && canEditCourseOffering(offering.status);
   const isTemplate = isCourseOfferingTemplate(offering.status);
-  const publishBlock = courseOfferingPublishBlockReason(offering);
-  const publishReady = publishBlock == null;
+  const publishBlockers = courseOfferingPublishBlockReasons(offering).map((reason) =>
+    t(courseOfferingPublishBlockReasonLabelKey(reason)),
+  );
   const canComplete = canWrite && offering.status === 'PUBLISHED';
   const undecidedCount =
     completion?.participants.filter((participant) => participant.finalPassed == null).length ?? 0;
-  const completeBlock = courseOfferingCompleteBlockReason(
+  const completeBlockers = courseOfferingCompleteBlockReasons(
     offering,
     undecidedCount,
     completion != null,
-  );
-  const completeBlocked = completeBlock != null;
+  ).map((reason) => t(courseOfferingCompleteBlockReasonLabelKey(reason)));
 
   const openEdit = () => {
     setForm({
@@ -167,26 +167,20 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
   // Quotas sum up to the maximum, so the maximum follows the quotas and is locked while they exist.
   const quotasSet = offering.audiences.some((entry) => entry.quota != null);
 
-  const editBasicsValid = isTemplate
-    ? (form.templateName?.trim().length ?? 0) > 0
-    : form.maxParticipants >= minParticipants;
+  const editBasicsBlockers = formBlockers(
+    isTemplate
+      ? [[t('courseOfferings.fields.templateName'), (form.templateName?.trim().length ?? 0) > 0]]
+      : [[t('courseOfferings.fields.maxParticipants'), form.maxParticipants >= minParticipants]],
+  );
+  const templateNameBlockers = formBlockers([
+    [t('courseOfferings.fields.templateName'), templateName.trim() !== ''],
+  ]);
+  const instantiateBlockers = formBlockers([
+    [t('courseOfferings.templates.firstSessionDate'), firstSessionDate !== ''],
+  ]);
 
   const saveBasics = async () => {
-    if (isTemplate) {
-      if (
-        !validateRequiredFields(
-          { templateName: form.templateName ?? '' },
-          t,
-          showError,
-          'common.validation.fillRequired',
-        )
-      ) {
-        return;
-      }
-    } else if (form.maxParticipants < minParticipants) {
-      showError(t('courseOfferings.detail.maxParticipantsMin', { min: minParticipants }));
-      return;
-    }
+    if (editBasicsBlockers.length > 0) return;
     try {
       await updateOffering.mutateAsync(form);
       showSuccess(t('courseOfferings.detail.saved'));
@@ -227,9 +221,7 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
   };
 
   const handleSaveAsTemplate = async () => {
-    if (!validateRequiredFields({ templateName }, t, showError, 'common.validation.fillRequired')) {
-      return;
-    }
+    if (templateNameBlockers.length > 0) return;
     try {
       await saveAsTemplate.mutateAsync(templateName.trim());
       showSuccess(t('courseOfferings.templates.saved'));
@@ -240,11 +232,7 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
   };
 
   const handleInstantiate = async () => {
-    if (
-      !validateRequiredFields({ firstSessionDate }, t, showError, 'common.validation.fillRequired')
-    ) {
-      return;
-    }
+    if (instantiateBlockers.length > 0) return;
     try {
       const created = await instantiateTemplate.mutateAsync({
         templateId: offeringId,
@@ -372,29 +360,21 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
             />
           ) : null}
           {canPublishCourseOffering(offering.status) ? (
-            <ListRow
+            <ActionRow
               leading={<ActionRowIcon icon={Send} />}
               title={t('courseOfferings.actions.publish')}
-              subtitle={
-                publishReady
-                  ? t('courseOfferings.actions.publishHint')
-                  : t(courseOfferingPublishBlockReasonLabelKey(publishBlock))
-              }
-              onClick={publishReady ? () => setPublishOpen(true) : undefined}
-              className={publishReady ? undefined : 'opacity-60'}
+              subtitle={t('courseOfferings.actions.publishHint')}
+              blockers={publishBlockers}
+              onClick={() => setPublishOpen(true)}
             />
           ) : null}
           {canComplete ? (
-            <ListRow
+            <ActionRow
               leading={<ActionRowIcon icon={CircleCheck} />}
               title={t('courseOfferings.completion.completeAction')}
-              subtitle={
-                completeBlock != null
-                  ? t(courseOfferingCompleteBlockReasonLabelKey(completeBlock))
-                  : t('courseOfferings.completion.completeHint')
-              }
-              onClick={completeBlocked ? undefined : () => setCompleteOpen(true)}
-              className={completeBlocked ? 'opacity-60' : undefined}
+              subtitle={t('courseOfferings.completion.completeHint')}
+              blockers={completeBlockers}
+              onClick={() => setCompleteOpen(true)}
             />
           ) : null}
           {canCancelCourseOffering(offering.status) ? (
@@ -432,7 +412,7 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
             <ModalFooter
               onCancel={() => setEditOpen(false)}
               onSave={() => void saveBasics()}
-              isValid={editBasicsValid}
+              blockers={editBasicsBlockers}
               isLoading={updateOffering.isPending}
             />
           }
@@ -461,6 +441,7 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
                   <DateTimePicker
                     label={t('courseOfferings.fields.registrationStart')}
                     name="registrationStart"
+                    allowEmpty
                     value={form.registrationStart ?? ''}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, registrationStart: e.target.value || null }))
@@ -469,6 +450,7 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
                   <DateTimePicker
                     label={t('courseOfferings.fields.registrationEnd')}
                     name="registrationEnd"
+                    allowEmpty
                     value={form.registrationEnd ?? ''}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, registrationEnd: e.target.value || null }))
@@ -560,7 +542,7 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
             <ModalFooter
               onCancel={() => setTemplateNameOpen(false)}
               onSave={() => void handleSaveAsTemplate()}
-              isValid={templateName.trim().length > 0}
+              blockers={templateNameBlockers}
               isLoading={saveAsTemplate.isPending}
             />
           }
@@ -583,7 +565,7 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
             <ModalFooter
               onCancel={() => setInstantiateOpen(false)}
               onSave={() => void handleInstantiate()}
-              isValid={firstSessionDate !== ''}
+              blockers={instantiateBlockers}
               isLoading={instantiateTemplate.isPending}
             />
           }

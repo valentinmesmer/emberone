@@ -9,6 +9,7 @@
 import { FileText, Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -142,19 +143,11 @@ export function TrainingCourseRecordDetailView(props: TrainingCourseRecordDetail
           }
           actions={
             canWrite ? (
-              <>
-                <DetailCardAction
-                  label={t('common.edit')}
-                  icon={<Pencil className="h-4 w-4" aria-hidden />}
-                  onClick={() => setIsEditOpen(true)}
-                />
-                <DetailCardAction
-                  label={t('common.delete')}
-                  icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                  onClick={() => setIsDeleteOpen(true)}
-                  disabled={deleteRecord.isPending}
-                />
-              </>
+              <DetailCardAction
+                label={t('common.edit')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => setIsEditOpen(true)}
+              />
             ) : undefined
           }
         />
@@ -238,6 +231,17 @@ export function TrainingCourseRecordDetailView(props: TrainingCourseRecordDetail
           </ListContainer>
         )}
       </section>
+
+      {canWrite ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Trash2} />}
+            title={t('common.delete')}
+            subtitle={t('common.deleteHint')}
+            onClick={() => setIsDeleteOpen(true)}
+          />
+        </ActionsSection>
+      ) : null}
 
       {canWrite ? (
         <>

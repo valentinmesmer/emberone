@@ -56,7 +56,3 @@ export function masterDataFormToPatchRequest(
     name: f.name.trim(),
   };
 }
-
-export function isTenantFormComplete(form: TenantMasterDataFormState): boolean {
-  return Boolean(form.name.trim() && form.abbreviation.trim());
-}

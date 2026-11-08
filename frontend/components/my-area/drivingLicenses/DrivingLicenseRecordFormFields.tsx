@@ -102,6 +102,7 @@ export function DrivingLicenseRecordFormFields({
         value={classes}
         onChange={onClassesChange}
         disabled={disabled}
+        required
       />
       <Textarea
         label={t('common.record.notesLabel')}

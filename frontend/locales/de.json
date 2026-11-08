@@ -15,6 +15,10 @@
     },
     "edit": "Bearbeiten",
     "delete": "Löschen",
+    "actionsSection": "Aktionen",
+    "deleteHint": "Entfernt diesen Eintrag dauerhaft.",
+    "archiveHint": "Blendet den Eintrag aus; er kann später wieder aktiviert werden.",
+    "unarchiveHint": "Macht den archivierten Eintrag wieder verfügbar.",
     "archive": "Archivieren",
     "unarchive": "Entarchivieren",
     "close": "Schließen",
@@ -42,7 +46,6 @@
       "endNotBeforeStart": "Das Ende darf nicht vor dem Beginn liegen.",
       "endAfterStart": "Das Ende muss nach dem Beginn liegen.",
       "startNotInFuture": "Das Startdatum darf nicht in der Zukunft liegen.",
-      "fillRequired": "Bitte fülle alle Pflichtfelder aus.",
       "positiveInteger": "Bitte eine positive ganze Zahl eingeben.",
       "invalidDateOfBirth": "Bitte ein gültiges Geburtsdatum mit vierstelliger Jahreszahl eingeben."
     },
@@ -53,7 +56,7 @@
     "menuClose": "Menü schließen",
     "hoverDisabledAction": "Derzeit nicht verfügbar.",
     "hoverDisabledField": "Dieses Feld ist deaktiviert.",
-    "hoverDisabledSave": "Speichern nicht möglich: Eingaben unvollständig oder ungültig.",
+    "saveBlockedHint": "Bitte noch ausfüllen: {{fields}}",
     "pullToRefresh": {
       "action": "Aktualisieren",
       "retry": "Erneut versuchen",
@@ -490,7 +493,7 @@
     },
     "orgDeactivate": {
       "action": "Organisation deaktivieren",
-      "actionHint": "Deaktiviert diese Organisation und alle Unterorganisationen. Hauptorg-Mitglieder werden deaktiviert, Neben-Mitgliedschaften enden. Daten folgen den Löschfristen.",
+      "actionHint": "Deaktiviert diese Organisation und alle Unterorganisationen. Mitglieder, deren Hauptorganisation dies ist, werden deaktiviert, Neben-Mitgliedschaften enden. Daten folgen den Löschfristen.",
       "modalTitle": "Organisation deaktivieren?",
       "modalMessage": "Die Organisation wird nicht gelöscht, sondern deaktiviert - inklusive des gesamten Unterbaums.",
       "modalDetail": "Unterorganisationen, die erhalten bleiben sollen, vorher verschieben. Hauptorganisationen betroffener Mitglieder vorher ändern, wenn die Konten aktiv bleiben sollen.",
@@ -669,6 +672,7 @@
       "customSectionTitle": "Eigene Standards",
       "customEmpty": "Noch keine eigenen Standards. Klone den System-Standard, um zu starten.",
       "clone": "Klonen & anpassen",
+      "cloneHint": "Erstellt eine bearbeitbare Kopie dieses Standards.",
       "cloneTitle": "Standard klonen",
       "cloneFrom": "Basis-Standard",
       "name": "Name",
@@ -1167,6 +1171,7 @@
         "drivingLicenses": "Führerschein",
         "modeAll": "Alle erforderlich (UND)",
         "modeAny": "Mindestens einer (ODER)",
+        "requirementsLabel": "Anforderungen",
         "requirementsHint": "Mindestens ein Lehrgang, Führerschein, Nachweisprofil oder Organisationsentscheidung erforderlich."
       }
     },
@@ -1390,7 +1395,7 @@
         "periodRange": "{{start}} - {{end}}",
         "maxParticipants": "Max. Teilnehmer",
         "hasExam": "Prüfung",
-        "homeOrgApproval": "Freigabe Hauptorg",
+        "homeOrgApproval": "Freigabe durch deine Hauptorganisation",
         "notes": "Hinweise",
         "content": "Lehrgangsinhalt",
         "myRegistration": "Deine Anmeldung",
@@ -1797,6 +1802,7 @@
       "attachmentsLabel": "Nachweis",
       "attachmentsHint": "Nachweis für die Namensänderung. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
       "hintNamesUnchanged": "Der neue Name muss sich vom aktuellen Namen unterscheiden.",
+      "blockerChangedName": "Neuen Namen eingeben",
       "blockedOpenRequest": "Es läuft bereits ein Namensänderungsantrag. Warte auf die Entscheidung oder ziehe den offenen Antrag unter „Mein Bereich → Anträge“ zurück, bevor du einen neuen startest.",
       "errorAlreadyOpen": "Es gibt bereits einen offenen Namensänderungsantrag. Beende oder ziehe ihn zurück, bevor du einen neuen einreichst."
     },
@@ -1807,6 +1813,7 @@
       "attachmentsLabel": "Nachweis",
       "attachmentsHint": "Optionaler Nachweis für die Adressänderung. Mehrere Dateien möglich. Erlaubt: PDF, JPEG, PNG, GIF, WebP (max. 10 MB pro Datei).",
       "hintAddressUnchanged": "Die neue Adresse muss sich von der aktuellen Adresse unterscheiden.",
+      "blockerChangedAddress": "Neue Adresse eingeben",
       "blockedOpenRequest": "Es läuft bereits ein Adressänderungsantrag. Warte auf die Entscheidung oder ziehe den offenen Antrag unter „Mein Bereich → Anträge“ zurück, bevor du einen neuen startest.",
       "errorAlreadyOpen": "Es gibt bereits einen offenen Adressänderungsantrag. Beende oder ziehe ihn zurück, bevor du einen neuen einreichst."
     },
@@ -1983,6 +1990,8 @@
       "updateFailed": "Dokument konnte nicht gespeichert werden.",
       "downloadFailed": "Download fehlgeschlagen.",
       "view": "Ansehen",
+      "viewHint": "Zeigt die Datei an.",
+      "downloadHint": "Lädt die Datei auf dein Gerät.",
       "filterByTag": "Tag",
       "markAllRead": "Alle als gelesen markieren",
       "markAllReadLoading": "Wird markiert …",
@@ -2666,6 +2675,7 @@
       "title": "Termin anlegen"
     },
     "promoteToEvent": "Als Ereignis erstellen",
+    "promoteToEventHint": "Legt aus diesem Termin ein Ereignis an.",
     "promoteToEventAfterStart": "Erst ab Beginn des Termins möglich",
     "archived": {
       "badge": "Archiviert"
@@ -2865,14 +2875,13 @@
       "notes": "Hinweise",
       "maxParticipants": "Maximale Teilnehmerzahl",
       "hasExam": "Mit Prüfung",
-      "requiresHomeOrgApproval": "Freigabe der Hauptorg erforderlich",
+      "requiresHomeOrgApproval": "Freigabe durch die Hauptorganisation der Teilnehmer erforderlich",
       "registrationStart": "Anmeldebeginn",
       "registrationEnd": "Anmeldeschluss",
       "courseStart": "Kursbeginn"
     },
     "create": {
       "draftTitle": "Lehrgangsangebot anlegen",
-      "noOfferableTypes": "Für diese Organisation sind keine Lehrgangstypen am Standard ausgewählt oder im Katalog verfügbar.",
       "success": "Lehrgangsangebot angelegt."
     },
     "actions": {
@@ -2880,7 +2889,6 @@
       "publish": "Veröffentlichen",
       "publishHint": "Angebot für Anmeldungen freigeben.",
       "publishBlocked": {
-        "registrationPeriod": "Anmeldezeitraum fehlt.",
         "sessions": "Mindestens ein Termin ist erforderlich.",
         "registrationBeforeFirstSession": "Anmeldung muss vor dem ersten Termin enden.",
         "examSession": "Bei Prüfung ist ein Prüfungstermin erforderlich.",
@@ -3376,7 +3384,9 @@
     },
     "orgDecision": {
       "grant": "Ernennen",
+      "grantHint": "Erteilt die Ernennung für einen festzulegenden Zeitraum.",
       "revoke": "Entziehen",
+      "revokeHint": "Beendet die aktuelle Ernennung zu einem festzulegenden Enddatum.",
       "grantModalTitle": "Ernennen",
       "grantModalDescription": "Zeitraum für {{name}} festlegen.",
       "revokeModalTitle": "Ernennung beenden",

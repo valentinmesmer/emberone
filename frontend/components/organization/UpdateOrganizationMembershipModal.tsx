@@ -10,10 +10,9 @@ import { useCallback } from 'react';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
-import { useToast } from '@/components/ui/toast';
 import { useFormModal } from '@/hooks/useFormModal';
 import { useTranslation } from '@/hooks/useTranslation';
-import { validateRequiredFields, validateStartNotInFuture } from '@/lib/utils';
+import { formBlockers } from '@/lib/utils';
 import {
   formatToLocalDateTime,
   getOrganizationWallClockNow,
@@ -40,7 +39,6 @@ export function UpdateOrganizationMembershipModal({
   isLoading = false,
 }: UpdateOrganizationMembershipModalProps) {
   const t = useTranslation();
-  const { showError } = useToast();
 
   const getInitialData = useCallback((): UpdateUserOrganizationMembershipRequest => {
     return {
@@ -56,19 +54,7 @@ export function UpdateOrganizationMembershipModal({
   const handleUpdate = async () => {
     if (!membership) return;
 
-    if (
-      !validateRequiredFields(
-        { startDate: formData.startDate || '' },
-        t,
-        showError,
-        'common.validation.fillRequired',
-      )
-    ) {
-      return;
-    }
-    if (!validateStartNotInFuture(formData.startDate, t, showError)) {
-      return;
-    }
+    if (blockers.length > 0) return;
 
     try {
       await onUpdate({
@@ -89,7 +75,12 @@ export function UpdateOrganizationMembershipModal({
     ? t('common.validation.startNotInFuture')
     : undefined;
 
-  const isValid = () => formData.startDate.trim() !== '' && !isStartInTheFuture(formData.startDate);
+  const blockers = formBlockers([
+    [
+      t('userManagement.organizationMembership.startDate'),
+      formData.startDate.trim() !== '' && !isStartInTheFuture(formData.startDate),
+    ],
+  ]);
 
   return (
     <Modal
@@ -101,7 +92,7 @@ export function UpdateOrganizationMembershipModal({
         <ModalFooter
           onCancel={handleClose}
           onSave={handleUpdate}
-          isValid={isValid()}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }

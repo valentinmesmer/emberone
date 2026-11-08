@@ -6,7 +6,7 @@
 
 'use client';
 
-import { PencilLine } from 'lucide-react';
+import { Ban, MessageSquareWarning, PencilLine, Undo2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { WorkflowApprovalActionsSection } from '@/components/my-area/workflows/WorkflowApprovalActionsSection';
@@ -15,6 +15,7 @@ import { WorkflowCommentsSection } from '@/components/my-area/workflows/Workflow
 import { WorkflowEditInputModalHost } from '@/components/my-area/workflows/WorkflowEditInputModalHost';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { WorkflowMediaSection } from '@/components/my-area/workflows/WorkflowMediaSection';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -48,6 +49,7 @@ import {
   useWorkflowAttachments,
   useWorkflowDocumentPromotionPreview,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { formatDateTime } from '@/lib/utils/date';
 import { isActiveMemberOfOrganizationGroup } from '@/lib/utils/membership';
 import {
@@ -567,84 +569,43 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
         canComment={canCommentOnWorkflow}
       />
 
-      {canEditInput && !isAwaitingInputChange ? (
-        <Card className="p-3 sm:p-4">
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t('myArea.workflowDetail.editInputHint')}
-            </p>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              fullWidth="responsive"
-              onClick={() => setEditInputOpen(true)}
-            >
-              {t('myArea.workflowDetail.editInput')}
-            </Button>
-          </div>
-        </Card>
-      ) : null}
-
-      {canRequestInputChange ? (
-        <Card className="p-3 sm:p-4">
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t('myArea.workflowDetail.requestInputChangeHint')}
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              fullWidth="responsive"
-              onClick={() => {
-                setRequestChangeMessage('');
-                setRequestChangeOpen(true);
-              }}
-            >
-              {t('myArea.workflowDetail.requestInputChange')}
-            </Button>
-          </div>
-        </Card>
-      ) : null}
-
-      {canWithdrawInputChange ? (
-        <Card className="p-3 sm:p-4">
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t('myArea.workflowDetail.withdrawInputChangeHint')}
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              fullWidth="responsive"
-              onClick={() => setWithdrawInputChangeOpen(true)}
-            >
-              {t('myArea.workflowDetail.withdrawInputChange')}
-            </Button>
-          </div>
-        </Card>
-      ) : null}
-
-      {isOpener && isActiveWorkflow ? (
-        <Card className="p-3 sm:p-4">
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-[var(--text-secondary)]">
-              {t('myArea.workflowDetail.cancelHint')}
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              fullWidth="responsive"
-              onClick={() => setCancelOpen(true)}
-            >
-              {t('myArea.workflowDetail.cancelWorkflow')}
-            </Button>
-          </div>
-        </Card>
-      ) : null}
+      <ActionsSection>
+        {canEditInput && !isAwaitingInputChange ? (
+          <ListRow
+            leading={<ActionRowIcon icon={PencilLine} />}
+            title={t('myArea.workflowDetail.editInput')}
+            subtitle={t('myArea.workflowDetail.editInputHint')}
+            onClick={() => setEditInputOpen(true)}
+          />
+        ) : null}
+        {canRequestInputChange ? (
+          <ListRow
+            leading={<ActionRowIcon icon={MessageSquareWarning} />}
+            title={t('myArea.workflowDetail.requestInputChange')}
+            subtitle={t('myArea.workflowDetail.requestInputChangeHint')}
+            onClick={() => {
+              setRequestChangeMessage('');
+              setRequestChangeOpen(true);
+            }}
+          />
+        ) : null}
+        {canWithdrawInputChange ? (
+          <ListRow
+            leading={<ActionRowIcon icon={Undo2} />}
+            title={t('myArea.workflowDetail.withdrawInputChange')}
+            subtitle={t('myArea.workflowDetail.withdrawInputChangeHint')}
+            onClick={() => setWithdrawInputChangeOpen(true)}
+          />
+        ) : null}
+        {isOpener && isActiveWorkflow ? (
+          <ListRow
+            leading={<ActionRowIcon icon={Ban} />}
+            title={t('myArea.workflowDetail.cancelWorkflow')}
+            subtitle={t('myArea.workflowDetail.cancelHint')}
+            onClick={() => setCancelOpen(true)}
+          />
+        ) : null}
+      </ActionsSection>
 
       <WorkflowEditInputModalHost
         workflow={wf}
@@ -683,7 +644,12 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
           <ModalFooter
             onCancel={() => setRequestChangeOpen(false)}
             onSave={() => void handleRequestInputChange()}
-            isValid={requestChangeMessage.trim().length > 0}
+            blockers={formBlockers([
+              [
+                t('myArea.workflowDetail.requestInputChangeMessageLabel'),
+                requestChangeMessage.trim().length > 0,
+              ],
+            ])}
             isLoading={requestInputChangeMutation.isPending}
             saveText={t('myArea.workflowDetail.requestInputChangeSubmit')}
           />
@@ -731,7 +697,12 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
           <ModalFooter
             onCancel={() => setRejectOpen(false)}
             onSave={() => void handleRejectSubmit()}
-            isValid={!mapsRejectToInputChange || rejectComment.trim().length > 0}
+            blockers={formBlockers([
+              [
+                t('myArea.workflowDetail.requestInputChangeMessageLabel'),
+                !mapsRejectToInputChange || rejectComment.trim().length > 0,
+              ],
+            ])}
             isLoading={decideMutation.isPending}
             saveText={t(
               mapsRejectToInputChange

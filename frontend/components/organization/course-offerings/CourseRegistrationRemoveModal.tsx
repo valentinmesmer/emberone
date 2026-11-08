@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useRemoveCourseRegistration } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import type { CourseRegistrationDto } from '@/types/courseOffering';
 
 interface Props {
@@ -57,7 +58,9 @@ export function CourseRegistrationRemoveModal({
       <ModalFooter
         onCancel={onClose}
         saveText={t('courseOfferings.registrations.removeConfirm')}
-        isValid={reason.trim().length > 0}
+        blockers={formBlockers([
+          [t('courseOfferings.registrations.removeReasonLabel'), reason.trim() !== ''],
+        ])}
         isLoading={remove.isPending}
         onSave={() => void save()}
       />

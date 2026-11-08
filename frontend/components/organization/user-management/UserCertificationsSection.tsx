@@ -44,6 +44,7 @@ import {
   useUserCertificationAssignments,
   useUserCertificationStatus,
 } from '@/lib/store';
+import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 import { PermissionTypeEnum } from '@/types/permission';
 import type { WorkflowDto } from '@/types/workflow';
@@ -107,7 +108,9 @@ export function UserCertificationsSection({
     });
   }, [isAddOpen, options]);
 
-  const canSubmit = selectedIds.length > 0 && options.length > 0 && !createAssignment.isPending;
+  const blockers = formBlockers([
+    [t('certifications.assign.definitionLabel'), selectedIds.length > 0],
+  ]);
 
   const statusLabel = (s: CertificationStatus) => t(`certifications.status.${s}`);
   const workflowTitle = (workflow: WorkflowDto) =>
@@ -127,7 +130,7 @@ export function UserCertificationsSection({
   };
 
   const handleCreate = async () => {
-    if (selectedIds.length === 0) return;
+    if (blockers.length > 0) return;
     try {
       for (const tenantCertDefinitionId of selectedIds) {
         await createAssignment.mutateAsync({
@@ -260,7 +263,7 @@ export function UserCertificationsSection({
             <ModalFooter
               onCancel={onAddClose}
               onSave={() => void handleCreate()}
-              isValid={canSubmit}
+              blockers={blockers}
               isLoading={createAssignment.isPending}
               saveText={t('certifications.assign.action')}
               showSave

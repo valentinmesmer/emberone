@@ -5,16 +5,16 @@
  */
 
 import type { QueryClient } from '@tanstack/react-query';
-import { emitNotificationCreated } from '@/lib/notification/realtimeToast';
 import { emitManagementActivationExpired } from '@/lib/management/activationExpiry';
+import { emitNotificationCreated } from '@/lib/notification/realtimeToast';
 import { notifyPermissionsChanged } from '@/lib/permission/permissionsRealtime';
 import { invalidateServerCacheTopic } from '@/lib/store/cache-invalidation';
 import { invalidateAfterEventAttendanceChange } from '@/lib/store/queries/eventAttendance';
+import { managementKeys } from '@/lib/store/queries/management';
 import { applyNotificationCreated } from '@/lib/store/queries/notifications';
 import { onboardingInvitationKeys } from '@/lib/store/queries/onboardingInvitation';
 import { organizationOpenWorkflowKeys } from '@/lib/store/queries/organizationOpenWorkflows';
 import { organizationUserWorkflowKeys } from '@/lib/store/queries/organizationUserWorkflows';
-import { managementKeys } from '@/lib/store/queries/management';
 import { invalidateAfterOrgMembershipChange } from '@/lib/store/queries/userOrganizationMembership';
 import { workflowKeys } from '@/lib/store/queries/workflows';
 import { EventType } from '@/types/event';

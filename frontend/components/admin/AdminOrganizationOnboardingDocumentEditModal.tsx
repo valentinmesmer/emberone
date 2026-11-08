@@ -23,6 +23,7 @@ import {
   type OnboardingDocumentFulfillmentMode,
   type OrganizationOnboardingDocumentDefinitionDto,
 } from '@/lib/api/adminOrganizationOnboardingDocuments';
+import { formBlockers } from '@/lib/utils';
 import { downloadBlob } from '@/lib/utils/downloadBlob';
 
 export interface AdminOrganizationOnboardingDocumentEditModalProps {
@@ -87,10 +88,15 @@ function AdminOrganizationOnboardingDocumentEditModalBody({
   const hasFile = hasTemplate || pendingFile != null;
   const requiresFile = !hasTemplate;
 
-  const isValid =
-    name.trim().length > 0 &&
-    abbreviation.trim().length > 0 &&
-    (!requiresFile || pendingFile != null);
+  const blockers = formBlockers([
+    [t('admin.tenantStandards.onboardingDocuments.abbreviationLabel'), abbreviation.trim() !== ''],
+    [t('admin.standards.name'), name.trim() !== ''],
+    [t('admin.tenantStandards.onboardingDocuments.fulfillmentModeLabel'), Boolean(fulfillmentMode)],
+    [
+      t('admin.tenantStandards.onboardingDocuments.templateLabel'),
+      !requiresFile || pendingFile != null,
+    ],
+  ]);
 
   const buildPayload = (nextActive: boolean) => ({
     abbreviation: abbreviation.trim(),
@@ -102,7 +108,7 @@ function AdminOrganizationOnboardingDocumentEditModalBody({
   });
 
   const handleSave = async () => {
-    if (!isValid) return;
+    if (blockers.length > 0) return;
     setBusy(true);
     try {
       const willUpload = pendingFile != null;
@@ -219,7 +225,7 @@ function AdminOrganizationOnboardingDocumentEditModalBody({
           cancelText={t('common.cancel')}
           onSave={() => void handleSave()}
           saveText={t('common.save')}
-          isValid={isValid}
+          blockers={blockers}
           isLoading={busy}
         />
       }
@@ -296,7 +302,7 @@ function AdminOrganizationOnboardingDocumentEditModalBody({
             files={pendingFile ? [pendingFile] : []}
             onChange={(files) => setPendingFile(files[0] ?? null)}
             disabled={busy}
-            required
+            required={requiresFile}
             chooseLabel={t('common.attachments.chooseFile')}
           />
           {requiresFile ? (

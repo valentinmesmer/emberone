@@ -92,9 +92,9 @@ export type {
   TranslationFunction as ValidationTranslationFunction,
 } from './validation';
 export {
+  formBlockers,
   isOptionalPositiveInteger,
   validateDateRange,
-  validateRequiredFields,
   validateStartNotInFuture,
 } from './validation';
 export { workflowTypeTranslationKey } from './workflowLabels';

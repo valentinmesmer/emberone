@@ -11,15 +11,9 @@ import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Select } from '@/components/ui/select';
-import { useToast } from '@/components/ui/toast';
 import { useFormModal } from '@/hooks/useFormModal';
 import { useTranslation } from '@/hooks/useTranslation';
-import {
-  getGroupDisplayName,
-  getMembershipTypeOptions,
-  validateDateRange,
-  validateStartNotInFuture,
-} from '@/lib/utils';
+import { formBlockers, getGroupDisplayName, getMembershipTypeOptions } from '@/lib/utils';
 import {
   getOrganizationWallClockNow,
   isEndNotAfterStart,
@@ -47,7 +41,6 @@ export function AssignUserToGroupModal({
   isLoading = false,
 }: AssignUserToGroupModalProps) {
   const t = useTranslation();
-  const { showError } = useToast();
 
   const getInitialData = useCallback((): CreateUserOrganizationGroupMembershipRequest => {
     return {
@@ -62,19 +55,7 @@ export function AssignUserToGroupModal({
   const { formData, setFormData, reset } = useFormModal(getInitialData, isOpen, true, [userId]);
 
   const handleAssign = async () => {
-    // Validate required fields
-    if (formData.organizationGroupId === 0 || !formData.startDate || !formData.membershipType) {
-      showError(t('common.validation.fillRequired'));
-      return;
-    }
-
-    // Validate end date is after start date if provided
-    if (!validateDateRange(formData.startDate, formData.endDate, t, showError)) {
-      return;
-    }
-    if (!validateStartNotInFuture(formData.startDate, t, showError)) {
-      return;
-    }
+    if (blockers.length > 0) return;
 
     try {
       await onAssign(formData);
@@ -101,12 +82,18 @@ export function AssignUserToGroupModal({
     ? t('common.validation.startNotInFuture')
     : undefined;
 
-  const isValid = () =>
-    formData.organizationGroupId > 0 &&
-    formData.startDate.trim() !== '' &&
-    !isStartInTheFuture(formData.startDate) &&
-    formData.membershipType !== undefined &&
-    (!formData.endDate || !isEndNotAfterStart(formData.startDate, formData.endDate));
+  const blockers = formBlockers([
+    [t('userManagement.groupMembership.organizationGroup'), formData.organizationGroupId > 0],
+    [t('userManagement.groupMembership.membershipType'), formData.membershipType !== undefined],
+    [
+      t('userManagement.groupMembership.startDate'),
+      formData.startDate.trim() !== '' && !isStartInTheFuture(formData.startDate),
+    ],
+    [
+      t('userManagement.groupMembership.endDate'),
+      !formData.endDate || !isEndNotAfterStart(formData.startDate, formData.endDate),
+    ],
+  ]);
 
   const membershipTypeOptions = getMembershipTypeOptions(t);
 
@@ -125,7 +112,7 @@ export function AssignUserToGroupModal({
         <ModalFooter
           onCancel={handleClose}
           onSave={handleAssign}
-          isValid={isValid()}
+          blockers={blockers}
           isLoading={isLoading}
         />
       }
