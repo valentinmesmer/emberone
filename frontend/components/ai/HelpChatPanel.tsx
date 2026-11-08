@@ -16,6 +16,7 @@ import { Modal } from '@/components/ui/modal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type HelpChatActionTarget, resolveHelpChatActionTarget } from '@/lib/ai/helpChatActions';
 import { useAiCapabilities, useHelpChat, useSelf } from '@/lib/store';
+import { cn } from '@/lib/utils/cn';
 import { workflowTypeTranslationKey } from '@/lib/utils/workflowLabels';
 import {
   HELP_CHAT_MAX_MESSAGE_LENGTH,
@@ -170,17 +171,35 @@ function HelpChatPanelContent() {
       <button
         type="button"
         onClick={openChat}
-        className="fixed right-4 bottom-[calc(var(--app-mobile-bottom-safe)+0.5rem)] z-40 inline-flex h-12 items-center gap-2 rounded-full bg-[var(--fire-red)] px-4 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-[var(--fire-red-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--focus-ring-offset)] xl:right-8 xl:bottom-8"
+        aria-label={t('ai.helpChat.open')}
+        data-help-chat-fab
+        className={cn(
+          // Mobile-first: round 52px icon button above the tab bar; label appears from sm up.
+          // z-30 keeps it below the install hint (z-50) and toasts (z-200); it also lifts
+          // itself above the install hint via --app-chat-lift.
+          'fixed right-4 z-30 inline-flex h-13 w-13 items-center justify-center gap-2 rounded-full',
+          'bg-[var(--fire-red)] text-sm font-semibold text-white shadow-lg shadow-black/20',
+          'bottom-[calc(var(--app-mobile-bottom-safe)+var(--app-chat-lift,0px))]',
+          'transition-[colors,transform,bottom] duration-200 hover:bg-[var(--fire-red-dark)] active:scale-95',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--focus-ring-offset)]',
+          'sm:w-auto sm:px-5 xl:right-8 xl:bottom-8',
+        )}
       >
-        <MessageCircleQuestion className="h-5 w-5" aria-hidden />
+        <MessageCircleQuestion className="h-6 w-6 sm:h-5 sm:w-5" aria-hidden />
         <span className="hidden sm:inline">{t('ai.helpChat.open')}</span>
-        <span className="sm:hidden sr-only">{t('ai.helpChat.open')}</span>
       </button>
 
-      <Modal isOpen={open} onClose={() => setOpen(false)} title={t('ai.helpChat.title')} size="md">
-        <div className="flex flex-col gap-3">
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title={t('ai.helpChat.title')}
+        size="md"
+        className="max-sm:h-[100dvh] sm:h-[40rem]"
+        bodyClassName="flex flex-col overflow-hidden px-0 py-0 sm:px-0 sm:py-0"
+      >
+        <div className="flex min-h-0 flex-1 flex-col">
           {entries.length > 0 && !limitReached ? (
-            <div className="flex justify-end">
+            <div className="flex shrink-0 justify-end border-b border-[var(--border-color)] px-4 py-1.5 sm:px-6">
               <Button
                 type="button"
                 variant="ghost"
@@ -192,21 +211,27 @@ function HelpChatPanelContent() {
               </Button>
             </div>
           ) : null}
-          <div className="max-h-[55vh] space-y-3 overflow-y-auto" aria-live="polite">
+          <div
+            className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
+            aria-live="polite"
+          >
             {entries.length === 0 ? (
               <div className="space-y-4 py-2">
-                <p className="text-sm text-[var(--text-secondary)]">{t('ai.helpChat.intro')}</p>
+                <p className="text-base text-[var(--text-secondary)] sm:text-sm">
+                  {t('ai.helpChat.intro')}
+                </p>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-[var(--text-secondary)]">
                     {t('ai.helpChat.suggestionsTitle')}
                   </p>
-                  <div className="flex flex-col items-start gap-2">
+                  <div className="flex flex-col gap-2">
                     {suggestions.map((key) => (
                       <Button
                         key={key}
                         type="button"
-                        size="sm"
+                        size="md"
                         variant="secondary"
+                        className="h-auto min-h-11 w-full justify-start whitespace-normal py-2.5 text-left"
                         disabled={chat.isPending}
                         onClick={() => void send(t(`ai.helpChat.suggestions.${key}`))}
                       >
@@ -223,8 +248,8 @@ function HelpChatPanelContent() {
                 key={index}
                 className={
                   entry.role === 'user'
-                    ? 'ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-[var(--surface-soft)] px-4 py-2.5 text-sm'
-                    : 'mr-auto w-fit max-w-[95%] rounded-2xl rounded-bl-md border border-[var(--border-color)] px-4 py-3 text-sm'
+                    ? 'ml-auto w-fit max-w-[88%] rounded-2xl rounded-br-md bg-[var(--surface-soft)] px-4 py-2.5 text-[15px] leading-6 sm:text-sm sm:leading-5'
+                    : 'mr-auto w-fit max-w-[95%] rounded-2xl rounded-bl-md border border-[var(--border-color)] px-4 py-3 text-[15px] leading-6 sm:text-sm sm:leading-5'
                 }
               >
                 {entry.role === 'assistant' ? (
@@ -250,8 +275,9 @@ function HelpChatPanelContent() {
                                 <Button
                                   key={option.id}
                                   type="button"
-                                  size="sm"
+                                  size="md"
                                   variant="secondary"
+                                  className="min-h-11"
                                   onClick={() => navigate(option.href)}
                                 >
                                   {option.name}
@@ -263,7 +289,12 @@ function HelpChatPanelContent() {
                       }
                       return (
                         <div key={key}>
-                          <Button type="button" size="sm" onClick={() => runAction(action, target)}>
+                          <Button
+                            type="button"
+                            size="md"
+                            className="min-h-11 w-full sm:w-auto"
+                            onClick={() => runAction(action, target)}
+                          >
                             {actionLabel(action, target)}
                           </Button>
                         </div>
@@ -291,7 +322,7 @@ function HelpChatPanelContent() {
             <div ref={endRef} />
           </div>
 
-          <div className="space-y-2">
+          <div className="shrink-0 space-y-2 border-t border-[var(--border-color)] bg-[var(--card-bg)] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
             {limitReached ? (
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-3">
                 <p className="text-sm text-[var(--text-secondary)]">
@@ -307,7 +338,7 @@ function HelpChatPanelContent() {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-2 transition-colors focus-within:border-[var(--fire-red)] focus-within:ring-2 focus-within:ring-[var(--focus-ring)]">
+              <div className="flex items-end gap-2 rounded-3xl border border-[var(--border-color)] bg-[var(--card-bg)] p-1.5 transition-colors focus-within:border-[var(--fire-red)] focus-within:ring-2 focus-within:ring-[var(--focus-ring)]">
                 <textarea
                   ref={inputRef}
                   aria-label={t('ai.helpChat.inputLabel')}
@@ -315,7 +346,7 @@ function HelpChatPanelContent() {
                   maxLength={HELP_CHAT_MAX_MESSAGE_LENGTH}
                   rows={1}
                   placeholder={t('ai.helpChat.placeholder')}
-                  className="field-sizing-content max-h-32 min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-5 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none"
+                  className="field-sizing-content max-h-32 min-w-0 flex-1 resize-none bg-transparent px-3 py-2.5 text-base leading-5 sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none"
                   onChange={(event) => setDraft(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && !event.shiftKey) {
@@ -326,8 +357,8 @@ function HelpChatPanelContent() {
                 />
                 <Button
                   type="button"
-                  size="sm"
-                  className="w-9 shrink-0 px-0"
+                  size="md"
+                  className="h-10 w-10 shrink-0 rounded-full px-0"
                   icon={<ArrowUp className="h-4 w-4" aria-hidden />}
                   aria-label={t('ai.helpChat.send')}
                   onClick={() => void send()}
@@ -338,7 +369,7 @@ function HelpChatPanelContent() {
                 </Button>
               </div>
             )}
-            <p className="px-1 text-center text-xs text-[var(--text-secondary)]">
+            <p className="px-1 text-center text-[11px] leading-4 text-[var(--text-secondary)]">
               {t('ai.helpChat.privacyHint')}
             </p>
           </div>

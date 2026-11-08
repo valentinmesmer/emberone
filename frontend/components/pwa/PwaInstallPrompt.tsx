@@ -134,6 +134,16 @@ export function PwaInstallPrompt() {
     }
   };
 
+  const shown = visible && !!mode && !isChromeHidden(pathname);
+
+  // Lift floating actions (help chat) above the hint while it is on screen.
+  useEffect(() => {
+    if (!shown) return undefined;
+    const root = document.documentElement;
+    root.setAttribute('data-pwa-prompt', '');
+    return () => root.removeAttribute('data-pwa-prompt');
+  }, [shown]);
+
   // Hide on auth/setup chrome without clearing session state - returns when leaving those routes.
   if (!visible || !mode || isChromeHidden(pathname)) return null;
 
@@ -144,7 +154,7 @@ export function PwaInstallPrompt() {
       role="status"
       aria-live="polite"
       className={cn(
-        'fixed inset-x-3 z-40 flex items-center gap-3 xl:hidden',
+        'fixed inset-x-3 z-50 flex items-center gap-3 xl:hidden',
         // Sit just above the mobile bottom chrome (tabs).
         'bottom-[var(--app-mobile-bottom-safe)]',
         'rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-2.5 shadow-[var(--interactive-shadow-strong)]',
