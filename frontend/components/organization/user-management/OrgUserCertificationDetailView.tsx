@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { CertificationDetailStatusCard } from '@/components/certifications/CertificationDetailStatusCard';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -39,6 +40,7 @@ import {
   getOrganizationUserCertificationRecordDetailPath,
   getOrganizationUserWorkflowDetailPath,
 } from '@/lib/navigation/userManagementSections';
+import { readString } from '@/lib/ai/extractionFields';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateCertificationRecord,
@@ -361,6 +363,24 @@ export function OrgUserCertificationDetailView({
             optionalLabel={
               attachmentRequired ? undefined : t('certifications.submit.attachmentsOptional')
             }
+          />
+          <AiExtractionAssist
+            proofType="CERTIFICATION_RECORD"
+            target={{ organizationId, userId }}
+            files={files}
+            selectionId={definitionId}
+            requiresSelection
+            disabled={createRecord.isPending || uploadDocument.isPending}
+            fieldLabels={{
+              completedDate: t('certifications.record.completedDateLabel'),
+              tenantCertDefinitionId: t('certifications.submit.definitionLabel'),
+            }}
+            onApply={(fields) => {
+              const date = readString(fields, 'completedDate');
+              if (!date) return [];
+              setCompletedDate(date);
+              return ['completedDate'];
+            }}
           />
         </div>
       </Modal>

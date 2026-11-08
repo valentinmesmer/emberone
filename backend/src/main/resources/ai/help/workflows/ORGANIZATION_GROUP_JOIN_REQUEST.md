@@ -1,0 +1,1 @@
+Join a group ("{myArea}" > "{masterData}", organizations section): request to join a custom group of an organization the user is an active member of; the organization owning the group approves. Joining the leadership group is not possible this way.

@@ -12,6 +12,7 @@ export * from './queries/adminCourseOfferingTypes';
 export * from './queries/adminLeadershipGroup';
 export * from './queries/adminLists';
 export * from './queries/adminManagementAudience';
+export * from './queries/ai';
 export * from './queries/appointments';
 export * from './queries/certifications';
 export * from './queries/courseOfferings';

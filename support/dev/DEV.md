@@ -73,6 +73,28 @@ Redis Insight: Verbindung einmalig anlegen, mit Hostnamen aus dem Docker-Netzwer
 
 Lädt `backend/.env` und startet `./gradlew bootRun`. API: <http://localhost:8080>, OpenAPI unter `/swagger-ui.html` (`SPRINGDOC_ENABLED=true`). In der IDE: `backend/.env` als Env-Datei der Run-Konfiguration nutzen, oder `./support/dev/setup.sh --intellij`.
 
+### KI-Assistenz lokal (optional)
+
+Standardmäßig aus. Für Hilfe-Chat und „Aus Dokument ausfüllen“ gegen ein lokales Modell:
+
+```bash
+ollama pull gemma4          # Text und Bild (Vision)
+ollama serve                # falls nicht schon aktiv, lauscht auf localhost:11434
+```
+
+In `backend/.env` ergänzen und das Backend neu starten:
+
+```bash
+EMBERONE_AI_ENABLED=true
+EMBERONE_AI_BASE_URL=http://localhost:11434/v1
+# optional: EMBERONE_AI_MODELS_TEXT / EMBERONE_AI_MODELS_VISION (Default gemma4), EMBERONE_AI_TIMEOUT (Default 120s),
+#   EMBERONE_AI_RATE_LIMIT_PER_MINUTE (Default 20), EMBERONE_AI_REASONING_EFFORT (Default none; leer = nicht senden)
+```
+
+Statt Ollama geht jeder OpenAI-kompatible Anbieter (z. B. für eine Showcase-Umgebung). Dann zusätzlich `EMBERONE_AI_BASE_URL` des Anbieters, `EMBERONE_AI_API_KEY` und die Modelle setzen; ein Vision-fähiges Modell kann für Text und Bild gleichzeitig eingetragen werden. Lehnt der Anbieter das JSON-Schema ab, hilft `EMBERONE_AI_STRUCTURED_OUTPUT=JSON_OBJECT`; lehnt er `reasoning_effort` ab, `EMBERONE_AI_REASONING_EFFORT` leer setzen.
+
+`GET /api/v1/self/ai/capabilities` zeigt, was für den angemeldeten User verfügbar ist; das Frontend blendet Chat und Button nur dann ein. Ein lokales Modell auf CPU/Apple Silicon antwortet in Sekunden bis Minuten; bei Timeouts `EMBERONE_AI_TIMEOUT` erhöhen. Gelesen werden JPEG/PNG/WEBP/GIF und PDFs (bis zu drei Seiten); HEIC-Fotos vom iPhone wandelt das Frontend beim Auswählen automatisch in JPEG um. Konzept: [KI-Assistenz](../docs/concept/ai-assistance.md).
+
 ## Frontend
 
 ```bash

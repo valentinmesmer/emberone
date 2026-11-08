@@ -171,6 +171,20 @@ emberone:
     draft-retention-hours: ${EMBERONE_ATTACHMENTS_DRAFT_RETENTION_HOURS:12}
   retention:
     cron: ${EMBERONE_RETENTION_CRON:0 30 3 * * *}
+  ai:
+    # Optional AI assistance (help chat, proof extraction). Off by default; see concept ai-assistance.md.
+    enabled: ${EMBERONE_AI_ENABLED:false}
+    base-url: ${EMBERONE_AI_BASE_URL:http://localhost:11434/v1}
+    api-key: ${EMBERONE_AI_API_KEY:}
+    models:
+      text: ${EMBERONE_AI_MODELS_TEXT:gemma4}
+      vision: ${EMBERONE_AI_MODELS_VISION:gemma4}
+    # JSON_SCHEMA (response_format with schema) | JSON_OBJECT (schema in prompt)
+    structured-output: ${EMBERONE_AI_STRUCTURED_OUTPUT:JSON_SCHEMA}
+    timeout: ${EMBERONE_AI_TIMEOUT:120s}
+    rate-limit-per-minute: ${EMBERONE_AI_RATE_LIMIT_PER_MINUTE:20}
+    # Sent as reasoning_effort; "none" stops thinking models (gemma4) from cutting off the JSON. Empty = not sent
+    reasoning-effort: ${EMBERONE_AI_REASONING_EFFORT:none}
   object-storage:
     deletion-outbox-cron: ${EMBERONE_OBJECT_STORAGE_DELETION_OUTBOX_CRON:0 * * * * *}
     deletion-outbox-batch-size: ${EMBERONE_OBJECT_STORAGE_DELETION_OUTBOX_BATCH_SIZE:100}

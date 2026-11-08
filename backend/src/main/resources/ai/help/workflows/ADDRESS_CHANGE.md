@@ -1,0 +1,1 @@
+Request an address change ("{myArea}" > "{masterData}"): change the private address. A proof document is optional. The responsible unit of the main organization approves; the new address applies after approval.

@@ -1,0 +1,1 @@
+Cancel a course registration ("{myArea}" > "{courseRegistration}"): a confirmed participation is cancelled by request, approved by the offering organization and the own main organization. A still pending registration is withdrawn via its request; a waiting list place is withdrawn directly. Cancel from the list of own registrations.

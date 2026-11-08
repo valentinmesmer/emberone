@@ -7,12 +7,14 @@
 'use client';
 
 import { useState } from 'react';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { DrivingLicenseRecordFormFields } from '@/components/my-area/drivingLicenses/DrivingLicenseRecordFormFields';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readNumber, readObjectArray, readString } from '@/lib/ai/extractionFields';
 import { ApiRequestError } from '@/lib/api/client';
 import type {
   DrivingLicenseClassInput,
@@ -276,6 +278,64 @@ function DrivingLicenseRecordSubmitModalBody({
           disabled={pending}
           attachmentsInputId="driving-license-workflow-attachments"
         />
+        {isEdit ? null : (
+          <AiExtractionAssist
+            proofType="DRIVING_LICENSE_RECORD"
+            files={files}
+            disabled={pending}
+            fieldLabels={{
+              issueDate: t('drivingLicense.record.issueDateLabel'),
+              documentExpirationDate: t('drivingLicense.record.documentExpirationDateLabel'),
+              licenseNumber: t('drivingLicense.record.licenseNumberLabel'),
+              issuingAuthority: t('drivingLicense.record.issuingAuthorityLabel'),
+              classes: t('drivingLicense.classes.label'),
+            }}
+            onApply={(fields) => {
+              const applied: string[] = [];
+              const suggestedIssue = readString(fields, 'issueDate');
+              if (suggestedIssue) {
+                setIssueDate(suggestedIssue);
+                applied.push('issueDate');
+              }
+              const suggestedExpiration = readString(fields, 'documentExpirationDate');
+              if (suggestedExpiration) {
+                setDocumentExpirationDate(suggestedExpiration);
+                applied.push('documentExpirationDate');
+              }
+              const suggestedNumber = readString(fields, 'licenseNumber');
+              if (suggestedNumber) {
+                setLicenseNumber(suggestedNumber);
+                applied.push('licenseNumber');
+              }
+              const suggestedAuthority = readString(fields, 'issuingAuthority');
+              if (suggestedAuthority) {
+                setIssuingAuthority(suggestedAuthority);
+                applied.push('issuingAuthority');
+              }
+              const suggestedClasses = readObjectArray(fields, 'classes').flatMap((entry) => {
+                const definitionId = readNumber(entry, 'tenantDrivingLicenseDefinitionId');
+                if (
+                  definitionId === undefined ||
+                  !classDefinitions.some((definition) => definition.id === definitionId)
+                ) {
+                  return [];
+                }
+                return [
+                  {
+                    tenantDrivingLicenseDefinitionId: definitionId,
+                    grantDate: readString(entry, 'grantDate') ?? null,
+                    expirationDate: readString(entry, 'expirationDate') ?? null,
+                  },
+                ];
+              });
+              if (suggestedClasses.length > 0) {
+                setClasses(suggestedClasses);
+                applied.push('classes');
+              }
+              return applied;
+            }}
+          />
+        )}
       </div>
     </Modal>
   );

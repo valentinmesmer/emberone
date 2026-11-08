@@ -11,15 +11,20 @@ import com.emberone.certification.service.CertificationAssignmentService;
 import com.emberone.certification.service.CertificationCatalogService;
 import com.emberone.certification.service.CertificationRecordService;
 import com.emberone.certification.service.CertificationStatusService;
+import com.emberone.platform.ai.extraction.DocumentExtractionResult;
+import com.emberone.platform.ai.extraction.DocumentExtractionService;
 import com.emberone.platform.web.list.BoundedList;
 import com.emberone.user.service.UserService;
+import com.emberone.workflow.domain.WorkflowType;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Admin/manager certification API scoped to an organization. The path {@code organizationId} is the
@@ -35,6 +40,7 @@ public class UserCertificationOrganizationController {
     private final CertificationRecordService recordService;
     private final CertificationCatalogService catalogService;
     private final UserService userService;
+    private final DocumentExtractionService documentExtractionService;
 
     @GetMapping("/status")
     @PreAuthorize("@securityService.hasCertificationReadPermission(#organizationId)")
@@ -103,5 +109,26 @@ public class UserCertificationOrganizationController {
     public ResponseEntity<OrgCertificationCatalogDto> getAvailableCatalog(
             @PathVariable Long organizationId, @PathVariable Long userId) {
         return ResponseEntity.ok(catalogService.getCatalog(organizationId));
+    }
+
+    /**
+     * Optional AI assist for the admin form: suggests values from the uploaded proof images. Same
+     * permission as creating the record; nothing is stored.
+     */
+    @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@securityService.hasCertificationWritePermission(#organizationId)")
+    public ResponseEntity<DocumentExtractionResult> extract(
+            @PathVariable Long organizationId,
+            @PathVariable Long userId,
+            @RequestParam(value = "tenantCertDefinitionId", required = false)
+                    Long tenantCertDefinitionId,
+            @RequestParam("file") List<MultipartFile> files) {
+        userService.assertUserBelongsToOrganization(userId, organizationId);
+        return ResponseEntity.ok(
+                documentExtractionService.extractForUser(
+                        WorkflowType.CERTIFICATION_RECORD.name(),
+                        files,
+                        tenantCertDefinitionId,
+                        userId));
     }
 }

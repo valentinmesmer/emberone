@@ -9,14 +9,20 @@ package com.emberone.drivinglicense.controller;
 import com.emberone.drivinglicense.dto.*;
 import com.emberone.drivinglicense.service.DrivingLicenseCatalogService;
 import com.emberone.drivinglicense.service.DrivingLicenseRecordService;
+import com.emberone.platform.ai.extraction.DocumentExtractionResult;
+import com.emberone.platform.ai.extraction.DocumentExtractionService;
 import com.emberone.platform.web.list.BoundedList;
 import com.emberone.user.service.UserService;
+import com.emberone.workflow.domain.WorkflowType;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/auth/organizations/{organizationId}/users/{userId}/driving-license")
@@ -26,6 +32,7 @@ public class UserDrivingLicenseOrganizationController {
     private final DrivingLicenseRecordService recordService;
     private final DrivingLicenseCatalogService catalogService;
     private final UserService userService;
+    private final DocumentExtractionService documentExtractionService;
 
     @GetMapping
     @PreAuthorize("@securityService.hasDrivingLicenseReadPermission(#organizationId)")
@@ -85,5 +92,21 @@ public class UserDrivingLicenseOrganizationController {
     public ResponseEntity<OrgDrivingLicenseCatalogDto> getAvailableDefinitions(
             @PathVariable Long organizationId, @PathVariable Long userId) {
         return ResponseEntity.ok(catalogService.getAvailableDefinitionsForOrg(organizationId));
+    }
+
+    /**
+     * Optional AI assist for the admin form: suggests values from the uploaded proof images. Same
+     * permission as creating the record; nothing is stored.
+     */
+    @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@securityService.hasDrivingLicenseWritePermission(#organizationId)")
+    public ResponseEntity<DocumentExtractionResult> extract(
+            @PathVariable Long organizationId,
+            @PathVariable Long userId,
+            @RequestParam("file") List<MultipartFile> files) {
+        userService.assertUserBelongsToOrganization(userId, organizationId);
+        return ResponseEntity.ok(
+                documentExtractionService.extractForUser(
+                        WorkflowType.DRIVING_LICENSE_RECORD.name(), files, null, userId));
     }
 }

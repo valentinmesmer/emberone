@@ -81,6 +81,7 @@ Prosa auf Deutsch; Identifier (Klassen, Enums, Properties, Pfade) auf Englisch w
 | [Benachrichtigungssystem](notification-system.md) | Outbox, Typ-Registry, Kanäle, neuen Typ hinzufügen |
 | [Geplante Jobs](scheduled-jobs.md) | Alle `@Scheduled`-Jobs, Crons, `TenantBatchRunner` |
 | [Skalierbarkeit](scalability.md) | Instanzunabhängiger Betrieb, Request-Pfad, Datenwachstum |
+| [KI-Assistenz](ai-assistance.md) | Konzept: Hilfe-Chat, Nachweis-Extraktion; User-Kontext, `platform.ai` |
 
 ## Frontend
 

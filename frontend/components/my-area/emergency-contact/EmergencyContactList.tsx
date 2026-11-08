@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils/cn';
 import { EmergencyContactCard } from './EmergencyContactCard';
 import { EmergencyContactFormModal } from './EmergencyContactFormModal';
 import { useEmergencyContactReorder } from './useEmergencyContactReorder';
+import { useCreateIntent } from '@/hooks/useCreateIntent';
 
 export function EmergencyContactList() {
   const t = useTranslation();
@@ -46,6 +47,7 @@ export function EmergencyContactList() {
     setEditingContactId(null);
     setIsFormOpen(true);
   };
+  useCreateIntent(true, openAddForm);
 
   const actionsBusy =
     reorderContacts.isPending ||

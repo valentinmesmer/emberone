@@ -7,11 +7,12 @@
 'use client';
 
 import { Paperclip, Upload, X } from 'lucide-react';
-import { useId, useRef } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useFocusLastAddedListItem } from '@/hooks/useFocusLastAddedListItem';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils/cn';
+import { toUploadableFile, withHeifAccept } from '@/lib/utils/heic';
 
 export type FileInputVariant = 'field' | 'compact' | 'inline';
 
@@ -77,11 +78,27 @@ export function FileInput({
   const isField = variant === 'field';
   const hasAttachments = storedFileNames.length > 0 || files.length > 0;
 
-  const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files;
-    if (!selected?.length) return;
-    onChange(multiple ? [...files, ...Array.from(selected)] : [selected[0]]);
-    e.target.value = '';
+  const [converting, setConverting] = useState(false);
+  const [convertFailed, setConvertFailed] = useState(false);
+
+  const handleSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const selected = Array.from(input.files ?? []);
+    input.value = '';
+    if (selected.length === 0) return;
+    setConvertFailed(false);
+    setConverting(true);
+    try {
+      // iPhone photos (HEIC) become JPEG here, so every upload and AI read gets a readable image.
+      const ready = await Promise.all(
+        (multiple ? selected : selected.slice(0, 1)).map(toUploadableFile),
+      );
+      onChange(multiple ? [...files, ...ready] : ready);
+    } catch {
+      setConvertFailed(true);
+    } finally {
+      setConverting(false);
+    }
   };
 
   const handleRemove = (index: number) => {
@@ -94,7 +111,8 @@ export function FileInput({
       variant={variant === 'inline' ? 'ghost' : 'outline'}
       size={isField ? 'md' : 'sm'}
       fullWidth={isField ? true : variant === 'inline' ? 'responsive' : false}
-      disabled={disabled}
+      disabled={disabled || converting}
+      isLoading={converting}
       className={cn(variant === 'inline' && 'justify-start sm:justify-center', triggerClassName)}
       onClick={() => inputRef.current?.click()}
       icon={
@@ -131,10 +149,10 @@ export function FileInput({
         id={inputId}
         type="file"
         multiple={multiple}
-        accept={accept}
+        accept={withHeifAccept(accept)}
         className="hidden"
         disabled={disabled}
-        onChange={handleSelect}
+        onChange={(event) => void handleSelect(event)}
       />
       {readOnly ? null : triggerButton}
 
@@ -181,6 +199,16 @@ export function FileInput({
         </ul>
       ) : null}
 
+      {converting ? (
+        <p className="text-xs text-[var(--text-secondary)]" role="status">
+          {t('common.attachments.converting')}
+        </p>
+      ) : null}
+      {convertFailed ? (
+        <p className="text-sm text-red-600 dark:text-red-400 font-medium" role="alert">
+          {t('common.attachments.convertFailed')}
+        </p>
+      ) : null}
       {error ? <p className="text-sm text-red-600 dark:text-red-400 font-medium">{error}</p> : null}
     </div>
   );

@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import com.emberone.platform.ai.extraction.DocumentExtractionService;
 import com.emberone.platform.security.TokenService;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.UserDocumentSubmissionWorkflowPayload;
@@ -27,12 +28,15 @@ class UserDocumentSubmissionWorkflowControllerTest {
 
     @Mock WorkflowService workflowService;
     @Mock TokenService tokenService;
+    @Mock DocumentExtractionService documentExtractionService;
 
     UserDocumentSubmissionWorkflowController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new UserDocumentSubmissionWorkflowController(workflowService, tokenService);
+        controller =
+                new UserDocumentSubmissionWorkflowController(
+                        workflowService, tokenService, documentExtractionService);
     }
 
     @Test

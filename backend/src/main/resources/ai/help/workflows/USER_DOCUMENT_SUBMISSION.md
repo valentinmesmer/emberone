@@ -1,0 +1,1 @@
+Submit a document ("{myArea}" > "{myDocuments}"): a personal document is submitted for approval and stored in the personal archive after approval. Uploading directly into the archive is not possible. Max 10 MB per document.

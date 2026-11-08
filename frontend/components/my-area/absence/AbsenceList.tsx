@@ -28,6 +28,7 @@ import {
 } from '@/lib/store';
 import { AbsenceCard } from './AbsenceCard';
 import { AbsenceFormModal } from './AbsenceFormModal';
+import { useCreateIntent } from '@/hooks/useCreateIntent';
 
 export function AbsenceList() {
   const t = useTranslation();
@@ -57,6 +58,7 @@ export function AbsenceList() {
     setEditingAbsenceId(null);
     setIsFormOpen(true);
   };
+  useCreateIntent(canManageAbsences, openAddForm);
 
   const actionsBusy = deleteAbsence.isPending || updateAbsence.isPending || createAbsence.isPending;
 

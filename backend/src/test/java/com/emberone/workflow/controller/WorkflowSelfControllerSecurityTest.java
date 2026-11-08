@@ -16,8 +16,8 @@ import com.emberone.testsupport.SecurityTestFixtures;
 import com.emberone.testsupport.SecurityWebMvcTestConfig;
 import com.emberone.workflow.dto.WorkflowPageDto;
 import com.emberone.workflow.list.WorkflowSelfListFilterOptions;
+import com.emberone.workflow.service.BeginnableWorkflowTypeService;
 import com.emberone.workflow.service.WorkflowService;
-import com.emberone.workflow.spi.WorkflowHandlerRegistry;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ class WorkflowSelfControllerSecurityTest {
     @Autowired MockMvc mockMvc;
 
     @MockitoBean WorkflowService workflowService;
-    @MockitoBean WorkflowHandlerRegistry handlerRegistry;
+    @MockitoBean BeginnableWorkflowTypeService beginnableWorkflowTypeService;
     @MockitoBean WorkflowSelfListFilterOptions selfListFilterOptions;
 
     @MockitoBean(name = "securityService")

@@ -18,6 +18,10 @@ export function getAdminTenantDetailPath(tenantId: number): string {
   return `/admin/tenants/${tenantId}`;
 }
 
+export function getAdminTenantOrganizationsPath(tenantId: number): string {
+  return `/admin/tenants/${tenantId}/organizations`;
+}
+
 export function getAdminStandardsPath(tenantId: number): string {
   return `/admin/tenants/${tenantId}/standards`;
 }

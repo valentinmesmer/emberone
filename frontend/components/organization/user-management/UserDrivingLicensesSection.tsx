@@ -9,6 +9,7 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { DrivingLicenseClassesEditor } from '@/components/my-area/drivingLicenses/DrivingLicenseClassesEditor';
 import {
   DrivingLicensePendingWorkflowCard,
@@ -35,6 +36,7 @@ import {
   getOrganizationUserDocumentDetailPath,
   getOrganizationUserWorkflowDetailPath,
 } from '@/lib/navigation/userManagementSections';
+import { readNumber, readObjectArray, readString } from '@/lib/ai/extractionFields';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateDrivingLicense,
@@ -216,6 +218,63 @@ function UserDrivingLicenseAddModal({
           label={t('drivingLicense.record.attachmentsLabel')}
           hint={t('drivingLicense.record.attachmentsHint')}
           removeFileLabel={t('common.attachments.removeFile')}
+        />
+        <AiExtractionAssist
+          proofType="DRIVING_LICENSE_RECORD"
+          target={{ organizationId, userId }}
+          files={files}
+          disabled={createLicense.isPending || updateLicense.isPending || uploadDocument.isPending}
+          fieldLabels={{
+            issueDate: t('drivingLicense.record.issueDateLabel'),
+            documentExpirationDate: t('drivingLicense.record.documentExpirationDateLabel'),
+            licenseNumber: t('drivingLicense.record.licenseNumberLabel'),
+            issuingAuthority: t('drivingLicense.record.issuingAuthorityLabel'),
+            classes: t('drivingLicense.classes.label'),
+          }}
+          onApply={(fields) => {
+            const applied: string[] = [];
+            const suggestedIssue = readString(fields, 'issueDate');
+            if (suggestedIssue) {
+              setIssueDate(suggestedIssue);
+              applied.push('issueDate');
+            }
+            const suggestedExpiration = readString(fields, 'documentExpirationDate');
+            if (suggestedExpiration) {
+              setDocumentExpirationDate(suggestedExpiration);
+              applied.push('documentExpirationDate');
+            }
+            const suggestedNumber = readString(fields, 'licenseNumber');
+            if (suggestedNumber) {
+              setLicenseNumber(suggestedNumber);
+              applied.push('licenseNumber');
+            }
+            const suggestedAuthority = readString(fields, 'issuingAuthority');
+            if (suggestedAuthority) {
+              setIssuingAuthority(suggestedAuthority);
+              applied.push('issuingAuthority');
+            }
+            const suggestedClasses = readObjectArray(fields, 'classes').flatMap((entry) => {
+              const definitionId = readNumber(entry, 'tenantDrivingLicenseDefinitionId');
+              if (
+                definitionId === undefined ||
+                !classOptions.some((definition) => definition.id === definitionId)
+              ) {
+                return [];
+              }
+              return [
+                {
+                  tenantDrivingLicenseDefinitionId: definitionId,
+                  grantDate: readString(entry, 'grantDate') ?? null,
+                  expirationDate: readString(entry, 'expirationDate') ?? null,
+                },
+              ];
+            });
+            if (suggestedClasses.length > 0) {
+              setClasses(suggestedClasses);
+              applied.push('classes');
+            }
+            return applied;
+          }}
         />
       </div>
     </Modal>

@@ -8,12 +8,14 @@
 
 import { useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { WorkflowInputChangeRequestNote } from '@/components/my-area/workflows/WorkflowInputChangeRequestNote';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readString, readStringArray } from '@/lib/ai/extractionFields';
 import { ApiRequestError } from '@/lib/api/client';
 import { workflowsApi } from '@/lib/api/workflows';
 import { useSubmitUserDocumentSubmissionWorkflow, useUpdateWorkflowPayload } from '@/lib/store';
@@ -214,6 +216,44 @@ export function UserDocumentSubmissionRequestModal({
           required={!isEdit || existingAttachmentIds.length === 0}
           removeFileLabel={t('common.attachments.removeFile')}
         />
+
+        {isEdit ? null : (
+          <AiExtractionAssist
+            proofType="USER_DOCUMENT_SUBMISSION"
+            files={files}
+            disabled={pending}
+            fieldLabels={{
+              title: t('myArea.documents.titleLabel'),
+              description: t('myArea.documents.descriptionLabel'),
+              tags: t('myArea.documents.tagsLabel'),
+            }}
+            onApply={(fields) => {
+              const applied: string[] = [];
+              const suggestedTitle = readString(fields, 'title');
+              if (suggestedTitle) {
+                setTitle(suggestedTitle);
+                applied.push('title');
+              }
+              const suggestedDescription = readString(fields, 'description');
+              if (suggestedDescription) {
+                setDescription(suggestedDescription);
+                applied.push('description');
+              }
+              const suggestedTags = readStringArray(fields, 'tags');
+              if (suggestedTags.length > 0) {
+                setTags((current) => {
+                  const known = new Set(current.map((tag) => tag.toLowerCase()));
+                  return [
+                    ...current,
+                    ...suggestedTags.filter((tag) => !known.has(tag.toLowerCase())),
+                  ];
+                });
+                applied.push('tags');
+              }
+              return applied;
+            }}
+          />
+        )}
 
         {isEdit && existingAttachmentIds.length > 0 ? (
           <p className="text-xs text-[var(--text-secondary)]">

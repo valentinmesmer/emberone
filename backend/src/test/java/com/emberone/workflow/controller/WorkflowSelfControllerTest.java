@@ -10,10 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.emberone.platform.security.SecurityService;
 import com.emberone.platform.web.list.ListQuery;
-import com.emberone.workflow.domain.WorkflowMode;
-import com.emberone.workflow.domain.WorkflowOpenScope;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.WorkflowDto;
 import com.emberone.workflow.dto.WorkflowOpenConcurrencyKeysDto;
@@ -21,9 +18,8 @@ import com.emberone.workflow.dto.WorkflowOpenStateDto;
 import com.emberone.workflow.dto.WorkflowPageDto;
 import com.emberone.workflow.dto.WorkflowTypeCatalogDto;
 import com.emberone.workflow.list.WorkflowSelfListFilterOptions;
+import com.emberone.workflow.service.BeginnableWorkflowTypeService;
 import com.emberone.workflow.service.WorkflowService;
-import com.emberone.workflow.spi.WorkflowHandler;
-import com.emberone.workflow.spi.WorkflowHandlerRegistry;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,11 +32,8 @@ import org.springframework.http.ResponseEntity;
 class WorkflowSelfControllerTest {
 
     @Mock WorkflowService workflowService;
-    @Mock WorkflowHandlerRegistry handlerRegistry;
-    @Mock SecurityService workflowSecurityService;
+    @Mock BeginnableWorkflowTypeService beginnableWorkflowTypeService;
     @Mock WorkflowSelfListFilterOptions selfListFilterOptions;
-    @Mock WorkflowHandler<Object> allowedHandler;
-    @Mock WorkflowHandler<Object> deniedHandler;
 
     @InjectMocks WorkflowSelfController controller;
 
@@ -64,28 +57,18 @@ class WorkflowSelfControllerTest {
     }
 
     @Test
-    void getBeginnableTypesFiltersBySecurityAndIncludesCatalogFlag() {
-        when(allowedHandler.workflowType()).thenReturn(WorkflowType.NAME_CHANGE);
-        when(allowedHandler.workflowTypeId()).thenReturn(WorkflowType.NAME_CHANGE.getId());
-        when(allowedHandler.mode()).thenReturn(WorkflowMode.STATIC);
-        when(allowedHandler.allowsMultipleConcurrentOpen()).thenReturn(false);
-        when(allowedHandler.openScope()).thenReturn(WorkflowOpenScope.SELF);
-        when(allowedHandler.listedInBeginnableCatalog()).thenReturn(false);
-        when(deniedHandler.workflowTypeId()).thenReturn(WorkflowType.ADDRESS_CHANGE.getId());
-        when(handlerRegistry.all()).thenReturn(List.of(allowedHandler, deniedHandler));
-        when(workflowSecurityService.canBeginSelfServiceWorkflow(WorkflowType.NAME_CHANGE.getId()))
-                .thenReturn(true);
-        when(workflowSecurityService.canBeginSelfServiceWorkflow(
-                        WorkflowType.ADDRESS_CHANGE.getId()))
-                .thenReturn(false);
+    void getBeginnableTypesDelegatesToService() {
+        List<WorkflowTypeCatalogDto> types =
+                List.of(
+                        WorkflowTypeCatalogDto.builder()
+                                .workflowTypeId(WorkflowType.NAME_CHANGE.getId())
+                                .workflowTypeKey("NAME_CHANGE")
+                                .build());
+        when(beginnableWorkflowTypeService.listForCurrentUser()).thenReturn(types);
 
         ResponseEntity<List<WorkflowTypeCatalogDto>> response = controller.getBeginnableTypes();
 
-        assertThat(response.getBody()).hasSize(1);
-        assertThat(response.getBody().getFirst().getWorkflowTypeId())
-                .isEqualTo(WorkflowType.NAME_CHANGE.getId());
-        assertThat(response.getBody().getFirst().getWorkflowTypeKey()).isEqualTo("NAME_CHANGE");
-        assertThat(response.getBody().getFirst().isListedInBeginnableCatalog()).isFalse();
+        assertThat(response.getBody()).isEqualTo(types);
     }
 
     @Test

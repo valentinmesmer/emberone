@@ -35,6 +35,7 @@ import { courseOfferingStatusLabelKey } from '@/lib/utils/courseOffering';
 import { formatDateShort } from '@/lib/utils/date';
 import type { CourseOfferingDto } from '@/types/courseOffering';
 import { PermissionTypeEnum } from '@/types/permission';
+import { useCreateIntent } from '@/hooks/useCreateIntent';
 
 interface Props {
   organizationId: number;
@@ -86,6 +87,7 @@ export function CourseOfferingListView({ organizationId }: Props) {
   const createDraft = useCreateCourseOffering(organizationId);
 
   const [dialog, setDialog] = useState<'add' | 'templates' | 'create' | null>(null);
+  useCreateIntent(canOffer, () => setDialog('add'));
 
   if (orgLoading) {
     return <LoadingState variant="embedded" size="sm" />;

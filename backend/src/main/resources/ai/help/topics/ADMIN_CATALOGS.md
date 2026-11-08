@@ -1,0 +1,1 @@
+Admin area ("{management}") > "{tenantSettings}": tenant-wide settings and catalogs, e.g. certifications, course types, driving license classes, qualifications, organization types and request types ("{workflows}").

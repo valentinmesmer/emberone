@@ -1,0 +1,1 @@
+"{myArea}" > "{masterData}": shows name, address, contact data and memberships. Name and address are not edited directly but by request (name change, address change). Joining, leaving and changing the main organization are also requested there.

@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import com.emberone.platform.ai.extraction.DocumentExtractionService;
 import com.emberone.platform.security.TokenService;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.AddressChangeWorkflowPayload;
@@ -27,12 +28,15 @@ class AddressChangeWorkflowControllerTest {
 
     @Mock WorkflowService workflowService;
     @Mock TokenService tokenService;
+    @Mock DocumentExtractionService documentExtractionService;
 
     AddressChangeWorkflowController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new AddressChangeWorkflowController(workflowService, tokenService);
+        controller =
+                new AddressChangeWorkflowController(
+                        workflowService, tokenService, documentExtractionService);
     }
 
     @Test

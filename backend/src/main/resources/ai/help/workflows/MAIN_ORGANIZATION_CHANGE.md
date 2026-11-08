@@ -1,0 +1,1 @@
+Change the main organization ("{myArea}" > "{masterData}", organizations section): pick an organization the user is already a member of as new main organization. The current and the new main organization approve. Moving to an organization without membership requires a join request first.

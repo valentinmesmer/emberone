@@ -10,6 +10,7 @@ import { parseDate } from '@internationalized/date';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { TrainingCourseRecordEditModal } from '@/components/my-area/trainingCourses/TrainingCourseRecordEditModal';
 import { TrainingCourseSubmissionListRow } from '@/components/my-area/trainingCourses/TrainingCourseSubmissionListRow';
 import { TrainingCourseTypeSelectionField } from '@/components/my-area/trainingCourses/TrainingCourseTypeSelectionField';
@@ -32,6 +33,7 @@ import {
   getOrganizationUserTrainingCourseRecordDetailPath,
   getOrganizationUserWorkflowDetailPath,
 } from '@/lib/navigation/userManagementSections';
+import { readNumber, readNumberArray, readString } from '@/lib/ai/extractionFields';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateTrainingCourseRecord,
@@ -244,6 +246,56 @@ function UserTrainingCourseAddModal({
           label={t('trainingCourse.record.attachmentsLabel')}
           hint={t('trainingCourse.record.attachmentsHint')}
           removeFileLabel={t('common.attachments.removeFile')}
+        />
+        <AiExtractionAssist
+          proofType="TRAINING_COURSE_RECORD"
+          target={{ organizationId, userId }}
+          files={files}
+          disabled={createRecord.isPending || uploadDocument.isPending}
+          fieldLabels={{
+            tenantTrainingCourseTypeIds: t('trainingCourse.submit.typeLabel'),
+            name: t('trainingCourse.submissionName.label'),
+            startDate: t('trainingCourse.record.startDateLabel'),
+            endDate: t('trainingCourse.record.endDateLabel'),
+            location: t('trainingCourse.record.locationLabel'),
+            hours: t('trainingCourse.record.hoursLabel'),
+          }}
+          onApply={(fields) => {
+            const applied: string[] = [];
+            const typeIds = readNumberArray(fields, 'tenantTrainingCourseTypeIds').filter((id) =>
+              typeOptions.some((type) => type.id === id),
+            );
+            if (typeIds.length > 0) {
+              setSelectedTypeIds(typeIds);
+              applied.push('tenantTrainingCourseTypeIds');
+            }
+            const suggestedName = readString(fields, 'name');
+            if (suggestedName) {
+              setName(suggestedName);
+              applied.push('name');
+            }
+            const suggestedStart = readString(fields, 'startDate');
+            if (suggestedStart) {
+              setStartDate(suggestedStart);
+              applied.push('startDate');
+            }
+            const suggestedEnd = readString(fields, 'endDate');
+            if (suggestedEnd) {
+              setEndDate(suggestedEnd);
+              applied.push('endDate');
+            }
+            const suggestedLocation = readString(fields, 'location');
+            if (suggestedLocation) {
+              setLocation(suggestedLocation);
+              applied.push('location');
+            }
+            const suggestedHours = readNumber(fields, 'hours');
+            if (suggestedHours !== undefined) {
+              setHours(String(suggestedHours));
+              applied.push('hours');
+            }
+            return applied;
+          }}
         />
       </div>
     </Modal>

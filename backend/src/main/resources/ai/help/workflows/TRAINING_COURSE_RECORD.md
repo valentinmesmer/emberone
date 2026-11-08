@@ -1,0 +1,1 @@
+Submit a completed course ("{myArea}" > "{courses}"): pick one or more course types from the catalog, enter start, end and location (hours optional) and upload the proof. With several course types a name for the record is required. After approval the course appears in the own overview and can count towards qualifications.
