@@ -41,20 +41,20 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
-    implementation 'net.javacrumbs.shedlock:shedlock-spring:7.10.1'
-    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.10.1'
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:7.11.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.11.0'
     implementation 'org.thymeleaf:thymeleaf-spring6'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
 
-    implementation 'software.amazon.awssdk:s3:2.57.8'
+    implementation 'software.amazon.awssdk:s3:2.57.11'
     implementation 'io.github.openfeign:feign-okhttp:13.17'
     implementation 'io.github.openfeign:feign-jackson3:13.17'
     implementation 'io.github.openfeign:feign-core:13.17'
 
     implementation 'org.mnode.ical4j:ical4j:4.4.0'
 
-    implementation 'com.googlecode.libphonenumber:libphonenumber:9.0.42'
+    implementation 'com.googlecode.libphonenumber:libphonenumber:9.0.43'
 
     implementation 'com.github.librepdf:openpdf:3.0.5'
 
