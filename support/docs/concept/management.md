@@ -132,9 +132,9 @@ Der Admin (Global-Admin: alle Mandanten, Tenant-Admin: der eigene) sieht, **wer 
 Liste: `ListQuery` + `ManagementActivationListDefinition` + Specification (`ManagementActivationLogService`, kein eigener Zugriffspfad). Zeile nur Person (`userId`/Namen `null` = „Ehemaliges Mitglied“), M, T und `status`; Zeile verlinkt auf die Detailseite. Detail: Mandant, M, T, `status`, `activatedAt`, `validUntil`, `endedAt`/`endedBy`, `permissionTypes`, `reason`.
 
 - **Status** wird abgeleitet, nie gespeichert: `ENDED` (`endedAt` gesetzt), `EXPIRED` (offen, `validUntil` vorbei), `ACTIVE` (offen, `validUntil` in der Zukunft).
-- **Sortierung:** `activatedAt` (Standard `desc`), `validUntil`, `person` (Nachname, Vorname), `targetOrganization`. Die Namen kommen über schreibgeschützte Assoziationen an `ManagementActivation` (`user`, `managingOrganization`, `targetOrganization`, nur Lesen, Schreibpfad bleibt über die Ids).
+- **Sortierung:** `activatedAt` (Standard `desc`) und `person` (Nachname, Vorname). Die Namen kommen über schreibgeschützte Assoziationen an `ManagementActivation` (`user`, `managingOrganization`, `targetOrganization`, nur Lesen, Schreibpfad bleibt über die Ids).
 - **Suche:** Wörter müssen je in Person, Namen von M/T oder Anlass vorkommen (Left Joins, damit Zeilen gelöschter Personen auffindbar bleiben).
-- **Filter:** `tenantId` (Tenant-Admin: nur der eigene Mandant, sonst 403), `status`, `targetOrganizationId`, `managingOrganizationId` (wiederholbar, OR je Dimension). Ungültige Werte ergeben 400.
+- **Filter:** kein Standardfilter, die Liste zeigt zunächst alle Aktivierungen. `tenantId` (Tenant-Admin: nur der eigene Mandant, sonst 403), `status`, `targetOrganizationId`, `managingOrganizationId` (wiederholbar, OR je Dimension). Ungültige Werte ergeben 400.
 - **Beenden:** nur laufende Aktivierungen (offen und `validUntil` in der Zukunft), sonst 404. Die Person erhält `permissions.changed`.
 
 **Lesen global, Schreiben pro Mandant:** Die Liste liest mandantenübergreifend über die Global-Admin-Lese-Policy auf `org_management_activations` (und die gejointen `users`/`organizations`), siehe `multi-tenancy.md`. Das Beenden ist ein Schreibzugriff und läuft deshalb über den Mandantenpfad (`canAccessTenant`, Pfad-Interceptor setzt den Ziel-Mandanten), die Zeile liefert dafür `tenantId`.

@@ -7,12 +7,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useAuth } from '@/lib/auth/AuthContext';
-import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { MobileNavigationLayout } from '@/components/layout/MobileNavigationLayout';
 import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
+import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslation();

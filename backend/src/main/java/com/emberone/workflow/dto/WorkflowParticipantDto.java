@@ -27,7 +27,13 @@ public class WorkflowParticipantDto {
     private Long principalId;
     private Long organizationId;
 
-    /** Resolved from the slot organization's current workflow definition (not stored). */
+    /**
+     * The approver slot role the organization decides in (e.g. {@code CONTEXT}, {@code ADDITIONAL},
+     * {@code NEW_MAIN_ORG}); {@code CONTEXT} for user principals.
+     */
+    private String slotRole;
+
+    /** Resolved from the settings of the slot's role in the organization (not stored). */
     private boolean selfApproveAllowed;
 
     /** Resolved organization name for org-bound approver slots. */

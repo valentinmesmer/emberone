@@ -242,7 +242,7 @@ public class UserRankService {
                                 .tenantRankId(rank.getId())
                                 .configKey(rank.getConfigKey())
                                 .name(rank.getName())
-                                .abbreviation(rank.getAbbreviation())
+                                .abbreviation(rank.getConfigKey())
                                 .startDate(row.getStartDate())
                                 .reason(row.getReason())
                                 .build());
@@ -254,7 +254,7 @@ public class UserRankService {
                 .tenantRankId(row.getTenantRankId())
                 .configKey(rank != null ? rank.getConfigKey() : null)
                 .name(rank != null ? rank.getName() : null)
-                .abbreviation(rank != null ? rank.getAbbreviation() : null)
+                .abbreviation(rank != null ? rank.getConfigKey() : null)
                 .startDate(row.getStartDate())
                 .endDate(row.getEndDate())
                 .reason(row.getReason())
@@ -266,7 +266,7 @@ public class UserRankService {
                 .tenantRankId(rank.getId())
                 .configKey(rank.getConfigKey())
                 .name(rank.getName())
-                .abbreviation(rank.getAbbreviation())
+                .abbreviation(rank.getConfigKey())
                 .sortOrder(rank.getSortOrder())
                 .startDate(row.getStartDate())
                 .build();

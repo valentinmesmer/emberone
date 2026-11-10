@@ -16,7 +16,6 @@ public class TenantFunctionDto {
     String configKey;
     String name;
     String abbreviation;
-    int sortOrder;
     boolean active;
     boolean archived;
     Instant archivedAt;

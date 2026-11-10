@@ -9,6 +9,7 @@ package com.emberone.dutyfunction.service;
 import com.emberone.dutyfunction.dto.*;
 import com.emberone.dutyfunction.tenant.TenantFunction;
 import com.emberone.dutyfunction.tenant.TenantFunctionRepository;
+import com.emberone.dutyfunction.util.DutyFunctionAbbreviation;
 import com.emberone.federalstate.baseline.FunctionBaseline;
 import com.emberone.platform.domain.LifecycleFields;
 import com.emberone.platform.exception.ConflictException;
@@ -37,6 +38,11 @@ public class TenantDutyFunctionDefinitionService {
                                 .toList());
     }
 
+    @Transactional(readOnly = true)
+    public TenantFunctionDto get(long tenantId, String configKey) {
+        return withTenantContext(tenantId, () -> toDto(requireFunction(configKey)));
+    }
+
     @Transactional
     public void seedBaselineIfMissing(long tenantId, List<FunctionBaseline> items) {
         withTenantContext(
@@ -51,7 +57,6 @@ public class TenantDutyFunctionDefinitionService {
                                         .tenantId(tenantId)
                                         .configKey(item.configKey())
                                         .name(item.name())
-                                        .abbreviation(item.abbreviation())
                                         .sortOrder(item.sortOrder())
                                         .active(true)
                                         .build());
@@ -65,7 +70,8 @@ public class TenantDutyFunctionDefinitionService {
         return withTenantContext(
                 tenantId,
                 () -> {
-                    String configKey = request.getConfigKey().trim();
+                    String configKey =
+                            DutyFunctionAbbreviation.requireValid(request.getAbbreviation());
                     if (functionRepository.existsByConfigKeyAndArchivedFalse(configKey)) {
                         throw new ConflictException("Function already exists: " + configKey);
                     }
@@ -75,8 +81,7 @@ public class TenantDutyFunctionDefinitionService {
                                             .tenantId(tenantId)
                                             .configKey(configKey)
                                             .name(request.getName().trim())
-                                            .abbreviation(request.getAbbreviation().trim())
-                                            .sortOrder(request.getSortOrder())
+                                            .sortOrder(functionRepository.nextSortOrder())
                                             .active(request.isActive())
                                             .build());
                     return toDto(saved);
@@ -95,12 +100,6 @@ public class TenantDutyFunctionDefinitionService {
                     }
                     if (request.getName() != null) {
                         function.setName(request.getName().trim());
-                    }
-                    if (request.getAbbreviation() != null) {
-                        function.setAbbreviation(request.getAbbreviation().trim());
-                    }
-                    if (request.getSortOrder() != null) {
-                        function.setSortOrder(request.getSortOrder());
                     }
                     if (request.getActive() != null) {
                         function.setActive(request.getActive());
@@ -143,8 +142,7 @@ public class TenantDutyFunctionDefinitionService {
         return TenantFunctionDto.builder()
                 .configKey(function.getConfigKey())
                 .name(function.getName())
-                .abbreviation(function.getAbbreviation())
-                .sortOrder(function.getSortOrder())
+                .abbreviation(function.getConfigKey())
                 .active(function.isActive())
                 .archived(function.isArchived())
                 .archivedAt(function.getArchivedAt())

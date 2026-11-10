@@ -40,7 +40,7 @@ Tabelle `tenant_qualification_definitions`:
 | `active`, `archived` | Katalog-Filter |
 | `trainingCourses` / `certDefinitions` / `drivingLicenses` | Voraussetzungs-Links per Config Key |
 
-Mindestens eine Training-, Cert- oder Führerschein-Voraussetzung, oder `requiresOrgDecision = true`. Admin-CRUD: `AdminTenantQualificationController` → `TenantQualificationDefinitionService`.
+Mindestens eine Training-, Cert- oder Führerschein-Voraussetzung, oder `requiresOrgDecision = true`. Admin-CRUD: `AdminTenantQualificationController` → `TenantQualificationDefinitionService` (`GET /{configKey}` für die Detailseite `/admin/tenants/{id}/tenant-standards/qualifications/{configKey}`).
 
 ## Status-Zustandsautomat
 

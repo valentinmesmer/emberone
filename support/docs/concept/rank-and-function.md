@@ -15,9 +15,9 @@ Gruppenmitgliedschaft (start_date/end_date) ──► Funktion inkl. Historie (m
 
 | Entität | Bedeutung |
 |---------|-----------|
-| `tenant_ranks` | Mandanten-Katalog (Reihenfolge über `sort_order`) |
+| `tenant_ranks` | Mandanten-Katalog (Reihenfolge über `sort_order`); wie bei allen Katalogen nur `config_key` (= Kürzel), keine eigene Kürzel-Spalte |
 | `user_ranks` | Intervall `start_date`/`end_date`, optional `reason`; genau eine offene Zeile |
-| `tenant_functions` | Benannte Funktionen (Kommandant, …) |
+| `tenant_functions` | Benannte Funktionen (Kommandant, …); `config_key` = Kürzel, `sort_order` nur aus der Basis-Reihenfolge, nicht pflegbar |
 | `std_rank_selections` | Standard markiert nutzbare Dienstgrade (Admin/Clone; Vergabe nutzt aktiven Mandanten-Katalog) |
 | `std_function_selections` | Standard markiert nutzbare Funktionen für Grant-Zuordnungen |
 | `std_function_grants` | Mapping Org-Gruppe + `membership_type` → Funktion |
@@ -47,7 +47,7 @@ Frontend: `/my-area/rank`, `/organizations/[id]/ranks`. Standard-Admin: Funktion
 
 | Bereich | Pfad |
 |---------|------|
-| Katalog Admin | `AdminTenantRankController`, `AdminTenantDutyFunctionController` |
+| Katalog Admin | `AdminTenantRankController`, `AdminTenantDutyFunctionController` (je `GET /{configKey}` für die Detailseite `/admin/tenants/{id}/tenant-standards/ranks|functions/{configKey}`). Das Kürzel ist zugleich der `configKey` (wie bei Nachweisen und Lehrgängen: `RankAbbreviation`, `DutyFunctionAbbreviation`, eindeutig unter nicht archivierten Einträgen) und nach dem Anlegen nicht änderbar, weil Standards und Funktionszuordnungen den Schlüssel referenzieren. Funktionen haben keine pflegbare Reihenfolge: Neue Funktionen werden hinter die vorhandenen gehängt, die Basis-Reihenfolge bleibt. |
 | Org/Self API | `OrganizationRankController`, `UserRankOrganizationController`, `UserRankSelfController`, `UserDutyFunctionSelfController` |
 | Onboarding | `RankStepHandler` |
 | Workflow | `RankRequestWorkflowHandler`, `RankRequestWorkflowController` |

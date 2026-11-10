@@ -19,6 +19,7 @@ import com.emberone.platform.exception.ConflictException;
 import com.emberone.user.repository.UserRepository;
 import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
 import com.emberone.workflow.domain.Workflow;
+import com.emberone.workflow.domain.WorkflowRoutingDimension;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.CertificationRecordWorkflowPayload;
 import com.emberone.workflow.dto.WorkflowDocumentPromotionMetadata;
@@ -103,6 +104,21 @@ public class CertificationRecordWorkflowHandler
         return List.of(
                 WorkflowOpenConcurrencyKeys.certificationDefinition(
                         payload.getTenantCertDefinitionId()));
+    }
+
+    @Override
+    public Optional<WorkflowRoutingDimension> routingDimension() {
+        return Optional.of(WorkflowRoutingDimension.CERTIFICATION_DEFINITION);
+    }
+
+    @Override
+    public Set<Long> resolveRoutingSubjectIds(
+            WorkflowOpenContext<CertificationRecordWorkflowPayload> ctx) {
+        CertificationRecordWorkflowPayload payload = ctx.getPayload();
+        if (payload == null || payload.getTenantCertDefinitionId() == null) {
+            return Set.of();
+        }
+        return Set.of(payload.getTenantCertDefinitionId());
     }
 
     @Override

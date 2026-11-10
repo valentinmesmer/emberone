@@ -7,6 +7,7 @@
 'use client';
 
 import { Archive, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminTenantQualificationEditModal } from '@/components/admin/AdminTenantQualificationEditModal';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ import {
   type TenantQualificationDefinitionDto,
   tenantQualificationsApi,
 } from '@/lib/api/tenantQualifications';
+import { getAdminTenantQualificationDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantQualificationManagementProps {
   tenantId: number;
@@ -34,6 +36,7 @@ export function AdminTenantQualificationManagement({
   embedded = false,
 }: AdminTenantQualificationManagementProps) {
   const t = useTranslation();
+  const router = useRouter();
   const { showError, showSuccess } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -144,7 +147,10 @@ export function AdminTenantQualificationManagement({
       {definitions.map((definition) => (
         <ListRow
           key={definition.configKey}
-          onClick={definition.archived ? undefined : () => openEdit(definition)}
+          onClick={() =>
+            router.push(getAdminTenantQualificationDetailPath(tenantId, definition.configKey))
+          }
+          detailHref={getAdminTenantQualificationDetailPath(tenantId, definition.configKey)}
           title={definition.name}
           tone={definition.archived ? 'neutral' : 'default'}
           badges={

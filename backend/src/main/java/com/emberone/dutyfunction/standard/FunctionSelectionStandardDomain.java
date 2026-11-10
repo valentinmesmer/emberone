@@ -72,7 +72,7 @@ public class FunctionSelectionStandardDomain implements StandardDomain {
                                             domainKey(),
                                             function.getConfigKey(),
                                             function.getName(),
-                                            function.getAbbreviation(),
+                                            function.getConfigKey(),
                                             List.of(),
                                             Map.of("active", String.valueOf(function.isActive())),
                                             false)));

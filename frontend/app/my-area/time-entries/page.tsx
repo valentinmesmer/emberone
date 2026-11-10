@@ -7,8 +7,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { LoadingState } from '@/components/ui/loading';
 import { TimeEntryList } from '@/components/my-area/time-entries';
+import { LoadingState } from '@/components/ui/loading';
 
 export default function TimeEntriesPage() {
   return (

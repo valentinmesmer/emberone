@@ -18,7 +18,6 @@ export interface TenantRankDto {
 }
 
 export interface CreateTenantRankRequest {
-  configKey: string;
   name: string;
   abbreviation: string;
   sortOrder: number;
@@ -27,7 +26,6 @@ export interface CreateTenantRankRequest {
 
 export interface UpdateTenantRankRequest {
   name: string;
-  abbreviation: string;
   sortOrder: number;
   active: boolean;
 }
@@ -37,6 +35,10 @@ function base(tenantId: number) {
 }
 
 export const tenantRanksApi = {
+  get(tenantId: number, configKey: string): Promise<TenantRankDto> {
+    return apiClient.get<TenantRankDto>(`${base(tenantId)}/${encodeURIComponent(configKey)}`);
+  },
+
   list(tenantId: number): Promise<TenantRankDto[]> {
     return apiClient.get<TenantRankDto[]>(base(tenantId));
   },

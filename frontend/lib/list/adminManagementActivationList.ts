@@ -22,7 +22,6 @@ const statusFilter = {
     value,
     labelKey: `admin.managementActivations.status.${value}`,
   })),
-  defaultValue: ['ACTIVE'],
   countsInMenubarWhenSelected: true,
 } as const;
 
@@ -35,8 +34,7 @@ const organizationFilter = {
 } as const;
 
 /**
- * Admin activation log: search (person, organizations, reason), filters for status (default:
- * active), organization (managing or target) and (global admin) tenant. Options come from
+ * Admin activation log: search (person, organizations, reason), filters for status, organization (managing or target) and (global admin) tenant. Options come from
  * `filterOptionsSource`; statuses use static i18n keys.
  */
 function createAdminManagementActivationListDefinition(isGlobalAdmin: boolean) {
@@ -51,26 +49,8 @@ function createAdminManagementActivationListDefinition(isGlobalAdmin: boolean) {
           labelKey: 'admin.managementActivations.sort.activatedAtDesc',
         },
         { value: 'activatedAt,asc', labelKey: 'admin.managementActivations.sort.activatedAtAsc' },
-        { value: 'validUntil,desc', labelKey: 'admin.managementActivations.sort.validUntilDesc' },
-        { value: 'validUntil,asc', labelKey: 'admin.managementActivations.sort.validUntilAsc' },
         { value: 'person,asc', labelKey: 'admin.managementActivations.sort.personAsc' },
         { value: 'person,desc', labelKey: 'admin.managementActivations.sort.personDesc' },
-        {
-          value: 'managingOrganization,asc',
-          labelKey: 'admin.managementActivations.sort.managingAsc',
-        },
-        {
-          value: 'managingOrganization,desc',
-          labelKey: 'admin.managementActivations.sort.managingDesc',
-        },
-        {
-          value: 'targetOrganization,asc',
-          labelKey: 'admin.managementActivations.sort.targetAsc',
-        },
-        {
-          value: 'targetOrganization,desc',
-          labelKey: 'admin.managementActivations.sort.targetDesc',
-        },
       ],
     },
     sheetLayout: 'menubar',

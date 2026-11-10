@@ -7,13 +7,11 @@
 package com.emberone.workflow.standard;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.*;
 
 /**
  * Standard-library template for a workflow definition. {@code config_key} is the workflow type id.
- * Materialized into a per-org {@code wf_definitions} row (+ static approver orgs).
+ * Materialized into a per-org {@code wf_definitions} row.
  */
 @Entity
 @Table(
@@ -44,12 +42,4 @@ public class WorkflowDefinitionTemplate {
 
     @Column(name = "workflow_type_id", nullable = false)
     private Long workflowTypeId;
-
-    @Column(name = "static_approvers_exclusive", nullable = false)
-    @Builder.Default
-    private boolean staticApproversExclusive = false;
-
-    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<WorkflowDefinitionTemplateStaticOrg> staticOrganizations = new ArrayList<>();
 }

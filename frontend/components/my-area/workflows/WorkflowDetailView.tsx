@@ -61,6 +61,7 @@ import {
   slotHandlerStatusLine,
   slotListRowTone,
   slotOrgName,
+  slotRoleName,
   slotStatusBadge,
   sortApproverSlots,
 } from '@/lib/utils/workflowApprovalSlot';
@@ -343,7 +344,7 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
     (slot: (typeof actionableSlots)[number]['slot']) => {
       const org = slotOrgName(slot, t);
       const group = slotGroupName(slot);
-      return group ? `${org} · ${group}` : org;
+      return group ? `${org} (${group})` : org;
     },
     [t],
   );
@@ -429,7 +430,7 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
   return (
     <div className="w-full space-y-3 sm:space-y-4">
       <PageHeader
-        title={`${typeLabel} · #${wf.id}`}
+        title={`${typeLabel} #${wf.id}`}
         size="compact"
         action={
           <Badge tone={statusBadge.tone} pill>
@@ -537,25 +538,39 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
             {sortedApproverSlots.map((slot) => {
               const badge = slotStatusBadge(slot, t);
               const groupName = slotGroupName(slot);
+              const roleName = slotRoleName(slot, t, wf.workflowTypeId);
+
+              const handled = slot.claimedByUserId != null;
 
               return (
                 <ListRow
                   key={slot.id}
                   tone={slotListRowTone(slot)}
-                  title={slotOrgName(slot, t)}
-                  badges={
+                  title={
                     <>
-                      {groupName ? (
-                        <Badge tone="neutral" className="py-px text-[10px]">
-                          {groupName}
-                        </Badge>
+                      {roleName ? (
+                        <span className="mb-0.5 block text-[11px] font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+                          {roleName}
+                        </span>
                       ) : null}
-                      <Badge tone={badge.tone} pill className="py-px text-[10px]">
-                        {badge.label}
-                      </Badge>
+                      {slotOrgName(slot, t)}
                     </>
                   }
-                  subtitle={slotHandlerStatusLine(slot, t)}
+                  subtitle={
+                    groupName || handled ? (
+                      <>
+                        {groupName ? <span className="block">{groupName}</span> : null}
+                        {handled ? (
+                          <span className="block">{slotHandlerStatusLine(slot, t)}</span>
+                        ) : null}
+                      </>
+                    ) : undefined
+                  }
+                  badges={
+                    <Badge tone={badge.tone} pill className="py-px text-[10px]">
+                      {badge.label}
+                    </Badge>
+                  }
                 />
               );
             })}

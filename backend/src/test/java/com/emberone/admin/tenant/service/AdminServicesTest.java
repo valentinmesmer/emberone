@@ -6,6 +6,7 @@
 
 package com.emberone.admin.tenant.service;
 
+import static com.emberone.testsupport.SpecificationMatchers.anySpecification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -61,7 +62,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -130,7 +130,7 @@ class AdminServicesTest {
         when(tokenService.hasRole(EmberOneAppRole.GLOBAL_ADMIN.getRoleName())).thenReturn(true);
         Tenant zulu = Tenant.builder().id(2L).name("Zulu").build();
         Tenant alpha = Tenant.builder().id(1L).name("alpha").build();
-        when(tenantRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(tenantRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(alpha, zulu)));
         when(tenantMapper.toDto(zulu)).thenReturn(TenantDto.builder().id(2L).name("Zulu").build());
         when(tenantMapper.toDto(alpha))
@@ -155,7 +155,7 @@ class AdminServicesTest {
 
         Tenant tenant = Tenant.builder().id(7L).name("EmberOne").build();
         when(tokenService.getTenantId()).thenReturn(7L);
-        when(tenantRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(tenantRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(tenant)));
         when(tenantMapper.toDto(tenant)).thenReturn(TenantDto.builder().id(7L).build());
         assertThat(
@@ -297,7 +297,7 @@ class AdminServicesTest {
                         tenantAdminService.listTenants(DEFAULT_LIST_QUERY, TenantListFilter.NONE))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Unauthorized");
-        verify(tenantRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+        verify(tenantRepository, never()).findAll(anySpecification(), any(Pageable.class));
     }
 
     @Test
@@ -483,7 +483,7 @@ class AdminServicesTest {
         when(tokenService.hasRole(EmberOneAppRole.GLOBAL_ADMIN.getRoleName())).thenReturn(false);
         when(tokenService.hasRole(EmberOneAppRole.TENANT_ADMIN.getRoleName())).thenReturn(true);
         when(tokenService.getTenantId()).thenReturn(7L);
-        when(tenantRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(tenantRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         assertThat(

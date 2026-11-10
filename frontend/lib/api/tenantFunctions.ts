@@ -10,27 +10,31 @@ export interface TenantFunctionDto {
   configKey: string;
   name: string;
   abbreviation: string;
-  sortOrder: number;
   active: boolean;
   archived: boolean;
   archivedAt?: string | null;
 }
 
 export interface CreateTenantFunctionRequest {
-  configKey: string;
   name: string;
   abbreviation: string;
-  sortOrder: number;
   active: boolean;
 }
 
-export type UpdateTenantFunctionRequest = CreateTenantFunctionRequest;
+export interface UpdateTenantFunctionRequest {
+  name: string;
+  active: boolean;
+}
 
 function base(tenantId: number) {
   return `/api/v1/auth/admin/tenants/${tenantId}/functions`;
 }
 
 export const tenantFunctionsApi = {
+  get(tenantId: number, configKey: string): Promise<TenantFunctionDto> {
+    return apiClient.get<TenantFunctionDto>(`${base(tenantId)}/${encodeURIComponent(configKey)}`);
+  },
+
   list(tenantId: number): Promise<TenantFunctionDto[]> {
     return apiClient.get<TenantFunctionDto[]>(base(tenantId));
   },

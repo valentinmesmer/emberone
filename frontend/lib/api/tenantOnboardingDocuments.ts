@@ -44,6 +44,12 @@ function base(tenantId: number) {
 }
 
 export const tenantOnboardingDocumentsApi = {
+  get(tenantId: number, configKey: string): Promise<TenantOnboardingDocumentDefinitionDto> {
+    return apiClient.get<TenantOnboardingDocumentDefinitionDto>(
+      `${base(tenantId)}/${encodeURIComponent(configKey)}`,
+    );
+  },
+
   list(tenantId: number): Promise<TenantOnboardingDocumentDefinitionDto[]> {
     return apiClient.get<TenantOnboardingDocumentDefinitionDto[]>(base(tenantId));
   },

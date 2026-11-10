@@ -6,33 +6,33 @@
 
 'use client';
 
-import { useMemo, useEffect, type ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useHomeSearchItems } from '@/hooks/useHomeSearchItems';
-import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
-import {
-  useMyOrganizations,
-  useSelfServiceHoursTotal,
-  useSelfOperationAlarmAttendanceStats,
-  useUIStore,
-} from '@/lib/store';
-import { getOrganizationWorkspaceEntryPath } from '@/lib/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { type ReactNode, useEffect, useMemo } from 'react';
 import {
   GreetingSection,
-  HomeQuickSearch,
-  HomeQualificationsStatCard,
-  HomeTodosCard,
   HomeAppointmentsCard,
+  HomeQualificationsStatCard,
+  HomeQuickSearch,
+  HomeTodosCard,
 } from '@/components/home';
 import { MobileNavigationLayout } from '@/components/layout/MobileNavigationLayout';
 import { ORG_SWITCHER_THRESHOLD } from '@/components/navigation/OrganizationNavSwitcher';
-import { Card } from '@/components/ui/card';
 import { DropdownButton } from '@/components/ui/button-dropdown';
+import { Card } from '@/components/ui/card';
+import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
+import { useHomeSearchItems } from '@/hooks/useHomeSearchItems';
+import { useTranslation } from '@/hooks/useTranslation';
 import { DEPARTMENT_SECTION, getDepartmentSectionPath } from '@/lib/department/sections';
 import { MY_AREA_BASE_PATH } from '@/lib/my-area/myAreaSections';
+import {
+  useMyOrganizations,
+  useSelfOperationAlarmAttendanceStats,
+  useSelfServiceHoursTotal,
+  useUIStore,
+} from '@/lib/store';
+import { getOrganizationWorkspaceEntryPath } from '@/lib/utils';
 
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
@@ -126,7 +126,7 @@ export default function Home() {
         return [
           {
             value: org.organization.id.toString(),
-            label: `${org.organization.name}${org.main ? ` · ${t('home.navigation.organizations.mainBadge')}` : ''}`,
+            label: `${org.organization.name}${org.main ? ` (${t('home.navigation.organizations.mainBadge')})` : ''}`,
           },
         ];
       }),

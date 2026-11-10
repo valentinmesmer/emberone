@@ -6,6 +6,7 @@
 
 package com.emberone.notification.service;
 
+import static com.emberone.testsupport.SpecificationMatchers.anySpecification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,7 +34,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationSelfServiceTest {
@@ -71,7 +71,7 @@ class NotificationSelfServiceTest {
         when(tokenService.requireUserId()).thenReturn(USER_ID);
         Notification inApp = notificationWithChannel(NotificationChannel.IN_APP);
         Page<Notification> page = new PageImpl<>(List.of(inApp));
-        when(notificationRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(notificationRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(page);
         when(notificationDtoAssembler.toPageDto(page))
                 .thenReturn(

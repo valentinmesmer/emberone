@@ -7,8 +7,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { LoadingState } from '@/components/ui/loading';
 import { NotificationListView } from '@/components/notification/NotificationListView';
+import { LoadingState } from '@/components/ui/loading';
 
 export default function MyNotificationsPage() {
   return (

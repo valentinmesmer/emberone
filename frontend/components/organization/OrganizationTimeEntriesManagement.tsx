@@ -8,7 +8,7 @@
 
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { ListControls, ListLoadMore, ListNoResults } from '@/components/ui/list-filter';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard } from '@/components/ui/message-cards';
@@ -56,17 +56,16 @@ function resolveUserName(
 
 function formatEntrySubtitle(entry: UserTimeEntryDto) {
   const groupName = entry.organizationGroupName?.trim();
-  const groupPart = groupName ? ` · ${groupName}` : '';
   const timePart = entry.endTime
-    ? `${formatDateTime(entry.startTime)} - ${formatEndTime(entry.startTime, entry.endTime)} · ${formatDurationBetween(entry.startTime, entry.endTime)}`
+    ? `${formatDateTime(entry.startTime)} - ${formatEndTime(entry.startTime, entry.endTime)} (${formatDurationBetween(entry.startTime, entry.endTime)})`
     : formatDateTime(entry.startTime);
 
-  return (
-    <span className="tabular-nums text-[var(--text-secondary)]">
+  return subtitleLines([
+    <span key="time" className="tabular-nums">
       {timePart}
-      {groupPart}
-    </span>
-  );
+    </span>,
+    groupName,
+  ]);
 }
 
 export function OrganizationTimeEntriesManagement({

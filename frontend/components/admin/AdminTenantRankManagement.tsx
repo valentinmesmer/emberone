@@ -7,6 +7,7 @@
 'use client';
 
 import { Archive, Pencil, Plus, RotateCcw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminTenantRankEditModal } from '@/components/admin/AdminTenantRankEditModal';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,7 @@ import { SectionActions, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type TenantRankDto, tenantRanksApi } from '@/lib/api/tenantRanks';
+import { getAdminTenantRankDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantRankManagementProps {
   tenantId: number;
@@ -31,6 +33,7 @@ export function AdminTenantRankManagement({
   embedded = false,
 }: AdminTenantRankManagementProps) {
   const t = useTranslation();
+  const router = useRouter();
   const { showError, showSuccess } = useToast();
   const [loading, setLoading] = useState(true);
   const [ranks, setRanks] = useState<TenantRankDto[]>([]);
@@ -124,6 +127,8 @@ export function AdminTenantRankManagement({
         <ListRow
           key={rank.configKey}
           compact
+          onClick={() => router.push(getAdminTenantRankDetailPath(tenantId, rank.configKey))}
+          detailHref={getAdminTenantRankDetailPath(tenantId, rank.configKey)}
           title={rank.name}
           subtitle={rank.abbreviation}
           badges={
@@ -137,7 +142,8 @@ export function AdminTenantRankManagement({
               <IconButton
                 icon={<Pencil className="h-4 w-4" />}
                 aria-label={t('common.edit')}
-                onClick={() => {
+                onClick={(event) => {
+                  event.stopPropagation();
                   setEditing(rank);
                   setFormOpen(true);
                 }}
@@ -147,14 +153,20 @@ export function AdminTenantRankManagement({
                 <IconButton
                   icon={<RotateCcw className="h-4 w-4" />}
                   aria-label={t('common.unarchive')}
-                  onClick={() => setUnarchiveTarget(rank)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setUnarchiveTarget(rank);
+                  }}
                   disabled={busy}
                 />
               ) : (
                 <IconButton
                   icon={<Archive className="h-4 w-4" />}
                   aria-label={t('common.archive')}
-                  onClick={() => setArchiveTarget(rank)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setArchiveTarget(rank);
+                  }}
                   disabled={busy}
                 />
               )}

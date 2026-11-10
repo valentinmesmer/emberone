@@ -37,6 +37,7 @@ import com.emberone.workflow.service.LocalizedWorkflowDocumentPromotionSupport;
 import com.emberone.workflow.service.WorkflowDocumentService;
 import com.emberone.workflow.service.WorkflowTypeMappingService;
 import com.emberone.workflow.spi.ApproverOrg;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import com.emberone.workflow.spi.WorkflowOpenConcurrencyKeys;
 import com.emberone.workflow.spi.WorkflowOpenContext;
 import java.time.Instant;
@@ -102,7 +103,8 @@ class OrganizationJoinRequestWorkflowHandlerTest {
         List<ApproverOrg> orgs =
                 handler.resolveDynamicOrganizations(new WorkflowOpenContext<>(1L, 7L, payload));
 
-        assertThat(orgs).containsExactly(new ApproverOrg(25L));
+        assertThat(orgs)
+                .containsExactly(new ApproverOrg(25L, WorkflowApproverSlotRoles.TARGET_ORG));
     }
 
     @Test
@@ -389,5 +391,14 @@ class OrganizationJoinRequestWorkflowHandlerTest {
         assertThat(handler.resolveDocumentPromotionMetadata(workflow))
                 .map(WorkflowDocumentPromotionMetadata::getTitle)
                 .contains("Eintritt FF Musterstadt");
+    }
+
+    @Test
+    void declaresContextHandlerAndAdditionalApproverSlotRoles() {
+        assertThat(WorkflowApproverSlotRoles.rolesOf(handler))
+                .containsExactly(
+                        WorkflowApproverSlotRoles.CONTEXT,
+                        WorkflowApproverSlotRoles.TARGET_ORG,
+                        WorkflowApproverSlotRoles.ADDITIONAL);
     }
 }

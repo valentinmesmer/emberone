@@ -35,6 +35,8 @@ export interface OrgTreeSectionProps {
   onTreeLoaded?: (roots: AdminOrganizationTreeNodeDto[]) => void;
   /** When false, leader issues are only indicated on tree rows (e.g. onboarding card above). */
   showLeaderIssueBanner?: boolean;
+  /** Increment to open the create-root-organization modal from outside. */
+  openCreateSignal?: number;
 }
 
 export function OrgTreeSection({
@@ -46,6 +48,7 @@ export function OrgTreeSection({
   creatingRootOrg,
   onTreeLoaded,
   showLeaderIssueBanner = true,
+  openCreateSignal = 0,
 }: OrgTreeSectionProps) {
   const t = useTranslation();
   const [rootOrgOpen, setRootOrgOpen] = useState(false);
@@ -56,6 +59,10 @@ export function OrgTreeSection({
 
   const hasRoots = rootOrganizations.length > 0;
   const canCreateRoot = isGlobalAdmin && standardsConfiguredForOrgCreation;
+
+  useEffect(() => {
+    if (openCreateSignal > 0) setRootOrgOpen(true);
+  }, [openCreateSignal]);
 
   const loadTree = useCallback(async () => {
     setTreeLoading(true);

@@ -321,25 +321,25 @@ public final class BayernTenantBaseline {
 
     private static List<RankBaseline> ranks(Labels labels) {
         return List.of(
-                rank(labels.rankFwan(), RANK_FA, RANK_FA, 0),
-                rank(labels.rankFwm(), RANK_FM, RANK_FM, 1),
-                rank(labels.rankOfwm(), RANK_OFM, RANK_OFM, 2),
-                rank(labels.rankHfwm(), RANK_HFM, RANK_HFM, 3),
-                rank(labels.rankLm(), RANK_LM, RANK_LM, 4),
-                rank(labels.rankOlm(), RANK_OLM, RANK_OLM, 5),
-                rank(labels.rankHlm(), RANK_HLM, RANK_HLM, 6),
-                rank(labels.rankBm(), RANK_BM, RANK_BM, 7),
-                rank(labels.rankObm(), RANK_OBM, RANK_OBM, 8),
-                rank(labels.rankHbm(), RANK_HBM, RANK_HBM, 9));
+                rank(labels.rankFwan(), RANK_FA, 0),
+                rank(labels.rankFwm(), RANK_FM, 1),
+                rank(labels.rankOfwm(), RANK_OFM, 2),
+                rank(labels.rankHfwm(), RANK_HFM, 3),
+                rank(labels.rankLm(), RANK_LM, 4),
+                rank(labels.rankOlm(), RANK_OLM, 5),
+                rank(labels.rankHlm(), RANK_HLM, 6),
+                rank(labels.rankBm(), RANK_BM, 7),
+                rank(labels.rankObm(), RANK_OBM, 8),
+                rank(labels.rankHbm(), RANK_HBM, 9));
     }
 
     private static List<FunctionBaseline> functions(Labels labels) {
         return List.of(
-                function(labels.funcKdt(), FUNC_KDT, FUNC_KDT, 0),
-                function(labels.funcStvkdt(), FUNC_STVKDT, FUNC_STVKDT, 1),
-                function(labels.funcKbm(), FUNC_KBM, FUNC_KBM, 2),
-                function(labels.funcKbi(), FUNC_KBI, FUNC_KBI, 3),
-                function(labels.funcKbr(), FUNC_KBR, FUNC_KBR, 4));
+                function(labels.funcKdt(), FUNC_KDT, 0),
+                function(labels.funcStvkdt(), FUNC_STVKDT, 1),
+                function(labels.funcKbm(), FUNC_KBM, 2),
+                function(labels.funcKbi(), FUNC_KBI, 3),
+                function(labels.funcKbr(), FUNC_KBR, 4));
     }
 
     private static List<FunctionGrantBaseline> functionGrants() {
@@ -354,14 +354,12 @@ public final class BayernTenantBaseline {
                         FUNC_STVKDT));
     }
 
-    private static RankBaseline rank(
-            String name, String configKey, String abbreviation, int sortOrder) {
-        return new RankBaseline(configKey, name, abbreviation, sortOrder);
+    private static RankBaseline rank(String name, String configKey, int sortOrder) {
+        return new RankBaseline(configKey, name, sortOrder);
     }
 
-    private static FunctionBaseline function(
-            String name, String configKey, String abbreviation, int sortOrder) {
-        return new FunctionBaseline(configKey, name, abbreviation, sortOrder);
+    private static FunctionBaseline function(String name, String configKey, int sortOrder) {
+        return new FunctionBaseline(configKey, name, sortOrder);
     }
 
     private static List<TenantBaseline.OrganizationTypeDefinitionBaseline>

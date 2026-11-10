@@ -15,6 +15,7 @@ import com.emberone.trainingcourse.tenant.TenantTrainingCourseTypeRepository;
 import com.emberone.user.repository.UserRepository;
 import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
 import com.emberone.workflow.domain.Workflow;
+import com.emberone.workflow.domain.WorkflowRoutingDimension;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.TrainingCourseRecordWorkflowPayload;
 import com.emberone.workflow.dto.WorkflowDocumentPromotionMetadata;
@@ -91,6 +92,21 @@ public class TrainingCourseRecordWorkflowHandler
         return normalizeTypeIds(payload.getTenantTrainingCourseTypeIds()).stream()
                 .map(WorkflowOpenConcurrencyKeys::trainingCourseType)
                 .toList();
+    }
+
+    @Override
+    public Optional<WorkflowRoutingDimension> routingDimension() {
+        return Optional.of(WorkflowRoutingDimension.TRAINING_COURSE_TYPE);
+    }
+
+    @Override
+    public Set<Long> resolveRoutingSubjectIds(
+            WorkflowOpenContext<TrainingCourseRecordWorkflowPayload> ctx) {
+        TrainingCourseRecordWorkflowPayload payload = ctx.getPayload();
+        if (payload == null) {
+            return Set.of();
+        }
+        return new LinkedHashSet<>(normalizeTypeIds(payload.getTenantTrainingCourseTypeIds()));
     }
 
     @Override

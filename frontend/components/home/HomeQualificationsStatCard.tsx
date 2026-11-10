@@ -124,7 +124,7 @@ function QualificationPills({ items }: { items: AggregatedQualificationItem[] })
           const statusLabel = qualificationListBadgeLabel(item, t);
           return (
             <li key={item.tenantQualificationDefinitionId} className="min-w-0 shrink-0">
-              <span title={`${item.name} · ${statusLabel}`}>
+              <span title={`${item.name}: ${statusLabel}`}>
                 {item.orgDecisionProgressRatio != null ? (
                   <QualificationOrgProgressBadge
                     ratio={item.orgDecisionProgressRatio}

@@ -10,11 +10,8 @@ import com.emberone.federalstate.baseline.WorkflowDefinitionBaseline;
 import com.emberone.standard.domain.Standard;
 import com.emberone.standard.spi.StandardDomain;
 import com.emberone.workflow.domain.WorkflowDefinition;
-import com.emberone.workflow.domain.WorkflowDefinitionStaticOrg;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.repository.WorkflowDefinitionRepository;
-import com.emberone.workflow.service.TenantWorkflowDefinitionService;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -26,9 +23,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * {@link StandardDomain} for workflow definition templates on org standards. Tenant-wide static
- * approver settings live in {@code tenant_workflow_definitions}; per-org rows in {@code
- * wf_definitions} inherit those settings on materialization.
+ * {@link StandardDomain} for workflow definition templates on org standards. Tenant-wide extra
+ * approver orgs live only in {@code tenant_workflow_definitions} (and its routing rules); per-org
+ * rows in {@code wf_definitions} carry no copy of them.
  */
 @Slf4j
 @Component
@@ -39,7 +36,6 @@ public class WorkflowDefinitionStandardDomain implements StandardDomain {
     private final WorkflowDefinitionTemplateRepository templateRepository;
     private final WorkflowDefinitionRepository definitionRepository;
     private final WorkflowTypeMappingStandardDomain workflowTypeMappingStandardDomain;
-    private final TenantWorkflowDefinitionService tenantWorkflowDefinitionService;
 
     @Override
     public String domainKey() {
@@ -57,20 +53,7 @@ public class WorkflowDefinitionStandardDomain implements StandardDomain {
                             .standardId(target.getId())
                             .configKey(template.getConfigKey())
                             .workflowTypeId(template.getWorkflowTypeId())
-                            .staticApproversExclusive(template.isStaticApproversExclusive())
-                            .staticOrganizations(new ArrayList<>())
                             .build();
-            for (WorkflowDefinitionTemplateStaticOrg staticOrg :
-                    template.getStaticOrganizations()) {
-                copy.getStaticOrganizations()
-                        .add(
-                                WorkflowDefinitionTemplateStaticOrg.builder()
-                                        .tenantId(target.getTenantId())
-                                        .template(copy)
-                                        .approverOrganizationId(
-                                                staticOrg.getApproverOrganizationId())
-                                        .build());
-            }
             templateRepository.save(copy);
         }
     }
@@ -150,8 +133,6 @@ public class WorkflowDefinitionStandardDomain implements StandardDomain {
                             .standardId(standard.getId())
                             .configKey(item.configKey())
                             .workflowTypeId(item.workflowTypeId())
-                            .staticApproversExclusive(item.staticApproversExclusive())
-                            .staticOrganizations(new ArrayList<>())
                             .build());
             added++;
             log.info(
@@ -166,12 +147,10 @@ public class WorkflowDefinitionStandardDomain implements StandardDomain {
     private WorkflowDefinition toInstance(
             Long organizationId, WorkflowDefinitionTemplate template, Standard standard) {
         boolean enabled = true;
-        boolean selfApproveAllowed = false;
         Optional<WorkflowTypeMappingTemplate> mappingTemplate =
                 workflowTypeMappingStandardDomain.findTemplate(standard, template.getConfigKey());
         if (mappingTemplate.isPresent()) {
             enabled = mappingTemplate.get().isEnabled();
-            selfApproveAllowed = mappingTemplate.get().isSelfApproveAllowed();
         }
         WorkflowDefinition definition =
                 WorkflowDefinition.builder()
@@ -179,49 +158,14 @@ public class WorkflowDefinitionStandardDomain implements StandardDomain {
                         .workflowTypeId(template.getWorkflowTypeId())
                         .organizationId(organizationId)
                         .enabled(enabled)
-                        .staticApproversExclusive(template.isStaticApproversExclusive())
-                        .selfApproveAllowed(selfApproveAllowed)
                         .configKey(template.getConfigKey())
                         .standardOriginId(template.getId())
-                        .staticOrganizations(new ArrayList<>())
                         .build();
-        applyStaticOrgsFromTemplate(definition, template);
-        tenantWorkflowDefinitionService.applyToOrgDefinition(
-                template.getWorkflowTypeId(), definition);
         return definition;
-    }
-
-    private void applyStaticOrgsFromTemplate(
-            WorkflowDefinition definition, WorkflowDefinitionTemplate template) {
-        Set<Long> desired =
-                template.getStaticOrganizations().stream()
-                        .map(WorkflowDefinitionTemplateStaticOrg::getApproverOrganizationId)
-                        .collect(Collectors.toSet());
-        definition
-                .getStaticOrganizations()
-                .removeIf(existing -> !desired.contains(existing.getApproverOrganizationId()));
-        Set<Long> present =
-                definition.getStaticOrganizations().stream()
-                        .map(WorkflowDefinitionStaticOrg::getApproverOrganizationId)
-                        .collect(Collectors.toSet());
-        for (Long orgId : desired) {
-            if (!present.contains(orgId)) {
-                definition
-                        .getStaticOrganizations()
-                        .add(
-                                WorkflowDefinitionStaticOrg.builder()
-                                        .tenantId(definition.getTenantId())
-                                        .definition(definition)
-                                        .approverOrganizationId(orgId)
-                                        .build());
-            }
-        }
     }
 
     private void applyTemplateToInstance(
             WorkflowDefinition definition, WorkflowDefinitionTemplate template) {
-        tenantWorkflowDefinitionService.applyToOrgDefinition(
-                template.getWorkflowTypeId(), definition);
         definition.setStandardOriginId(template.getId());
         definitionRepository.save(definition);
     }

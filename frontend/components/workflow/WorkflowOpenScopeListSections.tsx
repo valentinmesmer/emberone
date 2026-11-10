@@ -35,26 +35,25 @@ export function WorkflowOpenScopeListSections<T>({
   const t = useTranslation();
   const byScope = groupByWorkflowOpenScope(items, getWorkflowTypeId);
 
+  // One <ul> for all scopes, so the sibling pager on the detail pages spans every workflow.
   return (
-    <div className="space-y-4">
+    <ListContainer label={listLabel} variant={listVariant}>
       {WORKFLOW_OPEN_SCOPE_ORDER.map((scope) => {
         const scopeItems = byScope.get(scope) ?? [];
         if (scopeItems.length === 0) {
           return null;
         }
         return (
-          <section key={scope} className="space-y-2">
-            <h3 className="text-sm font-medium text-[var(--text-primary)]">
+          <Fragment key={scope}>
+            <li className="bg-[var(--hover-bg)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
               {t(workflowOpenScopeTranslationKey(scope))}
-            </h3>
-            <ListContainer label={listLabel} variant={listVariant}>
-              {scopeItems.map((item) => (
-                <Fragment key={getItemKey(item)}>{renderRow(item)}</Fragment>
-              ))}
-            </ListContainer>
-          </section>
+            </li>
+            {scopeItems.map((item) => (
+              <Fragment key={getItemKey(item)}>{renderRow(item)}</Fragment>
+            ))}
+          </Fragment>
         );
       })}
-    </div>
+    </ListContainer>
   );
 }

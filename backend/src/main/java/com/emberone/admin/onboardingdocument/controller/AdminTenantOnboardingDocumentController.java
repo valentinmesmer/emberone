@@ -42,6 +42,13 @@ public class AdminTenantOnboardingDocumentController {
         return ResponseEntity.ok(definitionService.list(tenantId));
     }
 
+    @GetMapping("/{configKey}")
+    @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
+    public ResponseEntity<TenantOnboardingDocumentDefinitionDto> get(
+            @PathVariable long tenantId, @PathVariable String configKey) {
+        return ResponseEntity.ok(definitionService.get(tenantId, configKey));
+    }
+
     @PostMapping
     @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
     public ResponseEntity<TenantOnboardingDocumentDefinitionDto> create(

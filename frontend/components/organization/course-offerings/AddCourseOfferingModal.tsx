@@ -103,9 +103,10 @@ export function AddCourseOfferingModal({ organizationId, onClose, onCreateNew, o
       ) : null}
       {step === 'date' ? (
         <div className="space-y-4">
-          <p className="text-sm text-[var(--text-secondary)]">
-            {template?.templateName} · {template?.trainingCourseTypeName}
-          </p>
+          <div className="text-sm text-[var(--text-secondary)]">
+            <p className="font-medium text-[var(--text-primary)]">{template?.templateName}</p>
+            <p>{template?.trainingCourseTypeName}</p>
+          </div>
           <Input
             label={t('courseOfferings.templates.firstSessionDate')}
             type="date"

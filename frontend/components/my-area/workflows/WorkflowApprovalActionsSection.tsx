@@ -48,7 +48,7 @@ export interface WorkflowApprovalActionsSectionProps {
    * `dock` - compact thumb-zone actions for the mobile sticky bar.
    */
   layout?: 'card' | 'dock';
-  /** Single-slot context (org · group), shown under the section title. */
+  /** Single-slot context (org (group)), shown under the section title. */
   slotLabel?: string | null;
   /** When the user has multiple actionable slots, choose which one actions apply to. */
   slotOptions?: WorkflowApprovalSlotOption[];

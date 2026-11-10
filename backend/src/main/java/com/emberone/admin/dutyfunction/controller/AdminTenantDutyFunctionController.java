@@ -31,6 +31,13 @@ public class AdminTenantDutyFunctionController {
         return ResponseEntity.ok(functionService.list(tenantId));
     }
 
+    @GetMapping("/{configKey}")
+    @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
+    public ResponseEntity<TenantFunctionDto> get(
+            @PathVariable long tenantId, @PathVariable String configKey) {
+        return ResponseEntity.ok(functionService.get(tenantId, configKey));
+    }
+
     @PostMapping
     @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
     public ResponseEntity<TenantFunctionDto> create(

@@ -22,6 +22,7 @@ import {
   standardPermissionLabel,
 } from '@/components/admin/standards/standardContentUtils';
 import type { StandardContentState } from '@/components/admin/standards/useStandardContent';
+import { OrganizationManageSection } from '@/components/organization/OrganizationManageSection';
 import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -61,7 +62,7 @@ export function StandardPermissionGroupDetailView({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [perms, setPerms] = useState<Set<string>>(new Set());
+  const [permsDraft, setPermsDraft] = useState<Set<string> | null>(null);
 
   if (!item) {
     return <NotFoundState message={t('organizationManagement.errors.notFound')} />;
@@ -74,7 +75,6 @@ export function StandardPermissionGroupDetailView({
   const openEdit = () => {
     setName(item.title);
     setDescription(a.description ?? '');
-    setPerms(new Set(item.permissionTypes));
     setEditOpen(true);
   };
 
@@ -87,12 +87,27 @@ export function StandardPermissionGroupDetailView({
         standardsApi.updatePermissionGroup(tenantId, standardId, configKey, {
           name: name.trim(),
           description: description.trim() || undefined,
-          permissionTypes: Array.from(perms),
+          permissionTypes: item.permissionTypes,
         }),
       'admin.standards.itemSaved',
       'admin.standards.errors.saveFailed',
     );
     if (ok) setEditOpen(false);
+  };
+
+  const handleSavePermissions = async () => {
+    if (!permsDraft) return;
+    const ok = await runMutation(
+      () =>
+        standardsApi.updatePermissionGroup(tenantId, standardId, configKey, {
+          name: item.title,
+          description: a.description || undefined,
+          permissionTypes: Array.from(permsDraft),
+        }),
+      'admin.standards.itemSaved',
+      'admin.standards.errors.saveFailed',
+    );
+    if (ok) setPermsDraft(null);
   };
 
   const handleDelete = async () => {
@@ -140,40 +155,56 @@ export function StandardPermissionGroupDetailView({
             ) : undefined
           }
         />
-        <div className="space-y-3">
-          <FieldDisplay
-            label={t('admin.standards.description')}
-            value={a.description}
-            fallback={t('organizationManagement.permissionGroups.noDescription')}
-          />
-          <div>
-            <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
-              {t('admin.standards.permissionsLabel')}
-            </p>
-            {displayedPermissions.length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)]">
-                {t('admin.standards.noPermissions')}
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {displayedPermissions.map((perm) => (
-                  <Badge key={perm} tone="neutral">
-                    {standardPermissionLabel(t, perm)}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <FieldDisplay
+          label={t('admin.standards.description')}
+          value={a.description}
+          fallback={t('organizationManagement.permissionGroups.noDescription')}
+        />
       </Card>
 
-      {editable && !isAdminGroup && !isSystemGroup ? (
+      <Card className="p-3 sm:p-4">
+        <OrganizationManageSection
+          embedded
+          title={t('admin.standards.permissionsLabel')}
+          actionInline
+          action={
+            editable && !isAdminGroup ? (
+              <StandardDetailAction
+                label={t('common.edit')}
+                icon={<Pencil className="h-4 w-4" aria-hidden />}
+                onClick={() => setPermsDraft(new Set(item.permissionTypes))}
+                disabled={busy}
+              />
+            ) : undefined
+          }
+        >
+          {displayedPermissions.length === 0 ? (
+            <p className="text-sm text-[var(--text-secondary)]">
+              {t('admin.standards.noPermissions')}
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {displayedPermissions.map((perm) => (
+                <Badge key={perm} tone="neutral">
+                  {standardPermissionLabel(t, perm)}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </OrganizationManageSection>
+      </Card>
+
+      {editable ? (
         <ActionsSection>
           <ListRow
             leading={<ActionRowIcon icon={Trash2} />}
             title={t('admin.standards.deleteItem')}
-            subtitle={t('common.deleteHint')}
-            onClick={busy ? undefined : () => setDeleteOpen(true)}
+            subtitle={
+              isSystemGroup
+                ? t('admin.standards.systemPermissionGroupRequiredHint')
+                : t('common.deleteHint')
+            }
+            onClick={busy || isSystemGroup ? undefined : () => setDeleteOpen(true)}
           />
         </ActionsSection>
       ) : null}
@@ -207,24 +238,30 @@ export function StandardPermissionGroupDetailView({
               onChange={(e) => setDescription(e.target.value)}
               disabled={busy}
             />
-            <div>
-              <div className="mb-1.5 text-sm font-medium text-[var(--text-primary)]">
-                {t('admin.standards.permissionsLabel')}
-              </div>
-              {isAdminGroup ? (
-                <p className="text-sm text-[var(--text-secondary)]">
-                  {t('admin.standards.adminPermissionGroupHint')}
-                </p>
-              ) : (
-                <StandardPermissionTypePicker
-                  selected={perms}
-                  onChange={setPerms}
-                  disabled={busy}
-                  enabledModules={enabledModules}
-                />
-              )}
-            </div>
           </div>
+        </Modal>
+      ) : null}
+
+      {permsDraft ? (
+        <Modal
+          isOpen
+          onClose={() => setPermsDraft(null)}
+          title={t('admin.standards.permissionsLabel')}
+          size="lg"
+          footer={
+            <ModalFooter
+              onCancel={() => setPermsDraft(null)}
+              onSave={() => void handleSavePermissions()}
+              isLoading={busy}
+            />
+          }
+        >
+          <StandardPermissionTypePicker
+            selected={permsDraft}
+            onChange={setPermsDraft}
+            disabled={busy}
+            enabledModules={enabledModules}
+          />
         </Modal>
       ) : null}
 

@@ -6,6 +6,7 @@
 
 package com.emberone.absence.service;
 
+import static com.emberone.testsupport.SpecificationMatchers.anySpecification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,10 +43,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
 class UserAbsenceServiceTest {
@@ -135,8 +134,7 @@ class UserAbsenceServiceTest {
                                 new ListQuery(0, null, null, null),
                                 AbsenceListFilter.empty()))
                 .isInstanceOf(UserNotFoundException.class);
-        verify(userAbsenceRepository, never())
-                .findAll(any(Specification.class), any(Pageable.class));
+        verify(userAbsenceRepository, never()).findAll(anySpecification(), any(Pageable.class));
     }
 
     @Test
@@ -147,11 +145,11 @@ class UserAbsenceServiceTest {
                         .content(List.of(UserAbsenceDto.builder().id(3L).build()))
                         .build();
         when(userRepository.existsById(USER_ID)).thenReturn(true);
-        when(userAbsenceRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(userAbsenceRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(absence)));
         when(userAbsenceRepository.findWithOrganizationsByIdIn(List.of(3L)))
                 .thenReturn(List.of(absence));
-        when(userAbsenceDtoAssembler.toPageDto(any(Page.class))).thenReturn(page);
+        when(userAbsenceDtoAssembler.toPageDto(any())).thenReturn(page);
 
         assertThat(
                         userAbsenceService.listAbsencesForUser(

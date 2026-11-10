@@ -6,12 +6,10 @@
 
 'use client';
 
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { StandardPermissionTypePicker } from '@/components/admin/standards/StandardPermissionTypePicker';
 import {
-  isAdminStandardPermissionGroupItem,
   isSystemStandardPermissionGroupItem,
   standardPermissionGroupTypeLabel,
 } from '@/components/admin/standards/standardContentUtils';
@@ -19,8 +17,6 @@ import type { StandardContentState } from '@/components/admin/standards/useStand
 import { OrganizationManageSection } from '@/components/organization/OrganizationManageSection';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { ListContainer, ListRow } from '@/components/ui/list';
 import { EmptyStateCard } from '@/components/ui/message-cards';
@@ -28,7 +24,7 @@ import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type StandardContentItemDto, standardsApi } from '@/lib/api/standards';
+import { standardsApi } from '@/lib/api/standards';
 import { getAdminStandardPermissionGroupPath } from '@/lib/navigation/adminWorkspace';
 import { formBlockers } from '@/lib/utils';
 
@@ -42,7 +38,6 @@ export function StandardPermissionGroupManagement({
   embedded = false,
 }: StandardPermissionGroupManagementProps) {
   const t = useTranslation();
-  const router = useRouter();
   const { tenantId, standardId, items, editable, busy, runMutation, enabledModules } = state;
 
   const permGroupItems = useMemo(
@@ -51,33 +46,18 @@ export function StandardPermissionGroupManagement({
   );
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<StandardContentItemDto | null>(null);
-  const [deleteKey, setDeleteKey] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [perms, setPerms] = useState<Set<string>>(new Set());
 
   const openCreate = () => {
-    setEditingItem(null);
     setName('');
     setDescription('');
     setPerms(new Set());
     setFormOpen(true);
   };
 
-  const openEdit = (item: StandardContentItemDto) => {
-    const a = item.attributes ?? {};
-    setEditingItem(item);
-    setName(item.title);
-    setDescription(a.description ?? '');
-    setPerms(new Set(item.permissionTypes));
-    setFormOpen(true);
-  };
-
-  const closeForm = () => {
-    setFormOpen(false);
-    setEditingItem(null);
-  };
+  const closeForm = () => setFormOpen(false);
 
   const blockers = formBlockers([[t('admin.standards.name'), name.trim() !== '']]);
 
@@ -85,32 +65,16 @@ export function StandardPermissionGroupManagement({
     if (blockers.length > 0) return;
     const ok = await runMutation(
       () =>
-        editingItem
-          ? standardsApi.updatePermissionGroup(tenantId, standardId, editingItem.configKey, {
-              name: name.trim(),
-              description: description.trim() || undefined,
-              permissionTypes: Array.from(perms),
-            })
-          : standardsApi.addPermissionGroup(tenantId, standardId, {
-              name: name.trim(),
-              description: description.trim() || undefined,
-              type: 'CUSTOM',
-              permissionTypes: Array.from(perms),
-            }),
+        standardsApi.addPermissionGroup(tenantId, standardId, {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          type: 'CUSTOM',
+          permissionTypes: Array.from(perms),
+        }),
       'admin.standards.itemSaved',
       'admin.standards.errors.saveFailed',
     );
     if (ok) closeForm();
-  };
-
-  const handleDelete = async () => {
-    if (!deleteKey) return;
-    const ok = await runMutation(
-      () => standardsApi.deletePermissionGroup(tenantId, standardId, deleteKey),
-      'admin.standards.itemDeleted',
-      'admin.standards.errors.itemDeleteFailed',
-    );
-    if (ok) setDeleteKey(null);
   };
 
   return (
@@ -139,16 +103,11 @@ export function StandardPermissionGroupManagement({
           <ListContainer label={t('admin.standards.sections.permissionGroups')}>
             {permGroupItems.map((item) => {
               const isSystemGroup = isSystemStandardPermissionGroupItem(item);
-              const isAdminGroup = isAdminStandardPermissionGroupItem(item);
               return (
                 <ListRow
                   key={item.configKey}
                   compact
-                  onClick={() =>
-                    router.push(
-                      getAdminStandardPermissionGroupPath(tenantId, standardId, item.configKey),
-                    )
-                  }
+                  href={getAdminStandardPermissionGroupPath(tenantId, standardId, item.configKey)}
                   title={item.title}
                   subtitle={
                     item.permissionTypes.length > 0 ? (
@@ -173,32 +132,6 @@ export function StandardPermissionGroupManagement({
                       </>
                     ) : undefined
                   }
-                  actions={
-                    editable ? (
-                      <>
-                        {!isAdminGroup ? (
-                          <IconButton
-                            variant="action"
-                            icon={<Pencil className="h-4 w-4" aria-hidden />}
-                            aria-label={t('common.edit')}
-                            title={t('common.edit')}
-                            onClick={() => openEdit(item)}
-                            disabled={busy}
-                          />
-                        ) : null}
-                        {!isSystemGroup ? (
-                          <IconButton
-                            variant="action"
-                            icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                            aria-label={t('admin.standards.deleteItem')}
-                            title={t('admin.standards.deleteItem')}
-                            onClick={() => setDeleteKey(item.configKey)}
-                            disabled={busy}
-                          />
-                        ) : null}
-                      </>
-                    ) : undefined
-                  }
                 />
               );
             })}
@@ -210,7 +143,7 @@ export function StandardPermissionGroupManagement({
         <Modal
           isOpen
           onClose={closeForm}
-          title={editingItem ? t('common.edit') : t('admin.standards.addPermissionGroup')}
+          title={t('admin.standards.addPermissionGroup')}
           size="lg"
           footer={
             <ModalFooter
@@ -249,16 +182,6 @@ export function StandardPermissionGroupManagement({
           </div>
         </Modal>
       ) : null}
-
-      <ConfirmDialog
-        isOpen={deleteKey != null}
-        onClose={() => setDeleteKey(null)}
-        onConfirm={() => void handleDelete()}
-        message={t('admin.standards.deleteItemConfirm')}
-        confirmText={t('admin.standards.deleteItem')}
-        cancelText={t('common.cancel')}
-        isLoading={busy}
-      />
     </>
   );
 }

@@ -25,34 +25,28 @@ import lombok.Getter;
  */
 @Getter
 public enum HelpTopic {
-    // My area (order of the hub)
+    // My area (order of the hub: inbox, time, training, profile, account)
+    MY_TODOS(HelpTopicArea.SELF, null, null, false, false),
+    MY_WORKFLOWS(HelpTopicArea.SELF, null, null, false, false),
+    MY_NOTIFICATIONS(HelpTopicArea.SELF, null, null, false, false),
+    MY_TIME_ENTRIES(HelpTopicArea.SELF, null, null, true, false),
+    MY_ABSENCES(HelpTopicArea.SELF, null, null, true, false),
+    MY_COURSE_REGISTRATIONS(HelpTopicArea.SELF, null, null, false, false),
+    MY_QUALIFICATIONS(HelpTopicArea.SELF, null, null, false, false),
+    MY_CERTIFICATIONS(HelpTopicArea.SELF, null, null, false, false),
+    MY_TRAINING_COURSES(HelpTopicArea.SELF, null, null, false, false),
+    MY_DRIVING_LICENSES(HelpTopicArea.SELF, null, null, false, false),
     MY_MASTER_DATA(HelpTopicArea.SELF, null, null, false, false),
+    MY_RANK(HelpTopicArea.SELF, null, null, false, false),
     MY_EMERGENCY_CONTACTS(HelpTopicArea.SELF, null, null, true, false),
     MY_DOCUMENTS(HelpTopicArea.SELF, null, null, false, false),
-    MY_TRAINING_COURSES(HelpTopicArea.SELF, null, null, false, false),
-    MY_COURSE_REGISTRATIONS(HelpTopicArea.SELF, null, null, false, false),
-    MY_DRIVING_LICENSES(HelpTopicArea.SELF, null, null, false, false),
-    MY_CERTIFICATIONS(HelpTopicArea.SELF, null, null, false, false),
-    MY_QUALIFICATIONS(HelpTopicArea.SELF, null, null, false, false),
-    MY_RANK(HelpTopicArea.SELF, null, null, false, false),
-    MY_ABSENCES(HelpTopicArea.SELF, null, null, true, false),
-    MY_TIME_ENTRIES(HelpTopicArea.SELF, null, null, true, false),
-    MY_TODOS(HelpTopicArea.SELF, null, null, false, false),
-    MY_NOTIFICATIONS(HelpTopicArea.SELF, null, null, false, false),
-    MY_WORKFLOWS(HelpTopicArea.SELF, null, null, false, false),
     MY_NOTIFICATION_SETTINGS(HelpTopicArea.SELF, null, null, false, false),
 
-    // Organization (order of the navigation)
+    // Organization (order of the navigation; the last two have no hub tile)
     ORG_APPOINTMENTS(
             HelpTopicArea.ORGANIZATION,
             PermissionType.APPOINTMENT_READ,
             PermissionType.APPOINTMENT_WRITE,
-            false,
-            false),
-    ORG_SERVICE_EVENTS(
-            HelpTopicArea.ORGANIZATION,
-            PermissionType.SERVICE_EVENT_READ,
-            PermissionType.SERVICE_EVENT_WRITE,
             false,
             false),
     ORG_OPERATION_EVENTS(
@@ -61,26 +55,32 @@ public enum HelpTopic {
             PermissionType.OPERATION_EVENT_WRITE,
             false,
             false),
+    ORG_SERVICE_EVENTS(
+            HelpTopicArea.ORGANIZATION,
+            PermissionType.SERVICE_EVENT_READ,
+            PermissionType.SERVICE_EVENT_WRITE,
+            false,
+            false),
     ORG_USERS(HelpTopicArea.ORGANIZATION, PermissionType.USER_READ, null, false, false),
-    ORG_MANAGEMENT(
-            HelpTopicArea.ORGANIZATION, PermissionType.MANAGEMENT_ACCESS, null, false, false),
     ORG_ABSENCES(HelpTopicArea.ORGANIZATION, PermissionType.ABSENCE_READ, null, false, false),
-    ORG_WORKFLOWS(HelpTopicArea.ORGANIZATION, PermissionType.WORKFLOW_READ, null, false, false),
-    ORG_CERTIFICATIONS(
-            HelpTopicArea.ORGANIZATION, PermissionType.CERTIFICATION_READ, null, false, false),
     ORG_RANKS(HelpTopicArea.ORGANIZATION, PermissionType.RANK_READ, null, false, false),
+    ORG_GROUPS(
+            HelpTopicArea.ORGANIZATION, PermissionType.ORGANIZATION_GROUP_READ, null, false, false),
     ORG_QUALIFICATIONS(
             HelpTopicArea.ORGANIZATION, PermissionType.QUALIFICATION_READ, null, false, false),
-    ORG_COURSE_REGISTRATIONS(
-            HelpTopicArea.ORGANIZATION, PermissionType.TRAINING_COURSE_READ, null, false, false),
+    ORG_CERTIFICATIONS(
+            HelpTopicArea.ORGANIZATION, PermissionType.CERTIFICATION_READ, null, false, false),
     ORG_COURSE_OFFERINGS(
             HelpTopicArea.ORGANIZATION,
             PermissionType.COURSE_OFFERING_READ,
             PermissionType.COURSE_OFFERING_WRITE,
             false,
             false),
-    ORG_GROUPS(
-            HelpTopicArea.ORGANIZATION, PermissionType.ORGANIZATION_GROUP_READ, null, false, false),
+    ORG_COURSE_REGISTRATIONS(
+            HelpTopicArea.ORGANIZATION, PermissionType.TRAINING_COURSE_READ, null, false, false),
+    ORG_WORKFLOWS(HelpTopicArea.ORGANIZATION, PermissionType.WORKFLOW_READ, null, false, false),
+    ORG_MANAGEMENT(
+            HelpTopicArea.ORGANIZATION, PermissionType.MANAGEMENT_ACCESS, null, false, false),
     ORG_EMERGENCY_CONTACTS(
             HelpTopicArea.ORGANIZATION, PermissionType.EMERGENCY_CONTACT_READ, null, false, false),
     ORG_TIME_ENTRIES(

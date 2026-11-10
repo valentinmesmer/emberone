@@ -7,7 +7,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { PaginatedListView, paginatedListEmptyCard } from '@/components/ui/paginated-list';
 import { useTranslation } from '@/hooks/useTranslation';
 import { orgAbsenceEmptyMessageKey, orgAbsenceListDefinition } from '@/lib/list/absenceList';
@@ -80,15 +80,12 @@ export function OrganizationActiveAbsencesManagement({
             key={absence.id}
             title={resolveUserName(userById, absence, t)}
             href={getOrganizationUserAbsenceDetailPath(organizationId, absence.userId, absence.id)}
-            subtitle={
-              <>
-                <span className="font-medium text-[var(--text-primary)] tabular-nums">
-                  {formatDateShort(absence.startDate)} - {formatDateShort(absence.endDate)}
-                </span>
-                <span aria-hidden> · </span>
-                <span>{t(getAbsenceReasonLabelKey(absence.reason))}</span>
-              </>
-            }
+            subtitle={subtitleLines([
+              <span key="range" className="font-medium text-[var(--text-primary)] tabular-nums">
+                {formatDateShort(absence.startDate)} - {formatDateShort(absence.endDate)}
+              </span>,
+              t(getAbsenceReasonLabelKey(absence.reason)),
+            ])}
           />
         ))}
       </ListContainer>

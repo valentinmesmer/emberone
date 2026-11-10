@@ -26,6 +26,7 @@ import com.emberone.user.repository.UserRepository;
 import com.emberone.userorganizationmembership.domain.UserOrganizationMembership;
 import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
 import com.emberone.workflow.domain.Workflow;
+import com.emberone.workflow.domain.WorkflowRoutingDimension;
 import com.emberone.workflow.dto.TrainingCourseRecordWorkflowPayload;
 import com.emberone.workflow.dto.WorkflowDocumentPromotionMetadata;
 import com.emberone.workflow.exception.WorkflowValidationException;
@@ -299,5 +300,25 @@ class TrainingCourseRecordWorkflowHandlerTest {
                                         .tenantId(TENANT_ID)
                                         .active(true)
                                         .build()));
+    }
+
+    @Test
+    void routesByAllDistinctTrainingCourseTypesFromThePayload() {
+        TrainingCourseRecordWorkflowPayload payload =
+                TrainingCourseRecordWorkflowPayload.builder()
+                        .tenantTrainingCourseTypeIds(
+                                java.util.Arrays.asList(TYPE_ID, TYPE_ID_2, TYPE_ID, null))
+                        .build();
+
+        assertThat(handler.routingDimension())
+                .contains(WorkflowRoutingDimension.TRAINING_COURSE_TYPE);
+        assertThat(
+                        handler.resolveRoutingSubjectIds(
+                                new WorkflowOpenContext<>(USER_ID, TENANT_ID, payload)))
+                .containsExactlyInAnyOrder(TYPE_ID, TYPE_ID_2);
+        assertThat(
+                        handler.resolveRoutingSubjectIds(
+                                new WorkflowOpenContext<>(USER_ID, TENANT_ID, null)))
+                .isEmpty();
     }
 }

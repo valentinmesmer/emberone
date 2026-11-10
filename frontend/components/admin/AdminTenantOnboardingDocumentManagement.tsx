@@ -7,6 +7,7 @@
 'use client';
 
 import { Archive, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminTenantOnboardingDocumentEditModal } from '@/components/admin/AdminTenantOnboardingDocumentEditModal';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ import {
   type TenantOnboardingDocumentDefinitionDto,
   tenantOnboardingDocumentsApi,
 } from '@/lib/api/tenantOnboardingDocuments';
+import { getAdminTenantOnboardingDocumentDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantOnboardingDocumentManagementProps {
   tenantId: number;
@@ -34,6 +36,7 @@ export function AdminTenantOnboardingDocumentManagement({
   embedded = false,
 }: AdminTenantOnboardingDocumentManagementProps) {
   const t = useTranslation();
+  const router = useRouter();
   const { showError, showSuccess } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -154,7 +157,10 @@ export function AdminTenantOnboardingDocumentManagement({
       {documents.map((document) => (
         <ListRow
           key={document.configKey}
-          onClick={() => openEdit(document)}
+          onClick={() =>
+            router.push(getAdminTenantOnboardingDocumentDetailPath(tenantId, document.configKey))
+          }
+          detailHref={getAdminTenantOnboardingDocumentDetailPath(tenantId, document.configKey)}
           title={document.name}
           tone={document.archived ? 'neutral' : 'default'}
           badges={

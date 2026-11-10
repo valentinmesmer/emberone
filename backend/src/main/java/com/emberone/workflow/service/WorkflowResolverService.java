@@ -8,11 +8,16 @@ package com.emberone.workflow.service;
 
 import com.emberone.workflow.domain.*;
 import com.emberone.workflow.exception.WorkflowConfigurationException;
+import com.emberone.workflow.spi.ApproverOrg;
 import com.emberone.workflow.spi.ParticipantSpec;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,25 +40,40 @@ public class WorkflowResolverService {
         return selfApproveAllowed;
     }
 
-    static Set<Long> resolveApproverOrganizationIds(
+    /**
+     * The org approver slots of a request as org id to slot role, in this order: the context org
+     * ({@code CONTEXT}), the handler's dynamic orgs (their own roles), then the extra orgs from the
+     * tenant settings ({@code ADDITIONAL}). One org is one slot: the first role wins, so an org
+     * that is also the context org keeps the {@code CONTEXT} settings. When the extra orgs are
+     * exclusive, only they decide, and the context org among them is still {@code CONTEXT}.
+     */
+    static Map<Long, String> resolveApproverOrganizationIds(
             Long contextOrganizationId,
             List<Long> staticOrganizationIds,
             boolean staticApproversExclusive,
-            List<Long> dynamicOrganizationIds) {
-        Set<Long> approverOrgIds = new LinkedHashSet<>();
+            List<ApproverOrg> dynamicOrganizations) {
+        Map<Long, String> approverOrgs = new LinkedHashMap<>();
         boolean hasStaticOrgs = staticOrganizationIds != null && !staticOrganizationIds.isEmpty();
         if (staticApproversExclusive && hasStaticOrgs) {
-            approverOrgIds.addAll(staticOrganizationIds);
-        } else {
-            approverOrgIds.add(contextOrganizationId);
-            if (staticOrganizationIds != null) {
-                approverOrgIds.addAll(staticOrganizationIds);
-            }
-            if (dynamicOrganizationIds != null) {
-                approverOrgIds.addAll(dynamicOrganizationIds);
+            staticOrganizationIds.forEach(orgId ->
+                    approverOrgs.putIfAbsent(
+                            orgId,
+                            orgId.equals(contextOrganizationId)
+                                    ? WorkflowApproverSlotRoles.CONTEXT
+                                    : WorkflowApproverSlotRoles.ADDITIONAL));
+            return approverOrgs;
+        }
+        approverOrgs.putIfAbsent(contextOrganizationId, WorkflowApproverSlotRoles.CONTEXT);
+        if (dynamicOrganizations != null) {
+            for (ApproverOrg dynamicOrg : dynamicOrganizations) {
+                approverOrgs.putIfAbsent(dynamicOrg.organizationId(), dynamicOrg.slotRole());
             }
         }
-        return approverOrgIds;
+        if (hasStaticOrgs) {
+            staticOrganizationIds.forEach(
+                    orgId -> approverOrgs.putIfAbsent(orgId, WorkflowApproverSlotRoles.ADDITIONAL));
+        }
+        return approverOrgs;
     }
 
     private static boolean isOrgGroupApprover(WorkflowParticipant participant) {
@@ -70,24 +90,26 @@ public class WorkflowResolverService {
             List<Long> staticOrganizationIds,
             boolean staticApproversExclusive,
             boolean selfApproveAllowed,
-            List<Long> dynamicOrganizationIds,
+            List<ApproverOrg> dynamicOrganizations,
             List<ParticipantSpec> additionalParticipants) {
         Long tenantId = workflow.getTenantId();
         Set<String> usedSlotKeys = new LinkedHashSet<>();
 
-        Set<Long> approverOrgIds =
+        Map<Long, String> approverOrgs =
                 resolveApproverOrganizationIds(
                         contextOrganizationId,
                         staticOrganizationIds,
                         staticApproversExclusive,
-                        dynamicOrganizationIds);
+                        dynamicOrganizations);
 
-        for (Long orgId : approverOrgIds) {
+        approverOrgs.forEach((orgId, slotRole) -> {
             String slotKey = SlotKeys.forApproverOrg(orgId);
             registerSlotKey(usedSlotKeys, slotKey);
             workflow.getParticipants()
-                    .add(buildOrgApproverParticipant(workflow, tenantId, workflowTypeId, orgId));
-        }
+                    .add(
+                            buildOrgApproverParticipant(
+                                    workflow, tenantId, workflowTypeId, orgId, slotRole));
+        });
 
         if (additionalParticipants != null) {
             for (ParticipantSpec spec : additionalParticipants) {
@@ -107,8 +129,9 @@ public class WorkflowResolverService {
     }
 
     /**
-     * Adds missing org approver slots and drops obsolete pending ones so open instances match
-     * current routing.
+     * Adds missing org approver slots, drops obsolete pending ones and updates the role of existing
+     * ones so open instances match current routing. Pending slots whose role changed are returned
+     * so the caller can apply the settings of the new role (group, auto-approve).
      */
     public OrgApproverSlotSyncResult syncOrgApproverSlots(
             Workflow workflow,
@@ -116,20 +139,21 @@ public class WorkflowResolverService {
             Long contextOrganizationId,
             List<Long> staticOrganizationIds,
             boolean staticApproversExclusive,
-            List<Long> dynamicOrganizationIds) {
-        Set<Long> expectedOrgIds =
+            List<ApproverOrg> dynamicOrganizations) {
+        Map<Long, String> expectedOrgs =
                 resolveApproverOrganizationIds(
                         contextOrganizationId,
                         staticOrganizationIds,
                         staticApproversExclusive,
-                        dynamicOrganizationIds);
+                        dynamicOrganizations);
         Set<String> expectedSlotKeys = new LinkedHashSet<>();
-        for (Long orgId : expectedOrgIds) {
+        for (Long orgId : expectedOrgs.keySet()) {
             expectedSlotKeys.add(SlotKeys.forApproverOrg(orgId));
         }
 
         boolean changed = false;
         List<WorkflowParticipant> removedPending = new ArrayList<>();
+        List<WorkflowParticipant> reroledPending = new ArrayList<>();
         for (WorkflowParticipant participant : new ArrayList<>(workflow.getParticipants())) {
             if (!isOrgGroupApprover(participant)) {
                 continue;
@@ -145,38 +169,86 @@ public class WorkflowResolverService {
             changed = true;
         }
 
-        for (Long orgId : expectedOrgIds) {
+        for (Map.Entry<Long, String> expected : expectedOrgs.entrySet()) {
+            Long orgId = expected.getKey();
+            String slotRole = expected.getValue();
             String slotKey = SlotKeys.forApproverOrg(orgId);
-            boolean exists =
+            Optional<WorkflowParticipant> existing =
                     workflow.getParticipants().stream()
-                            .anyMatch(participant -> slotKey.equals(participant.getSlotKey()));
-            if (exists) {
+                            .filter(participant -> slotKey.equals(participant.getSlotKey()))
+                            .findFirst();
+            if (existing.isPresent()) {
+                WorkflowParticipant participant = existing.get();
+                if (!slotRole.equals(participant.getSlotRole())) {
+                    participant.setSlotRole(slotRole);
+                    if (participant.getSlotStatus() == ParticipantSlotStatus.PENDING) {
+                        reroledPending.add(participant);
+                    }
+                    changed = true;
+                }
                 continue;
             }
             workflow.getParticipants()
                     .add(
                             buildOrgApproverParticipant(
-                                    workflow, workflow.getTenantId(), workflowTypeId, orgId));
+                                    workflow,
+                                    workflow.getTenantId(),
+                                    workflowTypeId,
+                                    orgId,
+                                    slotRole));
             changed = true;
         }
 
-        return new OrgApproverSlotSyncResult(changed, removedPending);
+        return new OrgApproverSlotSyncResult(changed, removedPending, reroledPending);
+    }
+
+    /**
+     * Sets the role of the existing org approver slots to the one the current routing expects (for
+     * instances opened before slot roles existed). Does not add, remove or decide slots.
+     *
+     * @return the number of slots whose role changed
+     */
+    public int applySlotRoles(
+            Workflow workflow,
+            Long contextOrganizationId,
+            List<Long> staticOrganizationIds,
+            boolean staticApproversExclusive,
+            List<ApproverOrg> dynamicOrganizations) {
+        Map<Long, String> expectedOrgs =
+                resolveApproverOrganizationIds(
+                        contextOrganizationId,
+                        staticOrganizationIds,
+                        staticApproversExclusive,
+                        dynamicOrganizations);
+        int updated = 0;
+        for (WorkflowParticipant participant : workflow.getParticipants()) {
+            if (!isOrgGroupApprover(participant)) {
+                continue;
+            }
+            String expectedRole = expectedOrgs.get(participant.getOrganizationId());
+            if (expectedRole != null && !expectedRole.equals(participant.getSlotRole())) {
+                participant.setSlotRole(expectedRole);
+                updated++;
+            }
+        }
+        return updated;
     }
 
     private WorkflowParticipant buildOrgApproverParticipant(
-            Workflow workflow, Long tenantId, Long workflowTypeId, Long orgId) {
-        WorkflowTypeMapping mapping = mappingService.requireMapping(orgId, workflowTypeId);
+            Workflow workflow, Long tenantId, Long workflowTypeId, Long orgId, String slotRole) {
+        WorkflowTypeMappingSlot slot = mappingService.requireSlot(orgId, workflowTypeId, slotRole);
         return WorkflowParticipant.builder()
                 .tenantId(tenantId)
                 .workflow(workflow)
                 .role(ParticipantRole.APPROVER)
                 .requirement(ParticipantRequirement.MANDATORY)
                 .principalType(PrincipalType.ORGANIZATION_GROUP)
-                .principalId(mapping.getOrganizationGroupId())
+                .principalId(slot.getOrganizationGroupId())
                 .organizationId(orgId)
                 .slotKey(SlotKeys.forApproverOrg(orgId))
+                .slotRole(slotRole)
                 .slotStatus(
-                        mapping.isAutoApprove()
+                        slot.isAutoApprove()
                                 ? ParticipantSlotStatus.APPROVED
                                 : ParticipantSlotStatus.PENDING)
                 .build();
@@ -220,5 +292,7 @@ public class WorkflowResolverService {
     }
 
     public record OrgApproverSlotSyncResult(
-            boolean changed, List<WorkflowParticipant> removedPendingParticipants) {}
+            boolean changed,
+            List<WorkflowParticipant> removedPendingParticipants,
+            List<WorkflowParticipant> reroledPendingParticipants) {}
 }

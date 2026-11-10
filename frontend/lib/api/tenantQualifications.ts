@@ -48,6 +48,12 @@ function base(tenantId: number) {
 }
 
 export const tenantQualificationsApi = {
+  get(tenantId: number, configKey: string): Promise<TenantQualificationDefinitionDto> {
+    return apiClient.get<TenantQualificationDefinitionDto>(
+      `${base(tenantId)}/${encodeURIComponent(configKey)}`,
+    );
+  },
+
   list(tenantId: number): Promise<TenantQualificationDefinitionDto[]> {
     return apiClient.get<TenantQualificationDefinitionDto[]>(base(tenantId));
   },

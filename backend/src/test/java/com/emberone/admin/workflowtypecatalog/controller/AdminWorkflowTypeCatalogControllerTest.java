@@ -40,6 +40,7 @@ class AdminWorkflowTypeCatalogControllerTest {
         when(nameChangeHandler.allowsMultipleConcurrentOpen()).thenReturn(false);
         when(nameChangeHandler.openScope()).thenReturn(WorkflowOpenScope.SELF);
         when(nameChangeHandler.listedInBeginnableCatalog()).thenReturn(false);
+        when(nameChangeHandler.approverSlotRoles()).thenReturn(List.of("CONTEXT"));
 
         when(addressChangeHandler.workflowType()).thenReturn(WorkflowType.ADDRESS_CHANGE);
         when(addressChangeHandler.workflowTypeId()).thenReturn(WorkflowType.ADDRESS_CHANGE.getId());
@@ -47,6 +48,7 @@ class AdminWorkflowTypeCatalogControllerTest {
         when(addressChangeHandler.allowsMultipleConcurrentOpen()).thenReturn(true);
         when(addressChangeHandler.openScope()).thenReturn(WorkflowOpenScope.SELF);
         when(addressChangeHandler.listedInBeginnableCatalog()).thenReturn(false);
+        when(addressChangeHandler.approverSlotRoles()).thenReturn(List.of("CONTEXT", "HOME_ORG"));
 
         when(handlerRegistry.all()).thenReturn(List.of(addressChangeHandler, nameChangeHandler));
         controller = new AdminWorkflowTypeCatalogController(handlerRegistry);
@@ -64,5 +66,9 @@ class AdminWorkflowTypeCatalogControllerTest {
         assertThat(response.getBody().get(1).isAllowsMultipleConcurrentOpen()).isTrue();
         assertThat(response.getBody().get(0).getOpenScope()).isEqualTo(WorkflowOpenScope.SELF);
         assertThat(response.getBody().get(0).isListedInBeginnableCatalog()).isFalse();
+        assertThat(response.getBody().get(0).getApproverSlotRoles())
+                .containsExactly("CONTEXT", "ADDITIONAL");
+        assertThat(response.getBody().get(1).getApproverSlotRoles())
+                .containsExactly("CONTEXT", "HOME_ORG", "ADDITIONAL");
     }
 }

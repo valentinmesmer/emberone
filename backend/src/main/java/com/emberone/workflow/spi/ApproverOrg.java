@@ -7,7 +7,9 @@
 package com.emberone.workflow.spi;
 
 /**
- * An additional approver organization contributed by a dynamic handler. All approver orgs are
- * mandatory.
+ * An approver organization computed by a handler at runtime.
+ *
+ * @param slotRole one of {@link WorkflowHandler#approverSlotRoles()}, see {@link
+ *     WorkflowApproverSlotRoles}
  */
-public record ApproverOrg(Long organizationId) {}
+public record ApproverOrg(Long organizationId, String slotRole) {}

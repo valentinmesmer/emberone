@@ -6,8 +6,8 @@
 
 'use client';
 
-import { Suspense } from 'react';
 import { useParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { WorkflowApprovalSlotDetailView } from '@/components/my-area/workflows/WorkflowApprovalSlotDetailView';
 import { LoadingState } from '@/components/ui/loading';
 import { NotFoundState } from '@/components/ui/message-cards';

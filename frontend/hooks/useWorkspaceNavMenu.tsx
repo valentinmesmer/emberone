@@ -56,7 +56,7 @@ import {
   useUnreadDocumentCount,
   useAppointmentUnreadCount,
   useAppointmentUnreadCountsByOrganization,
-  useSelfPendingOnboardingInvitations,
+  useSelfOnboardingInvitations,
 } from '@/lib/store';
 
 const ORG_PATH = /^\/organizations\/(\d+)/;
@@ -98,10 +98,6 @@ export function useWorkspaceNavMenu(): {
   const { organizations: workspaceOrganizations, isPending: workspacePending } =
     useWorkspaceOrganizations();
   const { hasOrganizationMembership } = useHasActiveOrganizationMembership();
-  const accessibleMyAreaSections = useMemo(
-    () => getAccessibleMyAreaSections(hasOrganizationMembership),
-    [hasOrganizationMembership],
-  );
 
   const { data: unreadNotificationCount } = useUnreadNotificationCount({
     enabled: hasEmberOneUserId,
@@ -109,9 +105,18 @@ export function useWorkspaceNavMenu(): {
   const { data: openTodoCount } = useOpenTodoCount({ enabled: hasEmberOneUserId });
   const { data: pendingWorkflowCount } = useMyWorkflowPendingCount({ enabled: hasEmberOneUserId });
   const { data: unreadDocumentCount } = useUnreadDocumentCount({ enabled: hasEmberOneUserId });
-  const { data: pendingOnboardings = [] } = useSelfPendingOnboardingInvitations({
+  const { data: onboardingInvitations = [] } = useSelfOnboardingInvitations({
     enabled: hasEmberOneUserId,
   });
+  const pendingOnboardingCount = useMemo(
+    () => onboardingInvitations.filter((invitation) => invitation.status === 'OPEN').length,
+    [onboardingInvitations],
+  );
+  const hasOnboardingInvitation = onboardingInvitations.length > 0;
+  const accessibleMyAreaSections = useMemo(
+    () => getAccessibleMyAreaSections(hasOrganizationMembership, hasOnboardingInvitation),
+    [hasOrganizationMembership, hasOnboardingInvitation],
+  );
 
   const orgPathMatch = pathname.match(ORG_PATH);
   const activeOrgId = orgPathMatch ? Number.parseInt(orgPathMatch[1], 10) : null;
@@ -145,7 +150,7 @@ export function useWorkspaceNavMenu(): {
     (openTodoCount ?? 0) +
     (pendingWorkflowCount ?? 0) +
     (unreadDocumentCount?.count ?? 0) +
-    pendingOnboardings.length;
+    pendingOnboardingCount;
   const myAreaBadge = myAreaBadgeTotal > 0 ? myAreaBadgeTotal : undefined;
 
   return useMemo(() => {
@@ -154,7 +159,7 @@ export function useWorkspaceNavMenu(): {
       todos: openTodoCount,
       workflows: pendingWorkflowCount,
       documents: unreadDocumentCount?.count,
-      onboarding: pendingOnboardings.length > 0 ? pendingOnboardings.length : undefined,
+      onboarding: pendingOnboardingCount > 0 ? pendingOnboardingCount : undefined,
     };
 
     if (canAccessAdministration && pathname.startsWith('/admin')) {
@@ -301,7 +306,7 @@ export function useWorkspaceNavMenu(): {
     openTodoCount,
     pendingWorkflowCount,
     unreadDocumentCount?.count,
-    pendingOnboardings.length,
+    pendingOnboardingCount,
     unreadAppointmentCount,
   ]);
 }

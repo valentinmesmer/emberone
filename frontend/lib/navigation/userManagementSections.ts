@@ -4,27 +4,35 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-import type { MyAreaHubGroupId } from '@/lib/my-area/myAreaSections';
-import { getMyAreaHubGroupTitle } from '@/lib/my-area/myAreaSections';
 import { PermissionTypeEnum } from '@/types/permission';
 
-/** Hub grouping aligned with my-area (see `common.hub.groups`). */
-export type UserManagementHubGroupId = Extract<
-  MyAreaHubGroupId,
-  'personal' | 'inbox' | 'timeAttendance'
->;
+/**
+ * Hub grouping for a member's page (see `common.hub.groups`). The person's record comes first
+ * (the manager looks someone up); requests and actions close the page.
+ */
+export type UserManagementHubGroupId = 'profile' | 'training' | 'timeAttendance' | 'requests';
 
 export const USER_MANAGEMENT_HUB_GROUP_ORDER: readonly UserManagementHubGroupId[] = [
-  'personal',
-  'inbox',
+  'profile',
+  'training',
   'timeAttendance',
+  'requests',
 ] as const;
 
 export function getUserManagementHubGroupTitle(
   groupId: UserManagementHubGroupId,
   t: (key: string) => string,
 ): string {
-  return getMyAreaHubGroupTitle(groupId, t);
+  switch (groupId) {
+    case 'profile':
+      return t('common.hub.groups.myAreaProfile');
+    case 'training':
+      return t('common.hub.groups.myAreaTraining');
+    case 'timeAttendance':
+      return t('common.hub.groups.myAreaTimeAttendance');
+    case 'requests':
+      return t('common.hub.groups.userRequestsAndActions');
+  }
 }
 
 export type UserManagementSectionId =
@@ -55,86 +63,79 @@ export const USER_MANAGEMENT_SECTIONS: readonly UserManagementSectionConfig[] = 
   {
     id: 'master-data',
     labelKey: 'userManagement.sections.masterData',
-    hubGroupId: 'personal',
+    hubGroupId: 'profile',
     readPermission: PermissionTypeEnum.USER_READ,
     writePermission: PermissionTypeEnum.USER_WRITE,
   },
   {
     id: 'memberships',
     labelKey: 'userManagement.sections.memberships',
-    hubGroupId: 'personal',
+    hubGroupId: 'profile',
     readPermission: PermissionTypeEnum.USER_READ,
     writePermission: PermissionTypeEnum.USER_WRITE,
   },
   {
+    id: 'rank',
+    labelKey: 'userManagement.sections.rank',
+    hubGroupId: 'profile',
+    readPermission: PermissionTypeEnum.RANK_READ,
+    writePermission: PermissionTypeEnum.RANK_WRITE,
+  },
+  {
     id: 'emergency-contacts',
     labelKey: 'userManagement.sections.emergencyContacts',
-    hubGroupId: 'personal',
+    hubGroupId: 'profile',
     readPermission: PermissionTypeEnum.EMERGENCY_CONTACT_READ,
     writePermission: PermissionTypeEnum.EMERGENCY_CONTACT_WRITE,
   },
   {
     id: 'documents',
     labelKey: 'userManagement.sections.documents',
-    hubGroupId: 'personal',
+    hubGroupId: 'profile',
     readPermission: PermissionTypeEnum.DOCUMENT_READ,
     writePermission: PermissionTypeEnum.DOCUMENT_WRITE,
   },
   {
-    id: 'training-courses',
-    labelKey: 'userManagement.sections.trainingCourses',
-    hubGroupId: 'personal',
-    readPermission: PermissionTypeEnum.TRAINING_COURSE_READ,
-    writePermission: PermissionTypeEnum.TRAINING_COURSE_WRITE,
-  },
-  {
-    id: 'course-registrations',
-    labelKey: 'userManagement.sections.courseRegistrations',
-    hubGroupId: 'personal',
-    readPermission: PermissionTypeEnum.TRAINING_COURSE_READ,
-    writePermission: PermissionTypeEnum.TRAINING_COURSE_READ,
-  },
-  {
-    id: 'driving-licenses',
-    labelKey: 'userManagement.sections.drivingLicenses',
-    hubGroupId: 'personal',
-    readPermission: PermissionTypeEnum.DRIVING_LICENSE_READ,
-    writePermission: PermissionTypeEnum.DRIVING_LICENSE_WRITE,
-  },
-  {
-    id: 'certifications',
-    labelKey: 'userManagement.sections.certifications',
-    hubGroupId: 'personal',
-    readPermission: PermissionTypeEnum.CERTIFICATION_READ,
-    writePermission: PermissionTypeEnum.CERTIFICATION_WRITE,
+    id: 'onboarding',
+    labelKey: 'userManagement.sections.onboarding',
+    hubGroupId: 'profile',
+    readPermission: PermissionTypeEnum.USER_READ,
+    writePermission: PermissionTypeEnum.USER_WRITE,
   },
   {
     id: 'qualifications',
     labelKey: 'userManagement.sections.qualifications',
-    hubGroupId: 'personal',
+    hubGroupId: 'training',
     readPermission: PermissionTypeEnum.QUALIFICATION_READ,
     writePermission: PermissionTypeEnum.QUALIFICATION_WRITE,
   },
   {
-    id: 'rank',
-    labelKey: 'userManagement.sections.rank',
-    hubGroupId: 'personal',
-    readPermission: PermissionTypeEnum.RANK_READ,
-    writePermission: PermissionTypeEnum.RANK_WRITE,
+    id: 'certifications',
+    labelKey: 'userManagement.sections.certifications',
+    hubGroupId: 'training',
+    readPermission: PermissionTypeEnum.CERTIFICATION_READ,
+    writePermission: PermissionTypeEnum.CERTIFICATION_WRITE,
   },
   {
-    id: 'workflows',
-    labelKey: 'userManagement.sections.workflows',
-    hubGroupId: 'inbox',
-    readPermission: PermissionTypeEnum.WORKFLOW_READ,
-    writePermission: PermissionTypeEnum.WORKFLOW_READ,
+    id: 'training-courses',
+    labelKey: 'userManagement.sections.trainingCourses',
+    hubGroupId: 'training',
+    readPermission: PermissionTypeEnum.TRAINING_COURSE_READ,
+    writePermission: PermissionTypeEnum.TRAINING_COURSE_WRITE,
   },
   {
-    id: 'onboarding',
-    labelKey: 'userManagement.sections.onboarding',
-    hubGroupId: 'inbox',
-    readPermission: PermissionTypeEnum.USER_READ,
-    writePermission: PermissionTypeEnum.USER_WRITE,
+    id: 'driving-licenses',
+    labelKey: 'userManagement.sections.drivingLicenses',
+    hubGroupId: 'training',
+    readPermission: PermissionTypeEnum.DRIVING_LICENSE_READ,
+    writePermission: PermissionTypeEnum.DRIVING_LICENSE_WRITE,
+  },
+  {
+    id: 'course-registrations',
+    labelKey: 'userManagement.sections.courseRegistrations',
+    hubGroupId: 'training',
+    readPermission: PermissionTypeEnum.TRAINING_COURSE_READ,
+    writePermission: PermissionTypeEnum.TRAINING_COURSE_READ,
   },
   {
     id: 'absences',
@@ -149,6 +150,13 @@ export const USER_MANAGEMENT_SECTIONS: readonly UserManagementSectionConfig[] = 
     hubGroupId: 'timeAttendance',
     readPermission: PermissionTypeEnum.TIME_ENTRY_READ,
     writePermission: PermissionTypeEnum.TIME_ENTRY_WRITE,
+  },
+  {
+    id: 'workflows',
+    labelKey: 'userManagement.sections.workflows',
+    hubGroupId: 'requests',
+    readPermission: PermissionTypeEnum.WORKFLOW_READ,
+    writePermission: PermissionTypeEnum.WORKFLOW_READ,
   },
 ] as const;
 

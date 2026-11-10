@@ -11,11 +11,10 @@ import com.emberone.federalstate.baseline.WorkflowDefinitionBaseline;
 import com.emberone.organization.repository.OrganizationRepository;
 import com.emberone.platform.exception.ResourceNotFoundException;
 import com.emberone.platform.security.TenantScopeGuard;
-import com.emberone.workflow.domain.WorkflowDefinition;
-import com.emberone.workflow.domain.WorkflowDefinitionStaticOrg;
+import com.emberone.workflow.dto.SaveWorkflowRoutingRuleRequest;
 import com.emberone.workflow.dto.TenantWorkflowDefinitionDto;
+import com.emberone.workflow.dto.WorkflowRoutingRuleDto;
 import com.emberone.workflow.event.WorkflowConfigurationChangedEvent;
-import com.emberone.workflow.repository.WorkflowDefinitionRepository;
 import com.emberone.workflow.tenant.TenantWorkflowDefinition;
 import com.emberone.workflow.tenant.TenantWorkflowDefinitionRepository;
 import com.emberone.workflow.tenant.TenantWorkflowDefinitionStaticOrg;
@@ -37,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TenantWorkflowDefinitionService {
 
     private final TenantWorkflowDefinitionRepository definitionRepository;
-    private final WorkflowDefinitionRepository orgDefinitionRepository;
+    private final TenantWorkflowRoutingRuleService routingRuleService;
     private final OrganizationRepository organizationRepository;
     private final FederalStateService federalStateService;
     private final ApplicationEventPublisher eventPublisher;
@@ -63,7 +62,6 @@ public class TenantWorkflowDefinitionService {
                     applyStaticOrgs(definition, staticOrgIds == null ? List.of() : staticOrgIds);
                     definition.setCustomized(true);
                     TenantWorkflowDefinition saved = definitionRepository.save(definition);
-                    propagateToOrgDefinitions(workflowTypeId, saved);
                     publishConfigurationChanged(tenantId, workflowTypeId);
                     log.info("Updated tenant workflow definition for type id {}", workflowTypeId);
                     return toDto(saved);
@@ -85,12 +83,72 @@ public class TenantWorkflowDefinitionService {
                     definition.setStaticApproversExclusive(baseline.staticApproversExclusive());
                     applyStaticOrgs(definition, List.of());
                     definition.setCustomized(false);
+                    routingRuleService.deleteAll(definition);
                     TenantWorkflowDefinition saved = definitionRepository.save(definition);
-                    propagateToOrgDefinitions(workflowTypeId, saved);
                     publishConfigurationChanged(tenantId, workflowTypeId);
                     log.info("Restored tenant workflow definition for type id {}", workflowTypeId);
                     return toDto(saved);
                 });
+    }
+
+    @Transactional
+    public WorkflowRoutingRuleDto getRoutingRule(long tenantId, Long workflowTypeId, Long ruleId) {
+        return withTenantContext(
+                tenantId,
+                () -> routingRuleService.get(requireDefinition(tenantId, workflowTypeId), ruleId));
+    }
+
+    @Transactional
+    public WorkflowRoutingRuleDto createRoutingRule(
+            long tenantId, Long workflowTypeId, SaveWorkflowRoutingRuleRequest request) {
+        return withTenantContext(
+                tenantId,
+                () -> {
+                    TenantWorkflowDefinition definition =
+                            requireDefinition(tenantId, workflowTypeId);
+                    WorkflowRoutingRuleDto rule = routingRuleService.create(definition, request);
+                    afterRuleChange(tenantId, workflowTypeId, definition);
+                    return rule;
+                });
+    }
+
+    @Transactional
+    public WorkflowRoutingRuleDto updateRoutingRule(
+            long tenantId,
+            Long workflowTypeId,
+            Long ruleId,
+            SaveWorkflowRoutingRuleRequest request) {
+        return withTenantContext(
+                tenantId,
+                () -> {
+                    TenantWorkflowDefinition definition =
+                            requireDefinition(tenantId, workflowTypeId);
+                    WorkflowRoutingRuleDto rule =
+                            routingRuleService.update(definition, ruleId, request);
+                    afterRuleChange(tenantId, workflowTypeId, definition);
+                    return rule;
+                });
+    }
+
+    @Transactional
+    public void deleteRoutingRule(long tenantId, Long workflowTypeId, Long ruleId) {
+        withTenantContext(
+                tenantId,
+                () -> {
+                    TenantWorkflowDefinition definition =
+                            requireDefinition(tenantId, workflowTypeId);
+                    routingRuleService.delete(definition, ruleId);
+                    afterRuleChange(tenantId, workflowTypeId, definition);
+                    return null;
+                });
+    }
+
+    private void afterRuleChange(
+            long tenantId, Long workflowTypeId, TenantWorkflowDefinition definition) {
+        definition.setCustomized(true);
+        definitionRepository.save(definition);
+        publishConfigurationChanged(tenantId, workflowTypeId);
+        log.info("Changed routing rules of tenant workflow definition {}", workflowTypeId);
     }
 
     @Transactional
@@ -124,18 +182,6 @@ public class TenantWorkflowDefinitionService {
                 .orElseGet(() -> createFromBaseline(tenantId, workflowTypeId));
     }
 
-    public void applyToOrgDefinition(
-            WorkflowDefinition orgDefinition, TenantWorkflowDefinition tenantDefinition) {
-        orgDefinition.setStaticApproversExclusive(tenantDefinition.isStaticApproversExclusive());
-        applyStaticOrgs(orgDefinition, tenantDefinition);
-    }
-
-    public void applyToOrgDefinition(Long workflowTypeId, WorkflowDefinition orgDefinition) {
-        definitionRepository
-                .findByWorkflowTypeId(workflowTypeId)
-                .ifPresent(definition -> applyToOrgDefinition(orgDefinition, definition));
-    }
-
     private TenantWorkflowDefinition createFromBaseline(long tenantId, Long workflowTypeId) {
         WorkflowDefinitionBaseline baseline =
                 federalStateService.settings(tenantId).findWorkflowDefinition(workflowTypeId);
@@ -151,15 +197,6 @@ public class TenantWorkflowDefinitionService {
                         .customized(false)
                         .build();
         return definitionRepository.save(definition);
-    }
-
-    private void propagateToOrgDefinitions(
-            Long workflowTypeId, TenantWorkflowDefinition tenantDefinition) {
-        for (WorkflowDefinition orgDefinition :
-                orgDefinitionRepository.findByWorkflowTypeId(workflowTypeId)) {
-            applyToOrgDefinition(orgDefinition, tenantDefinition);
-            orgDefinitionRepository.save(orgDefinition);
-        }
     }
 
     private void publishConfigurationChanged(long tenantId, Long workflowTypeId) {
@@ -200,33 +237,6 @@ public class TenantWorkflowDefinitionService {
         }
     }
 
-    private void applyStaticOrgs(
-            WorkflowDefinition orgDefinition, TenantWorkflowDefinition tenantDefinition) {
-        Set<Long> desired =
-                tenantDefinition.getStaticOrganizations().stream()
-                        .map(TenantWorkflowDefinitionStaticOrg::getApproverOrganizationId)
-                        .collect(Collectors.toSet());
-        orgDefinition
-                .getStaticOrganizations()
-                .removeIf(existing -> !desired.contains(existing.getApproverOrganizationId()));
-        Set<Long> present =
-                orgDefinition.getStaticOrganizations().stream()
-                        .map(WorkflowDefinitionStaticOrg::getApproverOrganizationId)
-                        .collect(Collectors.toSet());
-        for (Long orgId : desired) {
-            if (!present.contains(orgId)) {
-                orgDefinition
-                        .getStaticOrganizations()
-                        .add(
-                                WorkflowDefinitionStaticOrg.builder()
-                                        .tenantId(orgDefinition.getTenantId())
-                                        .definition(orgDefinition)
-                                        .approverOrganizationId(orgId)
-                                        .build());
-            }
-        }
-    }
-
     private TenantWorkflowDefinitionDto toDto(TenantWorkflowDefinition definition) {
         List<Long> staticOrgIds =
                 definition.getStaticOrganizations().stream()
@@ -239,6 +249,7 @@ public class TenantWorkflowDefinitionService {
                 .staticApproversExclusive(definition.isStaticApproversExclusive())
                 .staticApproverOrganizationIds(staticOrgIds)
                 .customized(definition.isCustomized())
+                .routingRules(routingRuleService.list(definition))
                 .build();
     }
 

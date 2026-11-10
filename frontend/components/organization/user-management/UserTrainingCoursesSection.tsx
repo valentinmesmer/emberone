@@ -28,12 +28,12 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readNumber, readNumberArray, readString } from '@/lib/ai/extractionFields';
 import type { TrainingCourseTypeDto, TrainingCourseUserRecordDto } from '@/lib/api/trainingCourses';
 import {
   getOrganizationUserTrainingCourseRecordDetailPath,
   getOrganizationUserWorkflowDetailPath,
 } from '@/lib/navigation/userManagementSections';
-import { readNumber, readNumberArray, readString } from '@/lib/ai/extractionFields';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateTrainingCourseRecord,

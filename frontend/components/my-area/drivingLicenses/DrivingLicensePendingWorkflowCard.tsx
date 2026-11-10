@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { FieldDisplay } from '@/components/ui/field-display';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DrivingLicenseClassInput } from '@/lib/api/drivingLicenses';
 import { formatDateLong } from '@/lib/utils';
@@ -80,16 +80,14 @@ export function DrivingLicensePendingWorkflowCard({
                 key={licenseClass.label}
                 compact
                 title={licenseClass.label}
-                subtitle={[
+                subtitle={subtitleLines([
                   licenseClass.grantDate?.trim()
                     ? `${t('drivingLicense.classes.grantDateLabel')}: ${formatDateLong(licenseClass.grantDate)}`
                     : null,
                   licenseClass.expirationDate?.trim()
                     ? `${t('drivingLicense.classes.expirationDateLabel')}: ${formatDateLong(licenseClass.expirationDate)}`
                     : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
+                ])}
               />
             ))}
           </ListContainer>

@@ -50,7 +50,6 @@ class DutyFunctionStandardDomainTest {
                                 TenantFunction.builder()
                                         .configKey("KDT")
                                         .name("Kommandant")
-                                        .abbreviation("Kdt")
                                         .active(true)
                                         .archived(false)
                                         .build()));

@@ -71,7 +71,7 @@ public class RankStandardDomain implements StandardDomain {
                                             domainKey(),
                                             rank.getConfigKey(),
                                             rank.getName(),
-                                            rank.getAbbreviation(),
+                                            rank.getConfigKey(),
                                             List.of(),
                                             Map.of("active", String.valueOf(rank.isActive())),
                                             false)));

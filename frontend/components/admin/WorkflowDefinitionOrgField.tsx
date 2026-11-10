@@ -10,26 +10,21 @@ import { Plus, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { IconButton } from '@/components/ui/icon-button';
 import { Select } from '@/components/ui/select';
-import { SwitchField } from '@/components/ui/switch';
 import { useTranslation } from '@/hooks/useTranslation';
 import { compareText } from '@/lib/i18n/locale';
 import type { FlatAdminOrganization } from '@/lib/utils/adminOrgTree';
 
-export interface WorkflowDefinitionFormFieldsProps {
+export interface WorkflowDefinitionOrgFieldProps {
   organizations: FlatAdminOrganization[];
-  staticApproversExclusive: boolean;
-  onStaticApproversExclusiveChange: (exclusive: boolean) => void;
   staticOrgIds: Set<number>;
   onStaticOrgIdsChange: (ids: Set<number>) => void;
 }
 
-export function WorkflowDefinitionFormFields({
+export function WorkflowDefinitionOrgField({
   organizations,
-  staticApproversExclusive,
-  onStaticApproversExclusiveChange,
   staticOrgIds,
   onStaticOrgIdsChange,
-}: WorkflowDefinitionFormFieldsProps) {
+}: WorkflowDefinitionOrgFieldProps) {
   const t = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickOrgId, setPickOrgId] = useState('');
@@ -57,9 +52,6 @@ export function WorkflowDefinitionFormFields({
     const next = new Set(staticOrgIds);
     next.delete(orgId);
     onStaticOrgIdsChange(next);
-    if (next.size === 0 && staticApproversExclusive) {
-      onStaticApproversExclusiveChange(false);
-    }
   };
 
   const addOrg = (orgId: number) => {
@@ -140,15 +132,6 @@ export function WorkflowDefinitionFormFields({
           />
         ) : null}
       </div>
-
-      {staticOrgIds.size > 0 ? (
-        <SwitchField
-          label={t('admin.workflowDefinitions.staticExclusive')}
-          description={t('admin.workflowDefinitions.staticExclusiveHint')}
-          checked={staticApproversExclusive}
-          onCheckedChange={onStaticApproversExclusiveChange}
-        />
-      ) : null}
     </div>
   );
 }

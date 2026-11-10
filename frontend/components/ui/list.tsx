@@ -373,6 +373,27 @@ export function ListRowMeta({ children, className }: { children: ReactNode; clas
   );
 }
 
+/**
+ * Several facts of one row as stacked lines instead of a separator glyph ("a · b").
+ * Empty entries are skipped; returns `undefined` when nothing is left so `subtitle` stays unset.
+ */
+export function subtitleLines(
+  lines: ReadonlyArray<ReactNode | false | null | undefined | ''>,
+): ReactNode {
+  const visible = lines.filter((line) => line != null && line !== false && line !== '');
+  if (visible.length === 0) return undefined;
+  return (
+    <>
+      {visible.map((line, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: static, ordered lines
+        <span key={index} className="block">
+          {line}
+        </span>
+      ))}
+    </>
+  );
+}
+
 /** A single icon+text detail line. Pass an already-sized icon (e.g. `h-3 w-3 text-[var(--fire-red)]`). */
 export function ListRowMetaItem({
   icon,

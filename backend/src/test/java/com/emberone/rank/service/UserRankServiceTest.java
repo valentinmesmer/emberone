@@ -18,6 +18,7 @@ import com.emberone.platform.exception.ConflictException;
 import com.emberone.platform.security.TenantContextHolder;
 import com.emberone.platform.web.list.ListQuery;
 import com.emberone.rank.domain.UserRank;
+import com.emberone.rank.dto.OrganizationRankMemberDto;
 import com.emberone.rank.dto.OrganizationRankMemberPageDto;
 import com.emberone.rank.dto.SetUserRankRequest;
 import com.emberone.rank.mapper.OrganizationRankMemberDtoAssembler;
@@ -132,7 +133,6 @@ class UserRankServiceTest {
                                         .id(2L)
                                         .configKey("BM")
                                         .name("Brandmeister")
-                                        .abbreviation("BM")
                                         .active(true)
                                         .archived(false)
                                         .build()));
@@ -180,7 +180,10 @@ class UserRankServiceTest {
         when(organizationRankMemberDtoAssembler.toPageDto(any()))
                 .thenAnswer(invocation -> {
                     var page =
-                            invocation.getArgument(0, org.springframework.data.domain.Page.class);
+                            invocation
+                                    .<org.springframework.data.domain.Page<
+                                                    OrganizationRankMemberDto>>
+                                            getArgument(0);
                     return OrganizationRankMemberPageDto.builder()
                             .content(page.getContent())
                             .build();

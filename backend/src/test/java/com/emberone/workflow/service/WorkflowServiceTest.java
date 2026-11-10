@@ -6,6 +6,7 @@
 
 package com.emberone.workflow.service;
 
+import static com.emberone.testsupport.SpecificationMatchers.anySpecification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,6 +34,7 @@ import com.emberone.workflow.event.WorkflowEventContext;
 import com.emberone.workflow.event.WorkflowEventPublisher;
 import com.emberone.workflow.event.WorkflowLifecycleEvent;
 import com.emberone.workflow.exception.WorkflowAccessDeniedException;
+import com.emberone.workflow.exception.WorkflowConfigurationException;
 import com.emberone.workflow.exception.WorkflowNotFoundException;
 import com.emberone.workflow.exception.WorkflowStateException;
 import com.emberone.workflow.exception.WorkflowValidationException;
@@ -42,6 +44,7 @@ import com.emberone.workflow.mapper.WorkflowMapper;
 import com.emberone.workflow.repository.WorkflowParticipantRepository;
 import com.emberone.workflow.repository.WorkflowRepository;
 import com.emberone.workflow.spi.ApproverOrg;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import com.emberone.workflow.spi.WorkflowHandler;
 import com.emberone.workflow.spi.WorkflowHandlerRegistry;
 import com.emberone.workflow.spi.WorkflowOpenContext;
@@ -71,6 +74,7 @@ class WorkflowServiceTest {
     @Mock WorkflowTypeMappingService mappingService;
     @Mock WorkflowSelfApproveService selfApproveService;
     @Mock WorkflowResolverService resolverService;
+    @Mock WorkflowApproverRoutingService approverRoutingService;
     @Mock WorkflowRepository workflowRepository;
     @Mock WorkflowListSearch workflowListSearch;
     @Mock WorkflowParticipantRepository participantRepository;
@@ -97,6 +101,9 @@ class WorkflowServiceTest {
 
     @BeforeEach
     void setUpDtoMapping() {
+        lenient()
+                .when(approverRoutingService.resolve(any(), any()))
+                .thenReturn(WorkflowApproverRoutingService.Routing.none());
         lenient()
                 .when(workflowListSearch.search(any(ListQuery.class)))
                 .thenReturn(Specification.unrestricted());
@@ -552,13 +559,7 @@ class WorkflowServiceTest {
                         org.mockito.ArgumentMatchers.<WorkflowOpenContext<Object>>any(), eq(20L)))
                 .thenReturn(20L);
         when(handler.additionalParticipants(any())).thenReturn(List.of());
-        WorkflowDefinition definition =
-                WorkflowDefinition.builder()
-                        .enabled(true)
-                        .staticApproversExclusive(false)
-                        .selfApproveAllowed(false)
-                        .staticOrganizations(new ArrayList<>())
-                        .build();
+        WorkflowDefinition definition = WorkflowDefinition.builder().enabled(true).build();
         when(definitionService.resolveEffectiveDefinition(5L, 20L)).thenReturn(definition);
         when(jsonMapper.writeValueAsString(Map.of("key", "value")))
                 .thenReturn("{\"key\":\"value\"}");
@@ -607,6 +608,72 @@ class WorkflowServiceTest {
                         eq(List.of()));
         verify(handler).onOpened(any(Workflow.class));
         verify(eventPublisher).publish(any(Workflow.class), eq(WorkflowLifecycleEvent.OPENED));
+    }
+
+    @Test
+    void openRoutesToExtraOrgsOfTheRequestSubjects() throws JacksonException {
+        when(tokenService.requireUserId()).thenReturn(42L);
+        when(tokenService.requireTenantId()).thenReturn(7L);
+        doReturn(handler).when(handlerRegistry).require(5L);
+        when(handler.allowsMultipleConcurrentOpen()).thenReturn(true);
+        when(handler.mode()).thenReturn(WorkflowMode.STATIC);
+        when(handler.requiredPermissionToOpen()).thenReturn(Optional.empty());
+        when(handler.resolveContextOrganization(any())).thenReturn(20L);
+        when(handler.resolvePermissionCheckOrganization(
+                        org.mockito.ArgumentMatchers.<WorkflowOpenContext<Object>>any(), eq(20L)))
+                .thenReturn(20L);
+        when(handler.additionalParticipants(any())).thenReturn(List.of());
+        when(handler.resolveRoutingSubjectIds(any())).thenReturn(Set.of(100L, 101L));
+        when(definitionService.resolveEffectiveDefinition(5L, 20L))
+                .thenReturn(WorkflowDefinition.builder().enabled(true).build());
+        when(approverRoutingService.resolve(5L, Set.of(100L, 101L)))
+                .thenReturn(new WorkflowApproverRoutingService.Routing(List.of(55L, 56L), true));
+        when(workflowRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.open(5L, null, null, null);
+
+        verify(resolverService)
+                .resolveParticipants(
+                        any(Workflow.class),
+                        eq(42L),
+                        eq(5L),
+                        eq(20L),
+                        eq(List.of(55L, 56L)),
+                        eq(true),
+                        eq(false),
+                        eq(List.of()),
+                        eq(List.of()));
+    }
+
+    @Test
+    void updatePayloadResyncsApproverSlotsFromFreshlyResolvedSubjects() {
+        Workflow workflow = workflow(1L);
+        WorkflowParticipant removed = participant(workflow, 10L, null);
+        workflow.getParticipants().add(removed);
+        arrangeWorkflow(workflow, 42L);
+        lenient().when(handler.payloadType()).thenReturn(Object.class);
+        lenient().when(handler.mode()).thenReturn(WorkflowMode.STATIC);
+        lenient().when(handler.resolveContextOrganization(any())).thenReturn(20L);
+        when(handler.resolveRoutingSubjectIds(any())).thenReturn(Set.of(102L));
+        when(approverRoutingService.resolve(5L, Set.of(102L)))
+                .thenReturn(new WorkflowApproverRoutingService.Routing(List.of(57L), false));
+        when(resolverService.syncOrgApproverSlots(
+                        eq(workflow), eq(5L), eq(20L), eq(List.of(57L)), eq(false), eq(List.of())))
+                .thenReturn(
+                        new WorkflowResolverService.OrgApproverSlotSyncResult(
+                                true, List.of(removed), List.of()));
+        when(workflowRepository.save(workflow)).thenReturn(workflow);
+
+        service.updatePayload(1L, Map.of("key", "value"));
+
+        verify(resolverService)
+                .syncOrgApproverSlots(
+                        eq(workflow), eq(5L), eq(20L), eq(List.of(57L)), eq(false), eq(List.of()));
+        verify(eventPublisher)
+                .publish(
+                        eq(workflow),
+                        eq(WorkflowLifecycleEvent.APPROVER_SLOT_REMOVED),
+                        any(WorkflowEventContext.class));
     }
 
     @Test
@@ -755,7 +822,7 @@ class WorkflowServiceTest {
     void listOpenedForCurrentUserReturnsMappedWorkflows() {
         Workflow workflow = workflow(1L);
         when(tokenService.requireUserId()).thenReturn(42L);
-        when(workflowRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(workflowRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(workflow)));
         when(workflowRepository.findWithDetailsByIdIn(List.of(1L))).thenReturn(List.of(workflow));
         when(mapper.toDtoList(List.of(workflow)))
@@ -787,7 +854,7 @@ class WorkflowServiceTest {
         otherWorkflow.setOpenedByUserId(99L);
         when(tokenService.requireUserId()).thenReturn(42L);
         when(membershipRepository.findByUser_Id(42L)).thenReturn(List.of());
-        when(workflowRepository.findAll(any(Specification.class), any(Sort.class)))
+        when(workflowRepository.findAll(anySpecification(), any(Sort.class)))
                 .thenReturn(List.of(ownWorkflow, otherWorkflow));
         when(workflowRepository.findWithDetailsByIdIn(List.of(1L, 2L)))
                 .thenReturn(List.of(ownWorkflow, otherWorkflow));
@@ -817,7 +884,7 @@ class WorkflowServiceTest {
         workflow.setOpenedByUserId(99L);
         when(tokenService.requireUserId()).thenReturn(42L);
         when(membershipRepository.findByUser_Id(42L)).thenReturn(List.of());
-        when(workflowRepository.findAll(any(Specification.class), any(Sort.class)))
+        when(workflowRepository.findAll(anySpecification(), any(Sort.class)))
                 .thenReturn(List.of(workflow));
         when(workflowRepository.findWithDetailsByIdIn(List.of(2L))).thenReturn(List.of(workflow));
         when(workflowInstanceAccess.requiresParticipantAction(workflow, 42L)).thenReturn(true);
@@ -834,7 +901,7 @@ class WorkflowServiceTest {
                 new ListQuery(0, 50, null, "openedAt,asc"), WorkflowListFilter.parse(null, null));
 
         org.mockito.ArgumentCaptor<Sort> sort = org.mockito.ArgumentCaptor.forClass(Sort.class);
-        verify(workflowRepository).findAll(any(Specification.class), sort.capture());
+        verify(workflowRepository).findAll(anySpecification(), sort.capture());
         assertThat(sort.getValue().getOrderFor("openedAt").getDirection())
                 .isEqualTo(Sort.Direction.ASC);
     }
@@ -918,17 +985,19 @@ class WorkflowServiceTest {
         when(handler.resolvePermissionCheckOrganization(
                         org.mockito.ArgumentMatchers.<WorkflowOpenContext<Object>>any(), eq(20L)))
                 .thenReturn(20L);
+        when(handler.approverSlotRoles())
+                .thenReturn(
+                        List.of(
+                                WorkflowApproverSlotRoles.CONTEXT,
+                                WorkflowApproverSlotRoles.HOME_ORG));
         when(handler.resolveDynamicOrganizations(any()))
-                .thenReturn(List.of(new ApproverOrg(25L), new ApproverOrg(26L)));
+                .thenReturn(
+                        List.of(
+                                new ApproverOrg(25L, WorkflowApproverSlotRoles.HOME_ORG),
+                                new ApproverOrg(26L, WorkflowApproverSlotRoles.HOME_ORG)));
         when(handler.additionalParticipants(any())).thenReturn(List.of());
         when(definitionService.resolveEffectiveDefinition(5L, 20L))
-                .thenReturn(
-                        WorkflowDefinition.builder()
-                                .enabled(true)
-                                .staticApproversExclusive(false)
-                                .selfApproveAllowed(false)
-                                .staticOrganizations(new ArrayList<>())
-                                .build());
+                .thenReturn(WorkflowDefinition.builder().enabled(true).build());
         when(workflowRepository.save(any()))
                 .thenAnswer(invocation -> {
                     Workflow workflow = invocation.getArgument(0);
@@ -947,7 +1016,10 @@ class WorkflowServiceTest {
                         eq(List.of()),
                         eq(false),
                         eq(false),
-                        eq(List.of(25L, 26L)),
+                        eq(
+                                List.of(
+                                        new ApproverOrg(25L, WorkflowApproverSlotRoles.HOME_ORG),
+                                        new ApproverOrg(26L, WorkflowApproverSlotRoles.HOME_ORG))),
                         eq(List.of()));
     }
 
@@ -966,13 +1038,7 @@ class WorkflowServiceTest {
                 .thenReturn(20L);
         when(handler.additionalParticipants(any())).thenReturn(List.of());
         when(definitionService.resolveEffectiveDefinition(5L, 20L))
-                .thenReturn(
-                        WorkflowDefinition.builder()
-                                .enabled(true)
-                                .staticApproversExclusive(false)
-                                .selfApproveAllowed(false)
-                                .staticOrganizations(new ArrayList<>())
-                                .build());
+                .thenReturn(WorkflowDefinition.builder().enabled(true).build());
         doAnswer(
                         invocation -> {
                             Workflow workflow = invocation.getArgument(0);
@@ -1026,11 +1092,7 @@ class WorkflowServiceTest {
                 .thenReturn(20L);
         when(handler.additionalParticipants(any())).thenReturn(List.of());
         when(definitionService.resolveEffectiveDefinition(5L, 20L))
-                .thenReturn(
-                        WorkflowDefinition.builder()
-                                .enabled(true)
-                                .staticOrganizations(new ArrayList<>())
-                                .build());
+                .thenReturn(WorkflowDefinition.builder().enabled(true).build());
         JacksonException serializationError = org.mockito.Mockito.mock(JacksonException.class);
         when(serializationError.getMessage()).thenReturn("cannot serialize");
         when(jsonMapper.writeValueAsString(any())).thenThrow(serializationError);
@@ -1051,6 +1113,7 @@ class WorkflowServiceTest {
                         .principalType(PrincipalType.ORGANIZATION_GROUP)
                         .principalId(30L)
                         .organizationId(20L)
+                        .slotRole(WorkflowApproverSlotRoles.NEW_MAIN_ORG)
                         .slotStatus(ParticipantSlotStatus.PENDING)
                         .build();
         WorkflowParticipantDto userParticipant =
@@ -1062,7 +1125,8 @@ class WorkflowServiceTest {
                         .build();
         WorkflowDecisionDto decisionDto = WorkflowDecisionDto.builder().userId(51L).build();
         when(workflowRepository.findWithDetailsById(1L)).thenReturn(Optional.of(workflow));
-        when(selfApproveService.isAllowed(workflow, 20L)).thenReturn(true);
+        when(selfApproveService.isAllowed(workflow, 20L, WorkflowApproverSlotRoles.NEW_MAIN_ORG))
+                .thenReturn(true);
         when(mapper.toDto(workflow))
                 .thenReturn(
                         WorkflowDto.builder()
@@ -1123,7 +1187,7 @@ class WorkflowServiceTest {
         ownWorkflow.setOpenedByUserId(42L);
         when(tokenService.requireUserId()).thenReturn(42L);
         when(membershipRepository.findByUser_Id(42L)).thenReturn(List.of());
-        when(workflowRepository.findAll(any(Specification.class), any(Sort.class)))
+        when(workflowRepository.findAll(anySpecification(), any(Sort.class)))
                 .thenReturn(List.of(ownWorkflow));
         when(workflowRepository.findWithDetailsByIdIn(List.of(1L)))
                 .thenReturn(List.of(ownWorkflow));
@@ -1153,7 +1217,7 @@ class WorkflowServiceTest {
 
         when(tokenService.requireTenantId()).thenReturn(7L);
         when(organizationAccessService.organizationNotInTenant(20L, 7L)).thenReturn(false);
-        when(workflowRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(workflowRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(open)));
         when(workflowRepository.findWithDetailsByIdIn(List.of(9L))).thenReturn(List.of(open));
         when(mapper.toDtoList(List.of(open))).thenReturn(List.of(dto));
@@ -1166,7 +1230,7 @@ class WorkflowServiceTest {
                         .getContent();
 
         assertThat(result).containsExactly(dto);
-        verify(workflowRepository).findAll(any(Specification.class), any(Pageable.class));
+        verify(workflowRepository).findAll(anySpecification(), any(Pageable.class));
     }
 
     @Test
@@ -1181,7 +1245,7 @@ class WorkflowServiceTest {
                                         WorkflowListFilter.parse(null, null))
                                 .getContent())
                 .isEmpty();
-        verify(workflowRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+        verify(workflowRepository, never()).findAll(anySpecification(), any(Pageable.class));
     }
 
     @Test
@@ -1191,18 +1255,8 @@ class WorkflowServiceTest {
         workflow.getParticipants().add(participant);
 
         arrangeReconcileWorkflow(workflow, 20L);
-        when(mappingService.requireMapping(20L, 5L))
-                .thenReturn(
-                        WorkflowTypeMapping.builder()
-                                .organizationGroupId(99L)
-                                .autoApprove(false)
-                                .build());
-        when(definitionService.resolveEffectiveDefinition(5L, 20L))
-                .thenReturn(
-                        WorkflowDefinition.builder()
-                                .selfApproveAllowed(true)
-                                .staticOrganizations(new ArrayList<>())
-                                .build());
+        when(mappingService.requireSlot(20L, 5L, WorkflowApproverSlotRoles.CONTEXT))
+                .thenReturn(slotSetting(99L, false, true));
 
         service.reconcileOpenInstancesAfterConfigurationChange(
                 WorkflowConfigurationChangedEvent.forOrganizations(7L, 5L, Set.of(20L)));
@@ -1222,18 +1276,8 @@ class WorkflowServiceTest {
         workflow.getParticipants().add(participant);
 
         arrangeReconcileWorkflow(workflow, 20L);
-        when(mappingService.requireMapping(20L, 5L))
-                .thenReturn(
-                        WorkflowTypeMapping.builder()
-                                .organizationGroupId(30L)
-                                .autoApprove(true)
-                                .build());
-        when(definitionService.resolveEffectiveDefinition(5L, 20L))
-                .thenReturn(
-                        WorkflowDefinition.builder()
-                                .selfApproveAllowed(false)
-                                .staticOrganizations(new ArrayList<>())
-                                .build());
+        when(mappingService.requireSlot(20L, 5L, WorkflowApproverSlotRoles.CONTEXT))
+                .thenReturn(slotSetting(30L, true, false));
         when(documentPromotionService.resolvePromotionsForCompletion(any(), any()))
                 .thenReturn(List.of());
         when(documentPromotionService.promoteToUserDocuments(any(), any(), any()))
@@ -1265,18 +1309,8 @@ class WorkflowServiceTest {
         workflow.getParticipants().add(participant);
 
         arrangeReconcileWorkflow(workflow, 20L);
-        when(mappingService.requireMapping(20L, 5L))
-                .thenReturn(
-                        WorkflowTypeMapping.builder()
-                                .organizationGroupId(30L)
-                                .autoApprove(false)
-                                .build());
-        when(definitionService.resolveEffectiveDefinition(5L, 20L))
-                .thenReturn(
-                        WorkflowDefinition.builder()
-                                .selfApproveAllowed(false)
-                                .staticOrganizations(new ArrayList<>())
-                                .build());
+        when(mappingService.requireSlot(20L, 5L, WorkflowApproverSlotRoles.CONTEXT))
+                .thenReturn(slotSetting(30L, false, false));
 
         service.reconcileOpenInstancesAfterConfigurationChange(
                 WorkflowConfigurationChangedEvent.forOrganizations(7L, 5L, Set.of(20L)));
@@ -1284,6 +1318,219 @@ class WorkflowServiceTest {
         verify(participantClaimService).releasePendingClaim(participant, 42L);
         verify(eventPublisher).publish(workflow, WorkflowLifecycleEvent.OPENED);
         verify(eventPublisher).publish(workflow, WorkflowLifecycleEvent.UPDATED);
+    }
+
+    @Test
+    void reconcileUsesTheSettingsOfTheRoleOfEachSlot() {
+        // CONTEXT slot stays pending, the NEW_MAIN_ORG slot is configured as auto-approve.
+        Workflow workflow = workflow(1L);
+        WorkflowParticipant context = participant(workflow, 10L, null);
+        context.setSlotKey("AGR:20");
+        WorkflowParticipant newMain = participant(workflow, 11L, null);
+        newMain.setSlotKey("AGR:21");
+        newMain.setOrganizationId(21L);
+        newMain.setSlotRole(WorkflowApproverSlotRoles.NEW_MAIN_ORG);
+        workflow.getParticipants().addAll(List.of(context, newMain));
+
+        arrangeReconcileWorkflow(workflow, 20L);
+        when(mappingService.requireSlot(20L, 5L, WorkflowApproverSlotRoles.CONTEXT))
+                .thenReturn(slotSetting(30L, false, false));
+        when(mappingService.requireSlot(21L, 5L, WorkflowApproverSlotRoles.NEW_MAIN_ORG))
+                .thenReturn(slotSetting(31L, true, false));
+
+        service.reconcileOpenInstancesAfterConfigurationChange(
+                WorkflowConfigurationChangedEvent.forOrganizations(7L, 5L, Set.of(20L, 21L)));
+
+        assertThat(context.getSlotStatus()).isEqualTo(ParticipantSlotStatus.PENDING);
+        assertThat(newMain.getSlotStatus()).isEqualTo(ParticipantSlotStatus.APPROVED);
+        assertThat(newMain.getPrincipalId()).isEqualTo(31L);
+        assertThat(workflow.getStatus()).isEqualTo(WorkflowStatus.OPEN);
+    }
+
+    @Test
+    void reconcileReleasesSelfClaimOnlyWhenTheRoleOfTheSlotForbidsSelfApprove() {
+        Workflow workflow = workflow(1L);
+        workflow.setOpenedByUserId(42L);
+        WorkflowParticipant context = participant(workflow, 10L, 42L);
+        context.setSlotKey("AGR:20");
+        WorkflowParticipant home = participant(workflow, 11L, 42L);
+        home.setSlotKey("AGR:21");
+        home.setOrganizationId(21L);
+        home.setSlotRole(WorkflowApproverSlotRoles.HOME_ORG);
+        workflow.getParticipants().addAll(List.of(context, home));
+
+        arrangeReconcileWorkflow(workflow, 20L);
+        when(mappingService.requireSlot(20L, 5L, WorkflowApproverSlotRoles.CONTEXT))
+                .thenReturn(slotSetting(30L, false, true));
+        when(mappingService.requireSlot(21L, 5L, WorkflowApproverSlotRoles.HOME_ORG))
+                .thenReturn(slotSetting(30L, false, false));
+
+        service.reconcileOpenInstancesAfterConfigurationChange(
+                WorkflowConfigurationChangedEvent.forOrganizations(7L, 5L, Set.of(20L, 21L)));
+
+        verify(participantClaimService, never()).releasePendingClaim(eq(context), any());
+        verify(participantClaimService).releasePendingClaim(home, 42L);
+    }
+
+    @Test
+    void backfillApproverSlotRolesSetsTheRoleWithoutTouchingDecisions() {
+        Workflow workflow = workflow(1L);
+        doReturn(handler).when(handlerRegistry).require(5L);
+        when(handler.workflowTypeId()).thenReturn(5L);
+        when(handler.mode()).thenReturn(WorkflowMode.STATIC);
+        when(handler.resolveContextOrganization(any())).thenReturn(20L);
+        when(handler.additionalParticipants(any())).thenReturn(List.of());
+        when(workflowRepository.findWithDetailsById(1L)).thenReturn(Optional.of(workflow));
+        when(approverRoutingService.resolve(eq(5L), any()))
+                .thenReturn(new WorkflowApproverRoutingService.Routing(List.of(55L), false));
+        when(resolverService.applySlotRoles(
+                        eq(workflow), eq(20L), eq(List.of(55L)), eq(false), eq(List.of())))
+                .thenReturn(2);
+
+        assertThat(service.backfillApproverSlotRoles(1L)).isEqualTo(2);
+
+        verify(workflowRepository).save(workflow);
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void backfillApproverSlotRolesLeavesAnAlreadyMigratedInstanceUntouched() {
+        Workflow workflow = workflow(1L);
+        doReturn(handler).when(handlerRegistry).require(5L);
+        when(handler.workflowTypeId()).thenReturn(5L);
+        when(handler.mode()).thenReturn(WorkflowMode.STATIC);
+        when(handler.resolveContextOrganization(any())).thenReturn(20L);
+        when(handler.additionalParticipants(any())).thenReturn(List.of());
+        when(workflowRepository.findWithDetailsById(1L)).thenReturn(Optional.of(workflow));
+        when(approverRoutingService.resolve(eq(5L), any()))
+                .thenReturn(new WorkflowApproverRoutingService.Routing(List.of(), false));
+
+        assertThat(service.backfillApproverSlotRoles(1L)).isZero();
+
+        verify(workflowRepository, never()).save(any());
+    }
+
+    @Test
+    void backfillApproverSlotRolesPropagatesResolutionErrorsToTheCaller() {
+        Workflow workflow = workflow(1L);
+        doReturn(handler).when(handlerRegistry).require(5L);
+        when(handler.resolveContextOrganization(any()))
+                .thenThrow(new WorkflowValidationException("no membership"));
+        when(workflowRepository.findWithDetailsById(1L)).thenReturn(Optional.of(workflow));
+
+        assertThatThrownBy(() -> service.backfillApproverSlotRoles(1L))
+                .isInstanceOf(WorkflowValidationException.class);
+
+        verify(workflowRepository, never()).save(any());
+    }
+
+    @Test
+    void findWorkflowIdsAwaitingSlotRoleBackfillReadsTheRepositoryQuery() {
+        when(workflowRepository.findOpenIdsAwaitingSlotRoleBackfill()).thenReturn(List.of(1L, 2L));
+
+        assertThat(service.findWorkflowIdsAwaitingSlotRoleBackfill()).containsExactly(1L, 2L);
+    }
+
+    @Test
+    void reconcileAppliesTheSettingsOfTheNewRoleToAPendingSlotWhoseRoleChanged() {
+        Workflow workflow = workflow(1L);
+        WorkflowParticipant reroled = participant(workflow, 10L, 42L);
+        reroled.setSlotRole(WorkflowApproverSlotRoles.HOME_ORG);
+        workflow.getParticipants().add(reroled);
+
+        arrangeReconcileWorkflow(workflow, 20L);
+        when(resolverService.syncOrgApproverSlots(
+                        eq(workflow), eq(5L), eq(20L), any(), anyBoolean(), any()))
+                .thenReturn(
+                        new WorkflowResolverService.OrgApproverSlotSyncResult(
+                                true, List.of(), List.of(reroled)));
+        when(mappingService.requireSlot(20L, 5L, WorkflowApproverSlotRoles.HOME_ORG))
+                .thenReturn(slotSetting(31L, true, false));
+
+        service.reconcileOpenInstancesAfterConfigurationChange(
+                WorkflowConfigurationChangedEvent.forOrganizations(7L, 5L, Set.of(99L)));
+
+        assertThat(reroled.getPrincipalId()).isEqualTo(31L);
+        assertThat(reroled.getSlotStatus()).isEqualTo(ParticipantSlotStatus.APPROVED);
+        assertThat(reroled.getClaimedByUserId()).isNull();
+        assertThat(workflow.getDecisions())
+                .singleElement()
+                .satisfies(decision -> {
+                    assertThat(decision.getParticipantId()).isEqualTo(10L);
+                    assertThat(decision.getUserId()).isNull();
+                });
+        assertThat(workflow.getStatus()).isEqualTo(WorkflowStatus.APPROVED);
+        verify(handler).onApproved(workflow);
+    }
+
+    @Test
+    void updatePayloadNotifiesTheHandlerBeforeASlotSyncCompletesTheWorkflow() {
+        Workflow workflow = workflow(1L);
+        WorkflowParticipant participant = participant(workflow, 10L, null);
+        workflow.getParticipants().add(participant);
+        arrangeWorkflow(workflow, 42L);
+        lenient().when(handler.payloadType()).thenReturn(Object.class);
+        lenient().when(handler.mode()).thenReturn(WorkflowMode.STATIC);
+        lenient().when(handler.resolveContextOrganization(any())).thenReturn(20L);
+        when(handler.resolveRoutingSubjectIds(any())).thenReturn(Set.of(102L));
+        when(approverRoutingService.resolve(5L, Set.of(102L)))
+                .thenReturn(new WorkflowApproverRoutingService.Routing(List.of(), false));
+        // The sync switches the slot to auto-approve (a role change on a pending slot).
+        when(resolverService.syncOrgApproverSlots(
+                        eq(workflow), eq(5L), eq(20L), any(), anyBoolean(), any()))
+                .thenAnswer(invocation -> {
+                    participant.setSlotStatus(ParticipantSlotStatus.APPROVED);
+                    return new WorkflowResolverService.OrgApproverSlotSyncResult(
+                            true, List.of(), List.of());
+                });
+        when(workflowRepository.save(workflow)).thenReturn(workflow);
+
+        service.updatePayload(1L, Map.of("key", "value"));
+
+        var inOrder = inOrder(openExclusivityService, handler, eventPublisher);
+        inOrder.verify(openExclusivityService).replaceLocks(eq(handler), any(), eq(1L), any());
+        inOrder.verify(handler).onInputUpdated(workflow);
+        inOrder.verify(eventPublisher)
+                .publish(
+                        eq(workflow),
+                        eq(WorkflowLifecycleEvent.INPUT_UPDATED),
+                        any(WorkflowEventContext.class));
+        inOrder.verify(openExclusivityService).releaseLocks(1L);
+        inOrder.verify(handler).onApproved(workflow);
+        inOrder.verify(eventPublisher).publish(workflow, WorkflowLifecycleEvent.APPROVED);
+        inOrder.verify(eventPublisher).publish(workflow, WorkflowLifecycleEvent.UPDATED);
+    }
+
+    @Test
+    void openRejectsDynamicOrganizationWithUndeclaredRole() {
+        when(tokenService.requireUserId()).thenReturn(42L);
+        when(tokenService.requireTenantId()).thenReturn(7L);
+        doReturn(handler).when(handlerRegistry).require(5L);
+        when(handler.allowsMultipleConcurrentOpen()).thenReturn(true);
+        when(handler.mode()).thenReturn(WorkflowMode.DYNAMIC);
+        when(handler.workflowTypeId()).thenReturn(5L);
+        when(handler.requiredPermissionToOpen()).thenReturn(Optional.empty());
+        when(handler.resolveContextOrganization(any())).thenReturn(20L);
+        when(handler.resolvePermissionCheckOrganization(
+                        org.mockito.ArgumentMatchers.<WorkflowOpenContext<Object>>any(), eq(20L)))
+                .thenReturn(20L);
+        when(handler.approverSlotRoles()).thenReturn(List.of(WorkflowApproverSlotRoles.CONTEXT));
+        when(handler.resolveDynamicOrganizations(any()))
+                .thenReturn(List.of(new ApproverOrg(25L, WorkflowApproverSlotRoles.HOME_ORG)));
+
+        assertThatThrownBy(() -> service.open(5L, null, null, null))
+                .isInstanceOf(WorkflowConfigurationException.class)
+                .hasMessageContaining("undeclared role");
+        verify(workflowRepository, never()).save(any());
+    }
+
+    private static WorkflowTypeMappingSlot slotSetting(
+            Long groupId, boolean autoApprove, boolean selfApproveAllowed) {
+        return WorkflowTypeMappingSlot.builder()
+                .organizationGroupId(groupId)
+                .autoApprove(autoApprove)
+                .selfApproveAllowed(selfApproveAllowed)
+                .build();
     }
 
     private void arrangeReconcileWorkflow(Workflow workflow, long contextOrgId) {
@@ -1301,7 +1548,8 @@ class WorkflowServiceTest {
                         resolverService.syncOrgApproverSlots(
                                 eq(workflow), eq(5L), eq(contextOrgId), any(), anyBoolean(), any()))
                 .thenReturn(
-                        new WorkflowResolverService.OrgApproverSlotSyncResult(false, List.of()));
+                        new WorkflowResolverService.OrgApproverSlotSyncResult(
+                                false, List.of(), List.of()));
         lenient().when(workflowRepository.save(workflow)).thenReturn(workflow);
         lenient()
                 .when(workflowRepository.findWithDetailsById(1L))

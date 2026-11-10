@@ -15,9 +15,9 @@ import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DetailCardAction, DetailCardHeader } from '@/components/ui/detail-card-header';
 import { FieldDisplay } from '@/components/ui/field-display';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
-import { EmptyState, NotFoundState } from '@/components/ui/message-cards';
+import { NotFoundState } from '@/components/ui/message-cards';
 import { RecordSourceLinkSection } from '@/components/ui/record-source-link-section';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -197,13 +197,11 @@ export function TrainingCourseRecordDetailView(props: TrainingCourseRecordDetail
       {workflowHref ? <RecordSourceLinkSection kind="WORKFLOW" href={workflowHref} /> : null}
       {onboardingHref ? <RecordSourceLinkSection kind="ONBOARDING" href={onboardingHref} /> : null}
 
-      <section>
-        <h2 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
-          {t('common.record.documentsTitle')}
-        </h2>
-        {linkedDocuments.length === 0 ? (
-          <EmptyState>{t('common.record.noDocuments')}</EmptyState>
-        ) : (
+      {linkedDocuments.length > 0 ? (
+        <section>
+          <h2 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+            {t('common.record.documentsTitle')}
+          </h2>
           <ListContainer label={t('common.record.documentsTitle')} rowSeparator="inset">
             {linkedDocuments.map((doc) => (
               <ListRow
@@ -217,20 +215,19 @@ export function TrainingCourseRecordDetailView(props: TrainingCourseRecordDetail
                   </div>
                 }
                 title={doc.title}
-                subtitle={
-                  <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    <span className="truncate">{doc.fileName}</span>
-                    <span className="shrink-0 text-[var(--text-secondary)]/50" aria-hidden>
-                      ·
-                    </span>
-                    <span className="shrink-0 tabular-nums">{formatFileSize(doc.sizeBytes)}</span>
-                  </span>
-                }
+                subtitle={subtitleLines([
+                  <span key="name" className="block truncate">
+                    {doc.fileName}
+                  </span>,
+                  <span key="size" className="tabular-nums">
+                    {formatFileSize(doc.sizeBytes)}
+                  </span>,
+                ])}
               />
             ))}
           </ListContainer>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       {canWrite ? (
         <ActionsSection>

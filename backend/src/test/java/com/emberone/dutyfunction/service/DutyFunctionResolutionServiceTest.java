@@ -106,7 +106,6 @@ class DutyFunctionResolutionServiceTest {
                                 TenantFunction.builder()
                                         .configKey("KDT")
                                         .name("Kommandant")
-                                        .abbreviation("KDT")
                                         .active(true)
                                         .archived(false)
                                         .build()));
@@ -164,7 +163,6 @@ class DutyFunctionResolutionServiceTest {
                                 TenantFunction.builder()
                                         .configKey("KDT")
                                         .name("Kommandant")
-                                        .abbreviation("KDT")
                                         .active(true)
                                         .archived(false)
                                         .build()));

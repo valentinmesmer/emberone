@@ -6,13 +6,13 @@
 
 'use client';
 
-import { Pencil } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Pencil, Power } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StandardDetailAction,
   StandardDetailCardHeader,
 } from '@/components/admin/standards/StandardDetailCardHeader';
-import { StandardWorkflowEditFormFields } from '@/components/admin/standards/StandardWorkflowEditFormFields';
+import { StandardWorkflowEditModal } from '@/components/admin/standards/StandardWorkflowEditModal';
 import {
   buildStandardTitleByKey,
   eligibleWorkflowApproverOrgGroups,
@@ -21,14 +21,17 @@ import {
   standardWorkflowTypeLabel,
 } from '@/components/admin/standards/standardContentUtils';
 import type { StandardContentState } from '@/components/admin/standards/useStandardContent';
+import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
+import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { FieldDisplay } from '@/components/ui/field-display';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ListContainer, ListRow, ListRowMeta, ListRowMetaItem } from '@/components/ui/list';
 import { NotFoundState } from '@/components/ui/message-cards';
-import { Modal } from '@/components/ui/modal';
-import { ModalFooter } from '@/components/ui/modal-footer';
+import { SectionHeader } from '@/components/ui/section-header';
+import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { standardsApi } from '@/lib/api/standards';
-import { formBlockers } from '@/lib/utils';
+import { type StandardWorkflowDto, standardsApi } from '@/lib/api/standards';
+import { workflowSlotRoleHint, workflowSlotRoleLabel } from '@/lib/workflows/slotRoles';
 
 interface StandardWorkflowDetailViewProps {
   state: StandardContentState;
@@ -37,6 +40,7 @@ interface StandardWorkflowDetailViewProps {
 
 export function StandardWorkflowDetailView({ state, configKey }: StandardWorkflowDetailViewProps) {
   const t = useTranslation();
+  const { showError } = useToast();
   const { tenantId, standardId, items, editable, busy, runMutation } = state;
 
   const item = useMemo(
@@ -45,113 +49,143 @@ export function StandardWorkflowDetailView({ state, configKey }: StandardWorkflo
   );
   const orgGroupItems = useMemo(() => eligibleWorkflowApproverOrgGroups(items), [items]);
   const titleByKey = useMemo(() => buildStandardTitleByKey(items), [items]);
-  const a = item?.attributes ?? {};
 
   const [editOpen, setEditOpen] = useState(false);
-  const [approverOrgGroupConfigKey, setApproverOrgGroupConfigKey] = useState('');
-  const [autoApprove, setAutoApprove] = useState(false);
-  const [enabled, setEnabled] = useState(true);
-  const [selfApproveAllowed, setSelfApproveAllowed] = useState(false);
+  const closeEdit = useCallback(() => setEditOpen(false), []);
+  const [toggleOpen, setToggleOpen] = useState(false);
+  const [workflow, setWorkflow] = useState<StandardWorkflowDto | null>(null);
+  const hasItem = item != null;
+
+  // The content items only summarize the CONTEXT role; the detail needs every role.
+  const loadWorkflow = useCallback(async () => {
+    try {
+      setWorkflow(await standardsApi.getWorkflow(tenantId, standardId, configKey));
+    } catch (e) {
+      showError(e instanceof Error ? e.message : t('admin.standards.detail.loadFailed'));
+    }
+  }, [tenantId, standardId, configKey, showError, t]);
+
+  useEffect(() => {
+    if (!hasItem) return;
+    const id = window.setTimeout(() => void loadWorkflow(), 0);
+    return () => window.clearTimeout(id);
+  }, [hasItem, loadWorkflow]);
 
   if (!item) {
     return <NotFoundState message={t('organizationManagement.errors.notFound')} />;
   }
 
-  const openEdit = () => {
-    setApproverOrgGroupConfigKey(a.approverOrgGroupConfigKey ?? '');
-    setAutoApprove(a.autoApprove === 'true');
-    setEnabled(a.enabled !== 'false');
-    setSelfApproveAllowed(a.selfApproveAllowed === 'true');
-    setEditOpen(true);
-  };
+  const typeKey = item.title;
+  const enabled = workflow?.enabled ?? item.attributes?.enabled !== 'false';
+  const toggleKey = enabled ? 'disable' : 'enable';
 
-  const blockers = formBlockers([
-    [t('admin.standards.approverLabel'), Boolean(approverOrgGroupConfigKey)],
-  ]);
-
-  const handleSave = async () => {
+  const handleToggle = async () => {
+    if (!workflow) return;
     const ok = await runMutation(
       () =>
         standardsApi.updateWorkflow(tenantId, standardId, configKey, {
-          approverOrgGroupConfigKey,
-          autoApprove,
-          enabled,
-          selfApproveAllowed,
+          enabled: !enabled,
+          slots: workflow.slots,
         }),
-      'admin.standards.workflowSaved',
+      `admin.standards.workflow.${toggleKey}Done`,
       'admin.standards.errors.saveFailed',
     );
-    if (ok) setEditOpen(false);
+    if (ok) {
+      setToggleOpen(false);
+      void loadWorkflow();
+    }
   };
 
   return (
-    <div className="w-full space-y-3">
+    <div className="w-full space-y-4">
       <Card className="p-3 sm:p-4">
         <StandardDetailCardHeader
-          title={standardWorkflowTypeLabel(t, item.title)}
+          className="mb-2"
+          title={standardWorkflowTypeLabel(t, typeKey)}
+          badges={
+            <Badge tone={enabled ? 'success' : 'neutral'} pill>
+              {enabled ? t('admin.standards.active') : t('admin.standards.fields.disabled')}
+            </Badge>
+          }
           actions={
-            editable ? (
+            editable && workflow ? (
               <StandardDetailAction
                 label={t('admin.standards.editWorkflow')}
                 icon={<Pencil className="h-4 w-4" aria-hidden />}
-                onClick={openEdit}
+                onClick={() => setEditOpen(true)}
                 disabled={busy}
               />
             ) : undefined
           }
         />
-        <div className="space-y-3">
-          <FieldDisplay
-            label={t('admin.standards.fields.enabled')}
-            value={a.enabled !== 'false' ? t('common.yes') : t('common.no')}
-          />
-          <FieldDisplay
-            label={t('admin.standards.approverLabel')}
-            value={standardOrgKeyLabel(
-              t,
-              a.approverOrgGroupConfigKey ?? item.subtitle ?? '',
-              titleByKey,
-            )}
-          />
-          <FieldDisplay
-            label={t('admin.standards.fields.selfApproveAllowed')}
-            value={a.selfApproveAllowed === 'true' ? t('common.yes') : t('common.no')}
-          />
-          <FieldDisplay
-            label={t('admin.standards.fields.autoApprove')}
-            value={a.autoApprove === 'true' ? t('common.yes') : t('common.no')}
-          />
-        </div>
+
+        <SectionHeader title={t('admin.standards.workflow.slotsTitle')} />
+        <ListContainer
+          className="mt-3"
+          variant="inset"
+          label={t('admin.standards.workflow.slotsTitle')}
+        >
+          {(workflow?.slots ?? []).map((slot) => (
+            <ListRow
+              key={slot.slotRole}
+              title={workflowSlotRoleLabel(slot.slotRole, t, typeKey)}
+              subtitle={workflowSlotRoleHint(slot.slotRole, t, typeKey)}
+              meta={
+                <ListRowMeta>
+                  <ListRowMetaItem>
+                    {standardOrgKeyLabel(t, slot.approverOrgGroupConfigKey, titleByKey)}
+                  </ListRowMetaItem>
+                  <ListRowMetaItem>
+                    {slot.autoApprove
+                      ? t('admin.standards.workflow.summaryAuto')
+                      : t('admin.standards.workflow.summaryManual')}
+                  </ListRowMetaItem>
+                  <ListRowMetaItem>
+                    {slot.selfApproveAllowed
+                      ? t('admin.standards.workflow.summarySelfAllowed')
+                      : t('admin.standards.workflow.summarySelfBlocked')}
+                  </ListRowMetaItem>
+                </ListRowMeta>
+              }
+            />
+          ))}
+        </ListContainer>
       </Card>
 
-      {editOpen ? (
-        <Modal
-          isOpen
-          onClose={() => setEditOpen(false)}
-          title={t('admin.standards.editWorkflow')}
-          size="lg"
-          footer={
-            <ModalFooter
-              onCancel={() => setEditOpen(false)}
-              onSave={() => void handleSave()}
-              blockers={blockers}
-              isLoading={busy}
-            />
-          }
-        >
-          <StandardWorkflowEditFormFields
-            approverOrgGroupConfigKey={approverOrgGroupConfigKey}
-            onApproverOrgGroupConfigKeyChange={setApproverOrgGroupConfigKey}
-            orgGroupItems={orgGroupItems}
-            enabled={enabled}
-            onEnabledChange={setEnabled}
-            selfApproveAllowed={selfApproveAllowed}
-            onSelfApproveAllowedChange={setSelfApproveAllowed}
-            autoApprove={autoApprove}
-            onAutoApproveChange={setAutoApprove}
-            disabled={busy}
+      {editable && workflow ? (
+        <ActionsSection>
+          <ListRow
+            leading={<ActionRowIcon icon={Power} />}
+            title={t(`admin.standards.workflow.${toggleKey}`)}
+            subtitle={t(`admin.standards.workflow.${toggleKey}Hint`)}
+            onClick={busy ? undefined : () => setToggleOpen(true)}
           />
-        </Modal>
+        </ActionsSection>
+      ) : null}
+
+      {editOpen && workflow ? (
+        <StandardWorkflowEditModal
+          state={state}
+          workflow={workflow}
+          typeKey={typeKey}
+          orgGroupItems={orgGroupItems}
+          onClose={closeEdit}
+          onSaved={() => void loadWorkflow()}
+        />
+      ) : null}
+
+      {toggleOpen ? (
+        <ConfirmDialog
+          isOpen
+          onClose={() => setToggleOpen(false)}
+          title={t(`admin.standards.workflow.${toggleKey}`)}
+          message={t(`admin.standards.workflow.${toggleKey}Message`, {
+            name: standardWorkflowTypeLabel(t, typeKey),
+          })}
+          confirmText={t(`admin.standards.workflow.${toggleKey}`)}
+          onConfirm={() => void handleToggle()}
+          isLoading={busy}
+        />
       ) : null}
     </div>
   );

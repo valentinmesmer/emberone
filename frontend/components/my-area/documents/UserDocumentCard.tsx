@@ -9,7 +9,7 @@
 import { Pencil } from 'lucide-react';
 import { AppLinkListAction, AppLinkListIndicator } from '@/components/ui/app-link-list-action';
 import { IconButton } from '@/components/ui/icon-button';
-import { ListRow } from '@/components/ui/list';
+import { ListRow, subtitleLines } from '@/components/ui/list';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import { type AppNavigationContext, hasDocumentLinks } from '@/lib/utils/appLink';
@@ -46,15 +46,14 @@ export function UserDocumentCard({
       tone={isUnread ? 'active' : 'default'}
       accent={isUnread}
       title={doc.title}
-      subtitle={
-        <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-          <span className="truncate">{doc.fileName}</span>
-          <span className="shrink-0 text-[var(--text-secondary)]/50" aria-hidden>
-            ·
-          </span>
-          <span className="shrink-0 tabular-nums">{formatFileSize(doc.sizeBytes)}</span>
-        </span>
-      }
+      subtitle={subtitleLines([
+        <span key="name" className="block truncate">
+          {doc.fileName}
+        </span>,
+        <span key="size" className="tabular-nums">
+          {formatFileSize(doc.sizeBytes)}
+        </span>,
+      ])}
       actions={
         <>
           {navigable ? (

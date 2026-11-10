@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { OrganizationManageSection } from '@/components/organization/OrganizationManageSection';
 import { ListContainer } from '@/components/ui/list';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -19,9 +19,15 @@ import type { StandardContentItemDto } from '@/lib/api/standards';
 interface Props {
   items: StandardContentItemDto[];
   organizationGroupConfigKey: string;
+  /** Edit icon for this section. */
+  action?: ReactNode;
 }
 
-export function StandardOrgGroupFunctionGrantSummary({ items, organizationGroupConfigKey }: Props) {
+export function StandardOrgGroupFunctionGrantSummary({
+  items,
+  organizationGroupConfigKey,
+  action,
+}: Props) {
   const t = useTranslation();
 
   const functionTitleByKey = useMemo(() => {
@@ -40,7 +46,12 @@ export function StandardOrgGroupFunctionGrantSummary({ items, organizationGroupC
   const hasAnyGrant = FUNCTION_GRANT_MEMBERSHIP_TYPES.some((slot) => slots[slot]?.trim());
 
   return (
-    <OrganizationManageSection embedded title={t('admin.standards.functions.grantsTitle')}>
+    <OrganizationManageSection
+      embedded
+      title={t('admin.standards.functions.grantsTitle')}
+      action={action}
+      actionInline
+    >
       {!hasAnyGrant ? (
         <p className="text-sm text-[var(--text-secondary)]">
           {t('admin.standards.functions.grantsSummaryEmpty')}

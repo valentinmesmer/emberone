@@ -7,7 +7,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { ErrorState } from '@/components/ui/message-cards';
 import { PageHeader } from '@/components/ui/page-header';
@@ -75,14 +75,12 @@ export function OrganizationCourseRegistrationListView({ organizationId }: Props
       >
         <ListContainer>
           {registrations.map((registration) => {
-            const subtitle = [
+            const subtitle = subtitleLines([
               registration.trainingCourseTypeName,
               registration.firstSessionStart
                 ? formatDateShort(registration.firstSessionStart)
                 : null,
-            ]
-              .filter(Boolean)
-              .join(' · ');
+            ]);
 
             return (
               <ListRow
@@ -93,7 +91,7 @@ export function OrganizationCourseRegistrationListView({ organizationId }: Props
                   registration.id,
                 )}
                 title={registration.userDisplayName}
-                subtitle={subtitle || undefined}
+                subtitle={subtitle}
                 trailing={
                   <Badge tone={courseRegistrationStatusBadgeTone(registration.status)} pill>
                     {t(courseRegistrationStatusLabelKey(registration.status))}

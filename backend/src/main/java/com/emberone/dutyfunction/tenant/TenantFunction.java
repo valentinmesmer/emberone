@@ -35,9 +35,6 @@ public class TenantFunction implements LifecycleFields.ActivatableCatalogEntry {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "abbreviation", nullable = false)
-    private String abbreviation;
-
     @Column(name = "sort_order", nullable = false)
     @Builder.Default
     private int sortOrder = 0;

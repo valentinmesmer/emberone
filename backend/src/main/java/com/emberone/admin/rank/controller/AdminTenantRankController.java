@@ -31,6 +31,13 @@ public class AdminTenantRankController {
         return ResponseEntity.ok(catalogService.listCatalog(tenantId));
     }
 
+    @GetMapping("/{configKey}")
+    @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
+    public ResponseEntity<TenantRankDto> get(
+            @PathVariable long tenantId, @PathVariable String configKey) {
+        return ResponseEntity.ok(catalogService.get(tenantId, configKey));
+    }
+
     @PostMapping
     @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
     public ResponseEntity<TenantRankDto> createRank(

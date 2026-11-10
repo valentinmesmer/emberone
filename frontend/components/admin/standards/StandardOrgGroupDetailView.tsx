@@ -8,48 +8,39 @@
 
 import { Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   StandardDetailAction,
   StandardDetailCardHeader,
 } from '@/components/admin/standards/StandardDetailCardHeader';
-import { StandardOrgGroupFunctionGrantFields } from '@/components/admin/standards/StandardOrgGroupFunctionGrantFields';
-import { StandardOrgGroupFunctionGrantSummary } from '@/components/admin/standards/StandardOrgGroupFunctionGrantSummary';
-import { StandardPermissionGroupMappingPicker } from '@/components/admin/standards/StandardPermissionGroupMappingPicker';
+import { StandardOrgGroupFunctionGrantsCard } from '@/components/admin/standards/StandardOrgGroupFunctionGrantsCard';
+import { StandardOrgGroupPermissionGroupsCard } from '@/components/admin/standards/StandardOrgGroupPermissionGroupsCard';
 import {
   findStandardItem,
-  getMappedPermissionGroupKeys,
   isSystemStandardOrgGroupItem,
   standardGroupTypeLabel,
   standardOrgGroupSupportsFunctionGrants,
 } from '@/components/admin/standards/standardContentUtils';
-import { syncStandardGroupMappings } from '@/components/admin/standards/syncStandardGroupMappings';
 import type { StandardContentState } from '@/components/admin/standards/useStandardContent';
-import { OrganizationManageSection } from '@/components/organization/OrganizationManageSection';
 import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { FieldDisplay } from '@/components/ui/field-display';
 import { Input } from '@/components/ui/input';
-import { ListContainer, ListRow } from '@/components/ui/list';
-import { EmptyState, NotFoundState } from '@/components/ui/message-cards';
+import { ListRow } from '@/components/ui/list';
+import { NotFoundState } from '@/components/ui/message-cards';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
-  mergeOrgGroupGrantsIntoAll,
-  type OrgGroupFunctionGrantBySlot,
-  orgGroupFunctionGrantsEqual,
-  readOrgGroupFunctionGrantsFromItems,
-} from '@/lib/admin/standardFunctionGrants';
-import type { FunctionGrantMembershipType } from '@/lib/api/standards';
+  formatOrgGroupRemovalImpactMessage,
+  removalImpactRequiresConfirmation,
+} from '@/lib/admin/standardImpact';
+import type { OrgGroupRemovalImpactDto } from '@/lib/api/standards';
 import { standardsApi } from '@/lib/api/standards';
-import {
-  getAdminStandardDetailPath,
-  getAdminStandardPermissionGroupPath,
-} from '@/lib/navigation/adminWorkspace';
+import { getAdminStandardDetailPath } from '@/lib/navigation/adminWorkspace';
 import { formBlockers } from '@/lib/utils';
 
 interface StandardOrgGroupDetailViewProps {
@@ -66,45 +57,35 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
     () => findStandardItem(items, 'organization-groups', configKey),
     [items, configKey],
   );
-  const permGroupItems = useMemo(
-    () => items.filter((i) => i.domainKey === 'permission-groups'),
-    [items],
-  );
   const a = item?.attributes ?? {};
-
-  const mappedPermKeys = useMemo(
-    () => (item ? getMappedPermissionGroupKeys(items, configKey) : []),
-    [item, items, configKey],
-  );
-  const mappedPermGroups = useMemo(
-    () => permGroupItems.filter((pg) => mappedPermKeys.includes(pg.configKey)),
-    [permGroupItems, mappedPermKeys],
-  );
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteImpact, setDeleteImpact] = useState<OrgGroupRemovalImpactDto | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [permSelectionOverride, setPermSelectionOverride] = useState<Set<string> | null>(null);
-  const [grantDraft, setGrantDraft] = useState<OrgGroupFunctionGrantBySlot | null>(null);
 
   const isSystemGroup = isSystemStandardOrgGroupItem(item);
   const supportsFunctionGrants = standardOrgGroupSupportsFunctionGrants(item);
+
+  useEffect(() => {
+    if (!deleteOpen) return;
+    let cancelled = false;
+    void standardsApi.getOrgGroupRemovalImpact(tenantId, standardId, configKey).then((impact) => {
+      if (!cancelled) setDeleteImpact(impact);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [deleteOpen, tenantId, standardId, configKey]);
 
   if (!item) {
     return <NotFoundState message={t('organizationManagement.errors.notFound')} />;
   }
 
-  const editPermSelection =
-    permSelectionOverride ?? new Set(getMappedPermissionGroupKeys(items, configKey));
-
-  const editGrantSlots = grantDraft ?? readOrgGroupFunctionGrantsFromItems(items, configKey);
-
   const openEdit = () => {
     setName(item.title);
     setDescription(a.description ?? '');
-    setPermSelectionOverride(null);
-    setGrantDraft(readOrgGroupFunctionGrantsFromItems(items, configKey));
     setEditOpen(true);
   };
 
@@ -112,29 +93,12 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
 
   const handleSave = async () => {
     if (blockers.length > 0) return;
-    const currentKeys = new Set(getMappedPermissionGroupKeys(items, configKey));
-    const grantsBefore = readOrgGroupFunctionGrantsFromItems(items, configKey);
-    const grantsAfter = grantDraft ?? grantsBefore;
     const ok = await runMutation(
-      async () => {
-        await standardsApi.updateOrgGroup(tenantId, standardId, configKey, {
+      () =>
+        standardsApi.updateOrgGroup(tenantId, standardId, configKey, {
           name: name.trim(),
           description: description.trim() || undefined,
-        });
-        let content = await syncStandardGroupMappings(
-          tenantId,
-          standardId,
-          configKey,
-          currentKeys,
-          editPermSelection,
-        );
-        if (supportsFunctionGrants && !orgGroupFunctionGrantsEqual(grantsBefore, grantsAfter)) {
-          content = await standardsApi.updateFunctionGrants(tenantId, standardId, {
-            grants: mergeOrgGroupGrantsIntoAll(content.items, configKey, grantsAfter),
-          });
-        }
-        return content;
-      },
+        }),
       'admin.standards.itemSaved',
       'admin.standards.errors.saveFailed',
     );
@@ -151,19 +115,6 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
       setDeleteOpen(false);
       router.push(getAdminStandardDetailPath(tenantId, standardId));
     }
-  };
-
-  const onGrantSlotChange = (slot: FunctionGrantMembershipType, functionConfigKey: string) => {
-    setGrantDraft((prev) => {
-      const base = prev ?? readOrgGroupFunctionGrantsFromItems(items, configKey);
-      const next = { ...base };
-      if (functionConfigKey) {
-        next[slot] = functionConfigKey;
-      } else {
-        delete next[slot];
-      }
-      return next;
-    });
   };
 
   return (
@@ -201,45 +152,29 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
       </Card>
 
       {supportsFunctionGrants ? (
-        <Card className="p-3 sm:p-4">
-          <StandardOrgGroupFunctionGrantSummary
-            items={items}
-            organizationGroupConfigKey={configKey}
-          />
-        </Card>
+        <StandardOrgGroupFunctionGrantsCard state={state} configKey={configKey} />
       ) : null}
 
-      <Card className="p-3 sm:p-4">
-        <OrganizationManageSection
-          embedded
-          title={t('organizationManagement.organizationGroups.permissionGroups')}
-        >
-          {mappedPermGroups.length === 0 ? (
-            <EmptyState>
-              {t('organizationManagement.organizationGroups.noPermissionGroupsAssigned')}
-            </EmptyState>
-          ) : (
-            <ListContainer label={t('organizationManagement.organizationGroups.permissionGroups')}>
-              {mappedPermGroups.map((pg) => (
-                <ListRow
-                  key={pg.configKey}
-                  compact
-                  href={getAdminStandardPermissionGroupPath(tenantId, standardId, pg.configKey)}
-                  title={pg.title}
-                />
-              ))}
-            </ListContainer>
-          )}
-        </OrganizationManageSection>
-      </Card>
+      <StandardOrgGroupPermissionGroupsCard state={state} configKey={configKey} />
 
-      {editable && !isSystemGroup ? (
+      {editable ? (
         <ActionsSection>
           <ListRow
             leading={<ActionRowIcon icon={Trash2} />}
             title={t('admin.standards.deleteItem')}
-            subtitle={t('common.deleteHint')}
-            onClick={busy ? undefined : () => setDeleteOpen(true)}
+            subtitle={
+              isSystemGroup
+                ? t('admin.standards.systemOrgGroupRequiredHint')
+                : t('common.deleteHint')
+            }
+            onClick={
+              busy || isSystemGroup
+                ? undefined
+                : () => {
+                    setDeleteImpact(null);
+                    setDeleteOpen(true);
+                  }
+            }
           />
         </ActionsSection>
       ) : null}
@@ -249,7 +184,7 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
           isOpen
           onClose={() => setEditOpen(false)}
           title={t('common.edit')}
-          size="xl"
+          size="lg"
           footer={
             <ModalFooter
               onCancel={() => setEditOpen(false)}
@@ -273,21 +208,6 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
               onChange={(e) => setDescription(e.target.value)}
               disabled={busy}
             />
-            <StandardPermissionGroupMappingPicker
-              permissionGroups={permGroupItems}
-              selected={editPermSelection}
-              onChange={setPermSelectionOverride}
-              disabled={busy}
-            />
-            {supportsFunctionGrants ? (
-              <StandardOrgGroupFunctionGrantFields
-                tenantId={tenantId}
-                items={items}
-                valueBySlot={editGrantSlots}
-                onSlotChange={onGrantSlotChange}
-                disabled={busy}
-              />
-            ) : null}
           </div>
         </Modal>
       ) : null}
@@ -296,9 +216,16 @@ export function StandardOrgGroupDetailView({ state, configKey }: StandardOrgGrou
         isOpen={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => void handleDelete()}
-        message={t('admin.standards.deleteItemConfirm')}
+        message={
+          deleteImpact
+            ? formatOrgGroupRemovalImpactMessage(deleteImpact, t)
+            : t('admin.standards.deleteItemConfirm')
+        }
         confirmText={t('admin.standards.deleteItem')}
         cancelText={t('common.cancel')}
+        variant={
+          deleteImpact && removalImpactRequiresConfirmation(deleteImpact) ? 'danger' : 'info'
+        }
         isLoading={busy}
       />
     </div>

@@ -14,10 +14,7 @@ public final class ManagementActivationListDefinition {
     public static final ListDefinition<ManagementActivation> INSTANCE =
             ListDefinition.<ManagementActivation>forEntity(ManagementActivation.class)
                     .sortKey("activatedAt", "activatedAt")
-                    .sortKey("validUntil", "validUntil")
                     .textSortKey("person", "user.lastName", "user.firstName")
-                    .textSortKey("managingOrganization", "managingOrganization.name")
-                    .textSortKey("targetOrganization", "targetOrganization.name")
                     .defaultSort("activatedAt,desc")
                     .build();
 

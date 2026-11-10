@@ -8,11 +8,13 @@ package com.emberone.workflow.spi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.emberone.platform.exception.ResourceNotFoundException;
 import com.emberone.workflow.exception.WorkflowConfigurationException;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -23,6 +25,12 @@ class WorkflowHandlerRegistryTest {
 
     @Mock WorkflowHandler<Object> firstHandler;
     @Mock WorkflowHandler<Object> secondHandler;
+
+    @BeforeEach
+    void declareContextRole() {
+        lenient().when(firstHandler.approverSlotRoles()).thenReturn(List.of("CONTEXT"));
+        lenient().when(secondHandler.approverSlotRoles()).thenReturn(List.of("CONTEXT"));
+    }
 
     @Test
     void registerIndexesHandlersByWorkflowTypeId() {
@@ -59,5 +67,42 @@ class WorkflowHandlerRegistryTest {
         assertThatThrownBy(() -> registry.require(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Unknown workflow type id");
+    }
+
+    @Test
+    void registerRejectsHandlerWithoutContextRole() {
+        when(firstHandler.workflowTypeId()).thenReturn(1L);
+        when(firstHandler.approverSlotRoles()).thenReturn(List.of("HOME_ORG"));
+        WorkflowHandlerRegistry registry = new WorkflowHandlerRegistry(List.of(firstHandler));
+
+        assertThatThrownBy(registry::register)
+                .isInstanceOf(WorkflowConfigurationException.class)
+                .hasMessageContaining("must declare the approver slot role CONTEXT");
+    }
+
+    @Test
+    void registerRejectsHandlerDeclaringAdditionalOrARoleTwice() {
+        when(firstHandler.workflowTypeId()).thenReturn(1L);
+        when(firstHandler.approverSlotRoles()).thenReturn(List.of("CONTEXT", "ADDITIONAL"));
+        assertThatThrownBy(() -> new WorkflowHandlerRegistry(List.of(firstHandler)).register())
+                .isInstanceOf(WorkflowConfigurationException.class)
+                .hasMessageContaining("must not declare ADDITIONAL");
+
+        when(firstHandler.approverSlotRoles())
+                .thenReturn(List.of("CONTEXT", "HOME_ORG", "HOME_ORG"));
+        assertThatThrownBy(() -> new WorkflowHandlerRegistry(List.of(firstHandler)).register())
+                .isInstanceOf(WorkflowConfigurationException.class)
+                .hasMessageContaining("twice");
+    }
+
+    @Test
+    void rolesOfListsHandlerRolesThenAdditional() {
+        when(firstHandler.approverSlotRoles()).thenReturn(List.of("CONTEXT", "HOME_ORG"));
+
+        assertThat(WorkflowApproverSlotRoles.rolesOf(firstHandler))
+                .containsExactly("CONTEXT", "HOME_ORG", "ADDITIONAL");
+        when(secondHandler.approverSlotRoles()).thenReturn(List.of("CONTEXT"));
+        assertThat(WorkflowApproverSlotRoles.rolesOf(secondHandler))
+                .containsExactly("CONTEXT", "ADDITIONAL");
     }
 }

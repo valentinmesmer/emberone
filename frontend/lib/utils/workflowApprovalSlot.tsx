@@ -12,7 +12,11 @@ import {
   isActiveMemberOfOrganizationGroup,
   type TranslationFunction,
 } from '@/lib/utils/membership';
-import { workflowParticipationSlotDisplayTone } from '@/lib/utils/workflowLabels';
+import {
+  workflowParticipationSlotDisplayTone,
+  workflowTypeEnumKey,
+} from '@/lib/utils/workflowLabels';
+import { workflowSlotRoleLabel } from '@/lib/workflows/slotRoles';
 import type { UserOrganizationGroupMembershipDto } from '@/types/user';
 import type {
   WorkflowDecisionDto,
@@ -146,7 +150,15 @@ export function slotStatusBadge(
   t: (key: string) => string,
 ): { label: string; tone: 'neutral' | 'accent' | 'success' | 'danger' | 'warning' } {
   if (p.slotStatus === 'APPROVED') {
-    return { label: t('myArea.workflowDetail.slotStatusApproved'), tone: 'success' };
+    const auto = p.claimedByUserId == null && !p.claimedByDisplayName?.trim();
+    return {
+      label: t(
+        auto
+          ? 'myArea.workflowDetail.approvalStatusAutoApproved'
+          : 'myArea.workflowDetail.slotStatusApproved',
+      ),
+      tone: 'success',
+    };
   }
   if (p.slotStatus === 'REJECTED') {
     return { label: t('myArea.workflowDetail.slotStatusRejected'), tone: 'danger' };
@@ -185,6 +197,17 @@ export function slotOrgName(slot: WorkflowParticipantDto, t: TranslationFunction
     return slot.principalDisplayName.trim();
   }
   return t('common.notAvailable');
+}
+
+/** Label of the role the slot's organization decides in; null for slots without a role. */
+export function slotRoleName(
+  slot: WorkflowParticipantDto,
+  t: TranslationFunction,
+  workflowTypeId?: number,
+): string | null {
+  if (slot.principalType !== 'ORGANIZATION_GROUP' || !slot.slotRole) return null;
+  const typeKey = workflowTypeId == null ? null : workflowTypeEnumKey(workflowTypeId);
+  return workflowSlotRoleLabel(slot.slotRole, t, typeKey);
 }
 
 export function slotGroupName(slot: WorkflowParticipantDto): string | null {
@@ -246,12 +269,7 @@ export function buildSlotSubtitle(
   const handlerLine = isAutoApproved ? (
     <span>
       {t('myArea.workflowDetail.approvalStatusAutoApproved')}
-      {decision?.decidedAt ? (
-        <>
-          <span aria-hidden> · </span>
-          {formatDateTime(decision.decidedAt)}
-        </>
-      ) : null}
+      {decision?.decidedAt ? `, ${formatDateTime(decision.decidedAt)}` : null}
     </span>
   ) : !isDecided ? (
     <span>{slotHandlerLabel(slot, t)}</span>

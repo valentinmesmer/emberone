@@ -9,6 +9,7 @@ package com.emberone.dutyfunction.tenant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 public interface TenantFunctionRepository extends JpaRepository<TenantFunction, Long> {
 
     List<TenantFunction> findAllByOrderBySortOrderAscNameAsc();
+
+    /** Appends a new function after the existing ones (seeded order stays intact). */
+    @Query("select coalesce(max(f.sortOrder), 0) + 1 from TenantFunction f")
+    int nextSortOrder();
 
     Optional<TenantFunction> findByConfigKey(String configKey);
 

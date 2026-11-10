@@ -12,10 +12,12 @@ import { StandardCatalogCheckboxList } from '@/components/admin/standards/Standa
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
+import { ModalFooter } from '@/components/ui/modal-footer';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useActivateManagement } from '@/lib/store';
 import { managementPermissionLabel } from '@/lib/utils/managementActivation';
+import { formBlockers } from '@/lib/utils/validation';
 import type { ManagementTargetOrganizationDto } from '@/types/management';
 
 /** Same bounds as the backend (`ManagementActivationService`). */
@@ -45,8 +47,11 @@ export function ActivateManagementDialog({ target, onClose }: ActivateManagement
     Number.isInteger(duration) && duration >= 1 && duration <= target.maxDurationMinutes;
   const reasonLength = reason.trim().length;
   const reasonValid = reasonLength >= REASON_MIN_LENGTH && reasonLength <= REASON_MAX_LENGTH;
-  const permissionsValid = selected.size > 0;
-  const canSubmit = permissionsValid && durationValid && reasonValid && !activate.isPending;
+  const blockers = formBlockers([
+    [t('management.dialog.permissionsLabel'), selected.size > 0],
+    [t('management.dialog.duration', { max: target.maxDurationMinutes }), durationValid],
+    [t('management.dialog.reason'), reasonValid],
+  ]);
 
   const togglePermission = (permission: string) => {
     setSelected((current) => {
@@ -78,14 +83,13 @@ export function ActivateManagementDialog({ target, onClose }: ActivateManagement
       onClose={onClose}
       title={t('management.dialog.title', { name: target.organizationName })}
       footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button onClick={() => void submit()} disabled={!canSubmit}>
-            {t('management.dialog.submit')}
-          </Button>
-        </div>
+        <ModalFooter
+          onCancel={onClose}
+          onSave={() => void submit()}
+          blockers={blockers}
+          isLoading={activate.isPending}
+          saveText={t('management.dialog.submit')}
+        />
       }
     >
       <div className="space-y-5">

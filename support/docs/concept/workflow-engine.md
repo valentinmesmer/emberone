@@ -8,7 +8,7 @@ Die Engine ist **generisch**. Sie besitzt Instanz-Lebenszyklus, Teilnehmer-Routi
 
 Jeder konkrete Prozess ist ein `WorkflowHandler`-Spring-Bean mit stabilem `WorkflowType`, typisiertem Payload-Validate, Auflösung der Kontext-Organisation und Domänen-Nebeneffekten bei approve/reject/cancel.
 
-Konfiguration (welche Org-Gruppe entscheidet, ob Typ enabled, auto-approve, self-approve) liegt außerhalb des Handlers in standard-templateten, mandanten-defaulteten, per-Org-Mappings und -Definitionen.
+Konfiguration (welche Org-Gruppe entscheidet, ob Typ enabled, auto-approve, self-approve) liegt außerhalb des Handlers in standard-templateten, mandanten-defaulteten, per-Org-Mappings und -Definitionen. Gruppe, auto-approve und self-approve gelten **pro Freigabe-Rolle** (siehe [Freigabe-Rollen](#freigabe-rollen)).
 
 Nebenkanäle - Todos, Notifications, Realtime, Document Promotion - subscriben auf Lifecycle-Events und bleiben aus dem Engine-Kern.
 
@@ -17,13 +17,13 @@ Typspezifischer POST ──► WorkflowService.open
                             │
                             ├─ handler.validateOpen / resolveContextOrganization
                             ├─ definitionService.resolveEffectiveDefinition (muss enabled sein)
-                            ├─ resolverService.resolveParticipants (mappings + static/dynamic orgs)
+                            ├─ routingService.resolve + resolverService.resolveParticipants (mappings + Mandanten-Regel + dynamic orgs)
                             ├─ Instanz persistieren + auto-approve decisions
                             ├─ handler.onOpened
                             └─ events → Todo / Notification / Realtime Adapter
 ```
 
-Tenant-Baseline-Kataloge (inkl. neue `wf_definitions` nach Deploy) werden idempotent über `TenantBaselineSyncFilter` vor `/api/v1/self` und `/api/v1/auth` synchronisiert, nicht in einzelnen Authorization-Checks.
+Die Tenant-Baseline (inkl. neue `wf_definitions`) wird beim Anlegen des Mandanten geseedet und für bestehende Mandanten nach einem Release per `POST /api/v1/auth/admin/tenants/{tenantId}/baseline-sync` nachgezogen (siehe [Standards](standard.md#baseline-sync)); nie im Request-Pfad und nicht in einzelnen Authorization-Checks.
 
 ## Kernentitäten
 
@@ -69,7 +69,7 @@ JSON serialisiert als numerische ID. (Frühere Typ-ID 12 - Deaktivierungs-Workfl
 
 Jeder Typ hat einen **Open-Scope** (`WorkflowOpenScope`): `SELF` (Mein Bereich) oder `ORGANIZATION` (Org-Benutzerverwaltung, `USER_WRITE`). Der Katalog (`WorkflowTypeCatalogDto.openScope`) und Standard-Inhalte (`workflow-type-mappings`, Attribut `openScope`) liefern den Scope für Gruppierung in der UI; die Anzeigenamen sind pro Typ einheitlich (z. B. „Organisation verlassen“ für Selbst- und Verwaltungs-Austritt).
 
-**Exclusivity-Locks** (`wf_exclusivity_locks`, `WorkflowOpenExclusivityKeys`): Handler können `resolveOpenExclusivityKeys` liefern. Pro Mandant darf ein Key nur von **einem** aktiven Workflow gehalten werden - **über Workflow-Typen hinweg** (z. B. Typ 8 + 13 teilen `membership-exit:user:{id}:org:{id}`, Typ 7 + 14 `main-organization:user:{id}`). Locks werden beim Open/Update gesetzt und bei terminalen Status freigegeben. `WorkflowExclusivityLockBackfillRunner` materialisiert Locks für bereits offene Instanzen nach Deploy. Race beim parallelen Open: DB-Unique `(tenant_id, lock_key)` → `WorkflowValidationException` mit Handler-`openExclusivityConflictCode`.
+**Exclusivity-Locks** (`wf_exclusivity_locks`, `WorkflowOpenExclusivityKeys`): Handler können `resolveOpenExclusivityKeys` liefern. Pro Mandant darf ein Key nur von **einem** aktiven Workflow gehalten werden - **über Workflow-Typen hinweg** (z. B. Typ 8 + 13 teilen `membership-exit:user:{id}:org:{id}`, Typ 7 + 14 `main-organization:user:{id}`). Locks werden beim Open/Update gesetzt und bei terminalen Status freigegeben. Es gibt keinen Backfill: eine neue `resolveOpenExclusivityKeys`-Implementierung sperrt bereits offene Instanzen erst beim nächsten Update. Race beim parallelen Open: DB-Unique `(tenant_id, lock_key)` → `WorkflowValidationException` mit Handler-`openExclusivityConflictCode`.
 
 `listedInBeginnableCatalog()` Default `false` (Start nur über Dedicated-UI). Opt-in mit `true` für Typen ohne eigenen Einstieg. `GET …/workflows/beginnable-types` liefert alle Typen, die der User starten darf (`canBeginSelfServiceWorkflow`), inkl. Flag `listedInBeginnableCatalog` (Logik in `BeginnableWorkflowTypeService`, auch vom KI-Hilfe-Chat genutzt, siehe [KI-Assistenz](ai-assistance.md)). Zusätzlich prüft `WorkflowOpenAccess.canBeginSelfServiceWorkflow` typ-spezifische Voraussetzungen (z. B. `RANK_REQUEST` nur ohne offenen `UserRank`).
 
@@ -90,7 +90,7 @@ Die UI zum Antrag-stellen-Picker listet nur Typen mit `listedInBeginnableCatalog
 | Org-Group-Approver | `AGR:{organizationId}` |
 | Zusätzlich (Handler) | explizit `spec.slotKey` oder `ADD:{role}:{principalType}:{principalId}[:orgId]` |
 
-Open/Reconcile materialisiert Org-Group-Slots (`AGR:…`) und zusätzliche Specs (`ADD:…` / explizites `slotKey`).
+Open/Reconcile materialisiert Org-Group-Slots (`AGR:…`) und zusätzliche Specs (`ADD:…` / explizites `slotKey`). Jeder Org-Slot trägt zusätzlich die Rolle, in der die Org entscheidet (`wf_participants.slot_role`, `WorkflowParticipantDto.slotRole`); der Slot-Key bleibt `AGR:{organizationId}`, eine Org ist also immer genau ein Slot. User-Slots (`ADD:…`) tragen `CONTEXT`.
 
 ## Zustände und Übergänge
 
@@ -143,7 +143,7 @@ Sobald ein Gruppen-Slot geclaimt **oder** eine menschliche Entscheidung existier
 
 ### System-Auto-Approve
 
-Bei Type-Mapping mit `autoApprove=true` öffnet Org-Slot schon `APPROVED` mit Entscheidung `userId == null`. Diese überleben Payload-Reset; menschliche nicht.
+Hat die Rolle eines Org-Slots im Type-Mapping `autoApprove=true`, öffnet der Slot schon `APPROVED` mit Entscheidung `userId == null`. Jede Rolle entscheidet das für sich: ein Antrag kann z. B. in der Rolle `CONTEXT` auf Menschen warten und in `NEW_MAIN_ORG` automatisch freigegeben sein. Diese Entscheidungen überleben Payload-Reset; menschliche nicht.
 
 ## `WorkflowService`-API
 
@@ -169,7 +169,7 @@ Open-Sequenz (`WorkflowService.openForUser`):
 3. Handler `validateOpen`, Kontext-Org, optional Open-Permission, dynamic orgs, additional participants
 4. Key-Concurrency (`resolveOpenConcurrencyKeys` gegen aktive Instanzen desselben Openers/Typs) und Exclusivity-Konfliktprüfung (`resolveOpenExclusivityKeys` / `assertNoConflict`)
 5. Effektive Definition muss `enabled` sein
-6. Teilnehmer auflösen (Kontext ∪ static ∪ dynamic, oder nur static wenn `staticApproversExclusive`)
+6. Zusätzliche Orgs bestimmen: `WorkflowApproverRoutingService.resolve(typeId, routingSubjectIds)` (Mandanten-Regeln, siehe [Konfigurationsebenen](#konfigurationsebenen)); Teilnehmer auflösen (Kontext ∪ zusätzliche Orgs ∪ dynamic, oder nur die zusätzlichen Orgs wenn die Auflösung „exklusiv“ liefert)
 7. Persist → Exclusivity-Locks setzen (`replaceLocks`) → Auto-Approve-Entscheidungen → `handler.onOpened`
 8. `OPENED` publizieren wenn pending Slots bleiben; immer `completeIfAllApproved` versuchen (All-Auto-Approve-Short-Circuit)
 
@@ -196,7 +196,9 @@ Wichtige Hooks:
 | `validateOpen` / `validateUpdate` | Payload-Regeln |
 | `resolveContextOrganization` | Basis-Genehmiger-Org |
 | `requiredPermissionToOpen()` | Leer = Self-Service |
-| `resolveDynamicOrganizations` | nur `DYNAMIC`-Modus |
+| `resolveDynamicOrganizations` | nur `DYNAMIC`-Modus. Liefert `ApproverOrg(organizationId, slotRole)`; die Rolle muss in `approverSlotRoles()` stehen, sonst bricht die Engine mit `WorkflowConfigurationException` ab |
+| `approverSlotRoles()` | Default `[CONTEXT]`. Deklariert die Rollen des Typs (siehe [Freigabe-Rollen](#freigabe-rollen)); `ADDITIONAL` nie angeben, das hängt die Engine an. `WorkflowHandlerRegistry` prüft beim Start: `CONTEXT` vorhanden, kein `ADDITIONAL`, keine Doppelten |
+| `routingDimension()` / `resolveRoutingSubjectIds(ctx)` | Optional, beide Default leer. Machen den Typ in den Mandanten-Einstellungen nach Untertyp teilbar (siehe [Regeln je Untertyp](#regeln-je-untertyp)). `routingDimension()` nennt den Katalog (`WorkflowRoutingDimension`), `resolveRoutingSubjectIds` liefert dessen Ids für den konkreten Antrag, **serverseitig** aus Payload oder referenzierten Entitäten, nie aus Anzeigefeldern des Clients. Leer = Standard-Regel. |
 | `additionalParticipants` | Extra USER/VIEWER/APPROVER Specs |
 | `onOpened` / `onInputUpdated` | Docs anhängen, etc. |
 | `onInputChangeRequested` / `onInputChangeWithdrawn` | Domänen-Nebeneffekte beim Change-Request (z. B. Onboarding-Einladung wieder `OPEN`) |
@@ -204,9 +206,9 @@ Wichtige Hooks:
 | `resolveDocumentPromotion*` / `onDocumentsPromoted` | Ausgewählte Medien in Opener-Persönlichen-Ordner kopieren |
 | `allowsDocumentPromotion` | `false` sperrt Promotion komplett (leere Preview, keine Übernahme bei Approve); Zertifikats-Workflows mit Nachweis-Scan nutzen Promotion wie andere Zertifikats-Workflows |
 
-`AbstractMembershipContextWorkflowHandler` ist gemeinsame Basis für heutige Handler: Default `STATIC`-Modus, Kontext-Org = aktive Hauptmitgliedschaft des Openers, `requiresOpenerOrganizationMembership() = true`, Draft/Proof-Attachment-Helfer, Default-Promotion-Regeln. Join-/Leave-/Main-Change-Handler setzen `requiresOpenerOrganizationMembership()` auf `false`, weil der Approver aus der Ziel-, Austritts- bzw. neuen Haupt-Org kommt. Join-, Main-Change- und Org-User-Main-Change-Handler sind `DYNAMIC` und liefern die zweite Genehmiger-Org aus dem Payload via `resolveDynamicOrganizations`.
+`AbstractMembershipContextWorkflowHandler` ist gemeinsame Basis für heutige Handler: Default `STATIC`-Modus, Kontext-Org = aktive Hauptmitgliedschaft des Openers, `requiresOpenerOrganizationMembership() = true`, Draft/Proof-Attachment-Helfer, Default-Promotion-Regeln. Join-/Leave-/Main-Change-Handler setzen `requiresOpenerOrganizationMembership()` auf `false`, weil der Approver aus der Ziel-, Austritts- bzw. neuen Haupt-Org kommt. Join-, Main-Change- und Org-User-Main-Change-Handler sind `DYNAMIC` und liefern die zweite Genehmiger-Org aus dem Payload via `resolveDynamicOrganizations` (mit ihrer Rolle).
 
-`WorkflowMode.DYNAMIC`: Kontext-Org ∪ dynamische Orgs werden additiv als Approver-Slots materialisiert (`WorkflowResolverService`). Produktiv genutzt von `ORGANIZATION_JOIN_REQUEST`, `MAIN_ORGANIZATION_CHANGE` und `ORGANIZATION_USER_MAIN_ORGANIZATION_CHANGE` (Leadership der beteiligten Orgs; ohne aktuelle Haupt-Org nur die Ziel- bzw. neue Haupt-Org).
+`WorkflowMode.DYNAMIC`: Kontext-Org ∪ dynamische Orgs werden additiv als Approver-Slots materialisiert (`WorkflowResolverService`), jede in ihrer Rolle. Produktiv genutzt von `ORGANIZATION_JOIN_REQUEST`, `MAIN_ORGANIZATION_CHANGE` und `ORGANIZATION_USER_MAIN_ORGANIZATION_CHANGE` (Leadership der beteiligten Orgs; ohne aktuelle Haupt-Org nur die Ziel- bzw. neue Haupt-Org).
 
 ### Konkrete Handler
 
@@ -234,28 +236,99 @@ Wichtige Hooks:
 1. `WorkflowType`-Enum-Wert mit neuer stabiler numerischer ID.
 2. `WorkflowHandler<P>` implementieren (meist `AbstractMembershipContextWorkflowHandler` erweitern). `requiresOpenerOrganizationMembership()` nur auf `false` setzen, wenn Approver ohne aktive Haupt-Org-Mitgliedschaft auflösbar sind. Bei mehreren parallelen Anträgen desselben Typs `allowsMultipleConcurrentOpen() = true` und `resolveOpenConcurrencyKeys` mit Prefix aus `WorkflowOpenConcurrencyKeys` liefern.
 3. Typspezifischen Controller, der nur `POST` open mit typisiertem Payload macht.
-4. Standard-Templates für Type-Mapping + Definition, damit Mandanten/Orgs aktivieren und routen können.
-5. Optional: Document-Promotion-Hooks; Notification/Todo-Verhalten folgt automatisch aus Lifecycle-Events.
+4. Standard-Templates für Type-Mapping + Definition, damit Mandanten/Orgs aktivieren und routen können. Liefert der Handler dynamische Orgs, `approverSlotRoles()` um eine Rolle je Art der dynamischen Org erweitern und die Konstante in `WorkflowApproverSlotRoles` anlegen (Key nie umbenennen: er steht in der DB und in der API); Label und Erklärung unter `workflows.slotRoles.<KEY>` / `workflows.slotRoleHints.<KEY>` in `locales/de.json` ergänzen. Bestehende Standards bekommen die neue Rolle beim Baseline-Sync mit den Werten von `CONTEXT`.
+5. Optional: nach Untertyp teilbar machen (`routingDimension()` + `resolveRoutingSubjectIds`), siehe [Regeln je Untertyp](#regeln-je-untertyp).
+6. Optional: Document-Promotion-Hooks; Notification/Todo-Verhalten folgt automatisch aus Lifecycle-Events.
+
+## Freigabe-Rollen
+
+Eine **Rolle** sagt, in welcher Eigenschaft eine Org über einen Antrag entscheidet. Gruppe, `autoApprove` und `selfApproveAllowed` werden pro Rolle konfiguriert. Die Keys stehen in `WorkflowApproverSlotRoles`:
+
+| Rolle | Bedeutung | Vorkommen |
+|-------|-----------|-----------|
+| `CONTEXT` | Kontext-Org des Antrags (`resolveContextOrganization`) | jeder Typ |
+| `ADDITIONAL` | Zusätzliche Orgs aus den Mandanteneinstellungen (Standard-Regel und Regeln je Untertyp) | jeder Typ, hängt die Engine an |
+| `NEW_MAIN_ORG` | Org, zu der die Hauptmitgliedschaft wechselt | `MAIN_ORGANIZATION_CHANGE`, `ORGANIZATION_USER_MAIN_ORGANIZATION_CHANGE` |
+| `TARGET_ORG` | Org, bei der der Beitritt beantragt wird | `ORGANIZATION_JOIN_REQUEST` |
+| `HOME_ORG` | Heimat-Org der teilnehmenden Person | `COURSE_OFFERING_REGISTRATION`, `COURSE_REGISTRATION_CANCELLATION` |
+
+Bei den Haupt-Org-Wechseln ist `CONTEXT` die aktuelle Haupt-Org, beim Beitritt die aktuelle Org des Antragstellers (ohne sie die Ziel-Org), bei den Lehrgangs-Workflows der Veranstalter. Alle anderen Handler haben nur `CONTEXT` (+ `ADDITIONAL`).
+
+**Auflösung** (`WorkflowResolverService.resolveApproverOrganizationIds`) liefert eine geordnete Map Org-Id → Rolle: `CONTEXT`, dann die dynamischen Orgs (mit ihrer Rolle), dann die zusätzlichen Orgs als `ADDITIONAL`. **Dieselbe Org in zwei Rollen ist ein Slot, `CONTEXT` gewinnt**, danach die zuerst genannte Rolle (`putIfAbsent`); es gelten die Einstellungen dieser einen Rolle. Das gilt auch bei „Nur diese Orgs entscheiden“: dann entscheiden nur die zusätzlichen Orgs (`ADDITIONAL`), steht die Kontext-Org darunter, ist ihr Slot `CONTEXT`.
+
+**Rolle deklarieren:** Handler überschreibt `approverSlotRoles()` (`[CONTEXT, <Rolle>]`) und gibt in `resolveDynamicOrganizations` `new ApproverOrg(orgId, <Rolle>)` zurück.
+
+**Neue Rolle:** Eine neue Handler-Rolle braucht die Slot-Zeilen auf Templates und Org-Instanzen, über eine Migration oder den Baseline-Sync (`POST …/tenants/{id}/baseline-sync` pro Mandant, siehe [Standards](standard.md#freigabe-rollen-im-standard)). Fehlt die Zeile, scheitert `WorkflowTypeMappingService.requireSlot` mit einer `WorkflowConfigurationException` (fail closed, wie bei einem fehlenden Mapping); es gibt keinen Fallback auf `CONTEXT`.
 
 ## Konfigurationsebenen
 
-Drei gestapelte Ebenen (äußere überschreibt / materialisiert aus inneren Templates):
+Drei gestapelte Ebenen. Die zusätzlichen Genehmiger-Orgs kommen **nur** aus Ebene 3; Ebene 1 und 2 tragen keine Kopie davon.
 
-### 1. Per-Org Type Mapping - `WorkflowTypeMapping` (`wf_type_mappings`)
+### 1. Per-Org Type Mapping - `WorkflowTypeMapping` (`wf_type_mappings` + `wf_type_mapping_slots`)
 
-Welche **Organisationsgruppe** für einen Typ in einer Org entscheidet, plus `autoApprove`. Unique `(tenant, org, workflowTypeId)`.
+Pro Typ und Org eine Zeile (Unique `(tenant, org, workflowTypeId)`), pro Rolle eine Slot-Zeile (`WorkflowTypeMappingSlot`, Unique `(tenant, mapping, slot_role)`) mit **Org-Gruppe**, `autoApprove` und `selfApproveAllowed`. Alle Tabellen FORCE RLS.
 
-- Runtime-Service: `WorkflowTypeMappingService`
+- Runtime-Service: `WorkflowTypeMappingService` (`requireMapping` prüft die Existenz, `requireSlot(orgId, typeId, role)` liefert die Einstellungen einer Rolle)
 - Standard-Domain: `WorkflowTypeMappingStandardDomain` (`domainKey = "workflow-type-mappings"`)
-- Templates tragen `orgGroupConfigKey` (z. B. leadership), `configKey` = Type-ID-String, `enabled`, `selfApproveAllowed`
+- Templates (`std_workflow_type_mapping_templates` + `…_template_slots`): `configKey` = Type-ID-String, `enabled` am Template, je Rolle `orgGroupConfigKey` (z. B. leadership), `autoApprove`, `selfApproveAllowed`
 
 ### 2. Per-Org Definition - `WorkflowDefinition` (`wf_definitions`)
 
-`enabled`, `staticApproversExclusive`, `selfApproveAllowed`, statische Approver-Orgs. Beim Open via `WorkflowDefinitionService.resolveEffectiveDefinition(typeId, contextOrgId)`. Self-Approve wird **pro Freigabe-Slot** und **live** gegen die aktuelle Definition der Slot-Organisation geprüft (`WorkflowSelfApproveService`), nicht Open-Time-Snapshot: Bei mehreren Freigabe-Orgs entscheidet jede Org nur über ihren eigenen Slot, die API liefert das Ergebnis als `selfApproveAllowed` je Participant. Für Input-Change-Requests braucht der Opener einen übernommenen Slot, dessen Org Self-Approve erlaubt. Ist Self-Approve für einen Slot blockiert, setzt `WorkflowTodoAdapter` den Opener beim Gruppen-Claim-Todo dieses Slots als `TodoExcludedUser` (siehe [Todo](todo.md)).
+Nur `enabled` (Org-Instanz, materialisiert aus dem Standard-Template). Es gibt hier **keine** statischen Approver-Orgs, kein `staticApproversExclusive` und kein `selfApproveAllowed` mehr (liegt pro Rolle am Mapping-Slot). Beim Open via `WorkflowDefinitionService.resolveEffectiveDefinition(typeId, contextOrgId)`.
+
+**Self-Approve** wird **pro Freigabe-Slot** und **live** gegen die Einstellung der Rolle des Slots in der Org des Slots geprüft (`WorkflowSelfApproveService.isAllowed(workflow, participant)`), nicht als Open-Time-Snapshot: Bei mehreren Freigabe-Orgs entscheidet jede Org nur über ihren eigenen Slot, die API liefert das Ergebnis als `selfApproveAllowed` je Participant. Vor dem Open (kein Workflow) und für User-Approver nutzt `isAllowedForSlot`/die Pre-Open-Variante die Rolle `CONTEXT`. Für Input-Change-Requests braucht der Opener einen übernommenen Slot, dessen Rolle Self-Approve erlaubt. Ist Self-Approve für einen Slot blockiert, setzt `WorkflowTodoAdapter` den Opener beim Gruppen-Claim-Todo dieses Slots als `TodoExcludedUser` (siehe [Todo](todo.md)).
 
 ### 3. Mandantenweite Defaults - `TenantWorkflowDefinition`
 
-Mandanten-Einstellungen für static exclusivity + static Org-Liste; propagiert in per-Org-Definitionen. Admin-APIs: `AdminWorkflowDefinitionController`, `AdminWorkflowTypeCatalogController`.
+Einzige Quelle der zusätzlichen Genehmiger-Orgs (`tenant_workflow_definition_static_orgs`) und des Schalters „Nur diese Orgs entscheiden“ (`staticApproversExclusive`). Das ist die **Standard-Regel** des Typs. Es wird nichts mehr in die Org-Definitionen oder Standard-Templates kopiert; zur Laufzeit liest `WorkflowApproverRoutingService` direkt von hier. Admin-APIs: `AdminWorkflowDefinitionController`, `AdminWorkflowTypeCatalogController` (liefert pro Typ `routingDimension`, `null` wenn nicht teilbar).
+
+#### Regeln je Untertyp
+
+Typen mit `routingDimension()` können zusätzlich Regeln je Untertyp haben (`tenant_workflow_routing_rules`, `…_rule_subjects`, `…_rule_orgs`, alle FORCE RLS). Eine Regel gilt für eine Menge von Untertypen (Ids des Katalogs der Dimension) und trägt nur eigene Orgs. Den Schalter „Nur diese Orgs entscheiden“ gibt es ausschließlich je Workflow (an der Standard-Regel), nicht je Regel. Ein Untertyp kommt pro Typ in höchstens einer Regel vor (Unique `(tenant_id, definition_id, subject_id)` plus Service-Check mit 400). Die Untertyp-Ids werden gegen den Mandantenkatalog der Dimension geprüft; es gibt keinen Fremdschlüssel, weil die Dimension variiert.
+
+| Workflow | Dimension | Untertyp (serverseitig) | Status |
+|----------|-----------|-------------------------|--------|
+| `CERTIFICATION_RECORD` | `CERTIFICATION_DEFINITION` | `tenantCertDefinitionId` | aktiv |
+| `TRAINING_COURSE_RECORD` | `TRAINING_COURSE_TYPE` | `tenantTrainingCourseTypeIds` (mehrere) | aktiv |
+| `COURSE_OFFERING_REGISTRATION` | `TRAINING_COURSE_TYPE` | Angebot → Lehrgangstyp (aus der Entität, nicht aus dem Payload) | aktiv |
+| `COURSE_REGISTRATION_CANCELLATION` | `TRAINING_COURSE_TYPE` | Anmeldung → Angebot → Lehrgangstyp | aktiv |
+| `DRIVING_LICENSE_RECORD` | `DRIVING_LICENSE_DEFINITION` | Klassen im Antrag | nur im Enum vorbereitet, Handler nicht aktiv |
+| `RANK_REQUEST` | `RANK` | `tenantRankId` | nur im Enum vorbereitet, Handler nicht aktiv |
+
+Typen ohne Katalog (Name, Adresse, Mitgliedschaften, Gruppen, Onboarding, Dokument) sind nicht teilbar; `POST …/routing-rules` liefert dort 400.
+
+Auflösung `WorkflowApproverRoutingService.resolve(typeId, subjectIds)`:
+
+- Je Untertyp gilt seine Regel, sonst die Standard-Regel. Ohne Untertypen gilt die Standard-Regel.
+- Die Orgs sind die Vereinigungsmenge der Standard-Orgs (für Untertypen ohne eigene Regel) und der Orgs jeder getroffenen Regel, ohne Duplikate.
+- „Nur diese Orgs entscheiden“ ist der workflowweite Wert `TenantWorkflowDefinition.staticApproversExclusive` und wirkt nur, wenn die Vereinigungsmenge nicht leer ist.
+
+API (alle `@PreAuthorize("@securityService.canAccessTenant(#tenantId)")`, Basis `/api/v1/auth/admin/tenants/{tenantId}/workflow-definitions/{workflowTypeId}`). Die Regel-Endpunkte liefern einheitlich das `WorkflowRoutingRuleDto` (`id`, `subjectIds`, `staticApproverOrganizationIds`); die Regelliste steht zusätzlich als `routingRules` im `TenantWorkflowDefinitionDto`.
+
+| Methode | Pfad | Antwort | Zweck |
+|---------|------|---------|-------|
+| `GET` | `/routing-rules/{ruleId}` | `200` `WorkflowRoutingRuleDto`, `404` wenn unbekannt oder zu einem anderen Typ gehörig | Regel lesen |
+| `POST` | `/routing-rules` | `201` `WorkflowRoutingRuleDto` (mit neuer `id`) | Regel anlegen |
+| `PUT` | `/routing-rules/{ruleId}` | `200` `WorkflowRoutingRuleDto` | Regel ändern |
+| `DELETE` | `/routing-rules/{ruleId}` | `204` | Regel löschen |
+| `POST` | `/restore` | `200` `TenantWorkflowDefinitionDto` | Standard-Regel auf die Baseline zurücksetzen **und alle Regeln löschen** |
+
+Frontend (Admin, Mandant → Workflows): Die Liste führt nur zur Detailseite (`/admin/tenants/[id]/workflows/[workflowTypeId]`), ohne Zeilen-Aktionen. Dort bearbeitet der Stift die Standard-Regel inkl. Schalter „Nur diese Orgs entscheiden“; „Auf Standard zurücksetzen“ steht unten in der `ActionsSection` (nur bei angepassten Einstellungen). Jede Regel ist eine Zeile zur Regel-Detailseite (`…/rules/[ruleId]`): Stift bearbeitet Untertypen und Orgs, „Regel löschen“ steht unten in der `ActionsSection`; der workflowweite Schalter wird dort nur angezeigt. „Regel hinzufügen“ navigiert nach dem Anlegen zur neuen Regel.
+
+Jede Änderung publiziert `WorkflowConfigurationChangedEvent.tenantWide`.
+
+#### Sync offener Anträge
+
+Die Slots offener Instanzen werden über `WorkflowService.syncApproverSlots` angeglichen (pending Slots ohne Bedarf entfallen mit `APPROVER_SLOT_REMOVED`, fehlende kommen hinzu), und zwar
+
+- beim Reconcile nach Config-Änderung (`reconcileOpenInstancesAfterConfigurationChange`) und
+- bei `updatePayload`: ändert sich der Untertyp (z. B. andere Zertifizierung), werden die Slots aus dem frisch gespeicherten Payload neu aufgelöst. Neue Auto-Approve-Slots werden verbucht, ggf. schließt die Instanz ab. Reihenfolge: Locks ersetzen, `onInputUpdated`, Event `INPUT_UPDATED`, erst dann Slot-Abgleich (und ein möglicher Abschluss mit `onApproved` und `APPROVED`), zuletzt `UPDATED`; der Handler sieht also den neuen Input vor einer Freigabe.
+
+Wechselt die Rolle eines noch offenen (`PENDING`) Slots, übernimmt er Gruppe und Auto-Approve der neuen Rolle (dieselbe Logik wie `reconcileApproverParticipant`); entschiedene Slots behalten ihre Entscheidung, nur die Rolle wird nachgezogen.
+
+Ändert sich dabei die Rolle eines bestehenden Slots (z. B. eine Org war `ADDITIONAL` und ist jetzt `CONTEXT`), wird `slot_role` am Slot nachgezogen; der Reconcile wendet danach Gruppe und Auto-/Self-Approve der neuen Rolle an.
+
+**Backfill (temporär, nach Rollout entfernen; ohne bestehende Daten überflüssig):** Das Schema kennt `slot_role` an `wf_participants` und die Slot-Tabellen `std_workflow_type_mapping_template_slots` und `wf_type_mapping_slots` bereits in `V1`; Handler-Rollen (`NEW_MAIN_ORG`, `TARGET_ORG`, `HOME_ORG`) kommen über Baseline und Standard. `WorkflowParticipantSlotRoleBackfillRunner` ist ein reiner Rollout-Runner: Beim Start findet er pro Mandant (`TenantBatchRunner`) per Query nur offene Instanzen mit mehreren Org-Freigabe-Slots und noch ohne Rolle außer `CONTEXT` (nach dem Rollout also keine mehr) und setzt dort die echte Rolle der `AGR:`-Slots (`WorkflowService.backfillApproverSlotRoles(id)`, je Instanz eine eigene Transaktion; nicht auflösbare Instanzen werden geloggt und übersprungen). Ändert keine Entscheidungen oder Claims und löst keine Events aus. Grenze: Eine Instanz mit nur einem Slot, der eine zusätzliche Org (exklusiv) ist, behält `CONTEXT`.
 
 Config-Change → `WorkflowConfigurationChangedEvent` → offene Instanzen reconcilen (pending Slots add/drop, Auto-Approve neu, ggf. complete).
 
@@ -304,7 +377,8 @@ Document Promotion (`WorkflowDocumentPromotionService`) bei voller Genehmigung: 
 | Handler SPI | `workflow/spi/WorkflowHandler.java`, `WorkflowHandlerRegistry.java` |
 | Open-Concurrency | `workflow/service/WorkflowOpenConcurrencyService.java`, `workflow/spi/WorkflowOpenConcurrencyKeys.java`; Frontend `lib/workflows/openConcurrency.ts` |
 | Teilnehmer-Auflösung | `workflow/service/WorkflowResolverService.java`, package-private `SlotKeys.java` |
-| Definitionen / Mappings | `workflow/service/WorkflowDefinitionService.java`, `WorkflowTypeMappingService.java` |
+| Definitionen / Mappings | `workflow/service/WorkflowDefinitionService.java`, `WorkflowTypeMappingService.java`, `workflow/domain/WorkflowTypeMappingSlot.java` |
+| Freigabe-Rollen | `workflow/spi/WorkflowApproverSlotRoles.java`, `ApproverOrg.java`, `workflow/service/WorkflowParticipantSlotRoleBackfillRunner.java` |
 | Standard-Domains | `workflow/standard/WorkflowTypeMappingStandardDomain.java`, `WorkflowDefinitionStandardDomain.java` |
 | Konkrete Handler | `workflow/{namechange,addresschange,certificationrecord,trainingcourse,drivinglicense,organizationjoinrequest,mainorganizationchange,organizationleaverequest,organizationgroupleaverequest,organizationgroupjoinrequest,onboardingsubmission,organizationmembershipend,organizationusermainorganizationchange,userdocumentsubmission}/` (je Typ ein Package mit `*WorkflowHandler`) |
 | Events | `workflow/event/WorkflowLifecycleEvent.java`, `WorkflowEventPublisher.java` |

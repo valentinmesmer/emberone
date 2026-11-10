@@ -8,7 +8,7 @@ Einheitliches Muster für Aktionen auf **Detailseiten** (eine einzelne Entität)
 
 | Ebene | Ort | Inhalt | Komponente |
 |-------|-----|--------|------------|
-| **Container** | Icon oben rechts in der Karte | **Bearbeiten** (nur Bearbeiten, keine Ausnahme) | `DetailCardHeader` + `DetailCardAction` (Entity-Detail-Cards), `SectionEditAction` (Section-Cards) |
+| **Container** | Icon oben rechts in der Karte | **Bearbeiten** (nur Bearbeiten, keine Ausnahme) | `DetailCardHeader` + `DetailCardAction` (Entity-Detail-Cards), `SectionHeader` / `OrganizationManageSection` mit `actionInline` + `DetailCardAction` (Karten mit eigener Überschrift), `SectionEditAction` (Section-Cards) |
 | **Seite** | Ganz unten | Alles andere, was die Entität betrifft: Ansehen und Herunterladen (Dateien), Löschen, Archivieren / Entarchivieren, Beenden, Deaktivieren, Klonen, Abbrechen, Zurückziehen, Veröffentlichen, Abschließen, Verschieben, Als Vorlage speichern, Event aus Termin anlegen, Ernennen / Entziehen | `ActionsSection` + `ListRow` |
 | **Primäre Aufgabe** (Ausnahme) | Eigene Karte oben | Die Aufgabe, für die die Seite geöffnet wird: Workflow-Entscheidung (Genehmigen / Ablehnen) und „Änderung vornehmen“ bei angefragter Änderung, Todo erledigen, Zeiteintrag ausstempeln | Karte mit Primär-Button |
 
@@ -24,8 +24,9 @@ Einheitliches Muster für Aktionen auf **Detailseiten** (eine einzelne Entität)
 8. **Titel**: Default ist `common.actionsSection` („Aktionen"). Ein eigener `title` nur, wenn der Domänenkontext es braucht.
 9. **Create** (Hinzufügen, Einreichen) bleibt beschrifteter `Button` im `SectionHeader` / `PageHeader`, nicht in der `ActionsSection`.
    Deep-Link auf den Anlegen-Dialog (z. B. aus dem Hilfe-Chat): `withCreateIntent(href)` hängt `?create=1` an; die Listenseite ruft `useCreateIntent(canWrite, open)` auf, öffnet den Dialog einmal, wenn der User dort anlegen darf, und entfernt den Parameter wieder. Kein eigener Weg je Seite.
-10. **Eingebettete Listen** auf Detailseiten (z. B. Sessions eines Kursangebots) behalten `ListRow.actions` für ihre Zeilen. Die Aktionen der Seite selbst folgen dieser Regel.
-11. **Navigation** ist keine Aktion: `href` / Chevron oder Hub-Tile (Ausnahme: „Workflow öffnen" auf Self-Seiten, solange es der einzige Weg zum Prozess ist).
+10. **Ein Edit-Icon bearbeitet nur seine eigene Karte.** Zeigt eine Seite mehrere Karten (Stammdaten, Zuordnungen, Listen), hat jede ihren eigenen Stift, Dialog und Speichervorgang; nie ein gemeinsamer Dialog für mehrere Karten. Referenz: `StandardOrgGroupDetailView`.
+11. **Eingebettete Listen** auf Detailseiten (z. B. Sessions eines Kursangebots) behalten `ListRow.actions` für ihre Zeilen. Die Aktionen der Seite selbst folgen dieser Regel.
+12. **Navigation** ist keine Aktion: `href` / Chevron oder Hub-Tile (Ausnahme: „Workflow öffnen" auf Self-Seiten, solange es der einzige Weg zum Prozess ist).
 
 ## Referenzseiten
 

@@ -29,10 +29,12 @@ import com.emberone.userorganizationmembership.domain.UserOrganizationMembership
 import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
 import com.emberone.workflow.domain.Workflow;
 import com.emberone.workflow.domain.WorkflowMode;
+import com.emberone.workflow.domain.WorkflowRoutingDimension;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.exception.WorkflowValidationException;
 import com.emberone.workflow.service.LocalizedWorkflowDocumentPromotionSupport;
 import com.emberone.workflow.spi.ApproverOrg;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import com.emberone.workflow.spi.WorkflowOpenConcurrencyKeys;
 import com.emberone.workflow.spi.WorkflowOpenContext;
 import java.time.Instant;
@@ -99,7 +101,7 @@ class CourseRegistrationCancellationWorkflowHandlerTest {
 
         assertThat(handler.resolveContextOrganization(context(payload))).isEqualTo(PROVIDER_ORG_ID);
         assertThat(handler.resolveDynamicOrganizations(context(payload)))
-                .containsExactly(new ApproverOrg(HOME_ORG_ID));
+                .containsExactly(new ApproverOrg(HOME_ORG_ID, WorkflowApproverSlotRoles.HOME_ORG));
     }
 
     @Test
@@ -110,7 +112,8 @@ class CourseRegistrationCancellationWorkflowHandlerTest {
 
         assertThat(handler.resolveContextOrganization(context(payload))).isEqualTo(PROVIDER_ORG_ID);
         assertThat(handler.resolveDynamicOrganizations(context(payload)))
-                .containsExactly(new ApproverOrg(PROVIDER_ORG_ID));
+                .containsExactly(
+                        new ApproverOrg(PROVIDER_ORG_ID, WorkflowApproverSlotRoles.HOME_ORG));
     }
 
     @Test
@@ -297,5 +300,31 @@ class CourseRegistrationCancellationWorkflowHandlerTest {
     private static WorkflowOpenContext<CourseRegistrationCancellationWorkflowPayload> context(
             CourseRegistrationCancellationWorkflowPayload payload) {
         return new WorkflowOpenContext<>(USER_ID, TENANT_ID, payload);
+    }
+
+    @Test
+    void routesByTheTrainingCourseTypeOfTheRegistrationsOffering() {
+        when(registrationService.findTrainingCourseTypeIdByRegistration(REGISTRATION_ID))
+                .thenReturn(Optional.of(55L));
+
+        assertThat(handler.routingDimension())
+                .contains(WorkflowRoutingDimension.TRAINING_COURSE_TYPE);
+        assertThat(
+                        handler.resolveRoutingSubjectIds(
+                                context(
+                                        CourseRegistrationCancellationWorkflowPayload.builder()
+                                                .registrationId(REGISTRATION_ID)
+                                                .build())))
+                .containsExactly(55L);
+        assertThat(handler.resolveRoutingSubjectIds(context(null))).isEmpty();
+    }
+
+    @Test
+    void declaresContextHandlerAndAdditionalApproverSlotRoles() {
+        assertThat(WorkflowApproverSlotRoles.rolesOf(handler))
+                .containsExactly(
+                        WorkflowApproverSlotRoles.CONTEXT,
+                        WorkflowApproverSlotRoles.HOME_ORG,
+                        WorkflowApproverSlotRoles.ADDITIONAL);
     }
 }

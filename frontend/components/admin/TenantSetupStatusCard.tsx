@@ -6,7 +6,8 @@
 
 'use client';
 
-import { AlertCircle, CheckCircle2, Circle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronRight, Circle } from 'lucide-react';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { statusCardToneClasses, statusIconToneClasses } from '@/components/ui/message-cards';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -19,6 +20,11 @@ export interface TenantSetupStatusCardProps {
   hasOrganizations: boolean;
   leaderSummary: LeaderIssueSummary | null;
   hasLeaderIssueHint: boolean;
+  standardsHref: string;
+  orgTreeAnchorId: string;
+  onCreateRootOrg: () => void;
+  /** Detail page of the first organization without a leader. */
+  firstLeaderIssueHref?: string | null;
 }
 
 export function TenantSetupStatusCard({
@@ -26,6 +32,10 @@ export function TenantSetupStatusCard({
   hasOrganizations,
   leaderSummary,
   hasLeaderIssueHint,
+  standardsHref,
+  orgTreeAnchorId,
+  onCreateRootOrg,
+  firstLeaderIssueHref,
 }: TenantSetupStatusCardProps) {
   const t = useTranslation();
 
@@ -36,6 +46,10 @@ export function TenantSetupStatusCard({
       : 0;
   const leadersOk = hasOrganizations && leaderIssues === 0;
   const setupComplete = standardsConfigured && hasOrganizations && leadersOk;
+  const scrollToOrgTree = () =>
+    document
+      .getElementById(orgTreeAnchorId)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   return (
     <Card className={cn('p-3 sm:p-4', !setupComplete && statusCardToneClasses.warning)}>
       <div className="flex items-start gap-2.5">
@@ -61,12 +75,15 @@ export function TenantSetupStatusCard({
                 done={standardsConfigured}
                 doneLabel={t('admin.tenantSetup.standardsDone')}
                 pendingLabel={t('admin.tenantSetup.standardsStep')}
+                href={standardsHref}
               />
 
               <SetupStep
                 done={hasOrganizations}
                 doneLabel={t('admin.tenantSetup.orgsDone')}
                 pendingLabel={t('admin.tenantSetup.orgsStep')}
+                href={standardsConfigured ? undefined : standardsHref}
+                onSelect={standardsConfigured ? onCreateRootOrg : undefined}
               />
 
               {hasOrganizations ? (
@@ -82,6 +99,8 @@ export function TenantSetupStatusCard({
                         ? t('admin.tenantSetup.leadersMissingSubtree')
                         : t('admin.tenantSetup.leadersStep')
                   }
+                  href={firstLeaderIssueHref ?? undefined}
+                  onSelect={firstLeaderIssueHref ? undefined : scrollToOrgTree}
                 />
               ) : null}
             </ol>
@@ -96,13 +115,19 @@ function SetupStep({
   done,
   doneLabel,
   pendingLabel,
+  href,
+  onSelect,
 }: {
   done: boolean;
   doneLabel: string;
   pendingLabel: string;
+  href?: string;
+  onSelect?: () => void;
 }) {
-  return (
-    <li className="flex items-start gap-2 text-sm">
+  const actionable = !done && (href || onSelect);
+  const label = done ? doneLabel : pendingLabel;
+  const content = (
+    <>
       {done ? (
         <CheckCircle2
           className={cn('mt-0.5 h-4 w-4 shrink-0', statusIconToneClasses.success)}
@@ -111,9 +136,38 @@ function SetupStep({
       ) : (
         <Circle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--text-secondary)]" aria-hidden />
       )}
-      <span className={done ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}>
-        {done ? doneLabel : pendingLabel}
+      <span
+        className={cn(
+          'flex-1',
+          done ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]',
+          actionable &&
+            'underline-offset-2 group-hover:text-[var(--text-primary)] group-hover:underline',
+        )}
+      >
+        {label}
       </span>
+      {actionable ? (
+        <ChevronRight
+          className="mt-0.5 h-4 w-4 shrink-0 text-[var(--text-secondary)]"
+          aria-hidden
+        />
+      ) : null}
+    </>
+  );
+  const rowClass = 'group flex w-full items-start gap-2 text-left text-sm';
+  return (
+    <li>
+      {actionable && href ? (
+        <Link href={href} className={rowClass}>
+          {content}
+        </Link>
+      ) : actionable ? (
+        <button type="button" onClick={onSelect} className={rowClass}>
+          {content}
+        </button>
+      ) : (
+        <div className={rowClass}>{content}</div>
+      )}
     </li>
   );
 }

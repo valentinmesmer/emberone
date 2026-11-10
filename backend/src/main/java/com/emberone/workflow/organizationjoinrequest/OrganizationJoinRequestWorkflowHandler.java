@@ -27,6 +27,7 @@ import com.emberone.workflow.service.WorkflowDocumentService;
 import com.emberone.workflow.service.WorkflowTypeMappingService;
 import com.emberone.workflow.spi.AbstractMembershipContextWorkflowHandler;
 import com.emberone.workflow.spi.ApproverOrg;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import com.emberone.workflow.spi.WorkflowOpenConcurrencyKeys;
 import com.emberone.workflow.spi.WorkflowOpenContext;
 import java.time.Instant;
@@ -171,6 +172,15 @@ public class OrganizationJoinRequestWorkflowHandler
                 workflow.getOpenedByUserId(), workflow.getTenantId());
     }
 
+    /**
+     * CONTEXT is the opener's current organization, TARGET_ORG the organization the request is
+     * addressed to.
+     */
+    @Override
+    public List<String> approverSlotRoles() {
+        return List.of(WorkflowApproverSlotRoles.CONTEXT, WorkflowApproverSlotRoles.TARGET_ORG);
+    }
+
     @Override
     public List<ApproverOrg> resolveDynamicOrganizations(
             WorkflowOpenContext<OrganizationJoinRequestWorkflowPayload> ctx) {
@@ -178,7 +188,9 @@ public class OrganizationJoinRequestWorkflowHandler
         if (payload == null || payload.getTargetOrganizationId() == null) {
             return List.of();
         }
-        return List.of(new ApproverOrg(payload.getTargetOrganizationId()));
+        return List.of(
+                new ApproverOrg(
+                        payload.getTargetOrganizationId(), WorkflowApproverSlotRoles.TARGET_ORG));
     }
 
     @Override

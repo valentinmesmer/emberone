@@ -16,6 +16,8 @@ export interface SectionHeaderProps {
   subtitle?: ReactNode;
   /** Right-aligned slot (e.g. an add button). */
   action?: ReactNode;
+  /** Keep `action` beside the title on small screens (icon-only actions such as a Pencil). */
+  actionInline?: boolean;
   className?: string;
 }
 
@@ -98,11 +100,18 @@ export function SectionEditAction({ label, onClick, disabled, title }: SectionEd
   );
 }
 
-export function SectionHeader({ title, subtitle, action, className }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  subtitle,
+  action,
+  actionInline = false,
+  className,
+}: SectionHeaderProps) {
   return (
     <div
       className={cn(
-        'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between',
+        'flex gap-2 sm:flex-row sm:items-center sm:justify-between',
+        actionInline ? 'items-start' : 'flex-col',
         className,
       )}
     >
@@ -115,7 +124,12 @@ export function SectionHeader({ title, subtitle, action, className }: SectionHea
         </div>
       </div>
       {action ? (
-        <div className="flex w-full shrink-0 flex-col items-stretch gap-2 sm:ml-auto sm:w-auto sm:items-end sm:justify-center">
+        <div
+          className={cn(
+            'flex shrink-0 gap-2 sm:ml-auto sm:w-auto sm:items-end sm:justify-center',
+            actionInline ? 'items-center' : 'w-full flex-col items-stretch',
+          )}
+        >
           {action}
         </div>
       ) : null}

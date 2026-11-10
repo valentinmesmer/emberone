@@ -6,6 +6,7 @@
 
 package com.emberone.workflow.domain;
 
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import jakarta.persistence.*;
 import java.time.Instant;
 import lombok.*;
@@ -55,6 +56,14 @@ public class WorkflowParticipant {
 
     @Column(name = "slot_key", nullable = false)
     private String slotKey;
+
+    /**
+     * The approver slot role the organization decides in (see {@link
+     * com.emberone.workflow.spi.WorkflowApproverSlotRoles}); {@code CONTEXT} for user principals.
+     */
+    @Column(name = "slot_role", nullable = false, length = 64)
+    @Builder.Default
+    private String slotRole = WorkflowApproverSlotRoles.CONTEXT;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "slot_status", length = 32)

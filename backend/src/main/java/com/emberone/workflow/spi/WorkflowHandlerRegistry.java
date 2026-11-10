@@ -28,6 +28,7 @@ public class WorkflowHandlerRegistry {
     @PostConstruct
     void register() {
         for (WorkflowHandler<?> handler : handlers) {
+            WorkflowApproverSlotRoles.validateDeclaredRoles(handler);
             WorkflowHandler<?> previous = handlerByTypeId.put(handler.workflowTypeId(), handler);
             if (previous != null) {
                 throw new WorkflowConfigurationException(

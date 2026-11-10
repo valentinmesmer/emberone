@@ -36,7 +36,7 @@ Tenant + Domänen-Packages (Besitzer der Kernlogik)
 | `AdminRetentionController` | `/api/v1/auth/admin/tenants/{tenantId}/retention` (nur Lesen: aktives Profil + Fristen) |
 | `AdminOrganizationController` | `.../tenants/{tenantId}/organizations` (u. a. `GET /{organizationId}/users` → aktive Org-Mitglieder via `UserService.getUsersByOrganizationId`; `GET /{organizationId}/children` → `@BoundedList`, einfache Liste der direkten Kind-Organisationen, Sortierung Name; Initial-Member nur über `POST …/leader-user`, kein Admin-Create weiterer Mitglieder) |
 | `AdminOnboardingInvitationController` | `.../tenants/{tenantId}/organizations/{organizationId}/…`: optionale Eintritts-Erfassung für bestehende Members (nach Leiter-Anlage; in der Leitungsgruppen-Mitgliedschaft als Kachel → eigene Wizard-Seite), Abschluss ohne Workflow |
-| `AdminTenantOnboardingDocumentController` | `.../tenants/{tenantId}/onboarding-documents` |
+| `AdminTenantOnboardingDocumentController` | `.../tenants/{tenantId}/onboarding-documents` (`GET /{configKey}` für die Detailseite `/admin/tenants/{id}/tenant-standards/onboarding-documents/{configKey}`) |
 | `AdminOrganizationOnboardingDocumentController` | `.../tenants/{tenantId}/organizations/{organizationId}/onboarding-documents` |
 | `AdminStandardController` | `.../tenants/{tenantId}/standards` (`GET /assignments` und `GET /organization-overrides` sind `@BoundedList`-Konfigurationslisten und liefern eine einfache Liste ohne `PageDto`) |
 | `AdminTenantUserController` | `.../tenants/{tenantId}/users/{userId}`: `PATCH /app-role`, `POST /deactivate` (Schreibzugriffe mandantengebunden per Pfad; Nutzer eines anderen Mandanten → 404) |

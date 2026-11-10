@@ -10,8 +10,8 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { PendingAttachments } from '@/components/attachment';
-import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { CertificationDetailStatusCard } from '@/components/certifications/CertificationDetailStatusCard';
+import { AiExtractionAssist } from '@/components/my-area/ai/AiExtractionAssist';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FieldDisplay } from '@/components/ui/field-display';
@@ -24,6 +24,7 @@ import { SectionActions } from '@/components/ui/section-header';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readString } from '@/lib/ai/extractionFields';
 import type { CertificationStatus } from '@/lib/api/certifications';
 import {
   allowsManualRecordCreation,
@@ -40,7 +41,6 @@ import {
   getOrganizationUserCertificationRecordDetailPath,
   getOrganizationUserWorkflowDetailPath,
 } from '@/lib/navigation/userManagementSections';
-import { readString } from '@/lib/ai/extractionFields';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateCertificationRecord,

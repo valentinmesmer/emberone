@@ -6,7 +6,7 @@
 
 'use client';
 
-import { CheckCircle2, Circle, Copy, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Circle, Copy, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminMobileLayout } from '@/components/admin';
@@ -18,7 +18,12 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { ListContainer, ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
-import { EmptyState, NoticeCard, statusIconToneClasses } from '@/components/ui/message-cards';
+import {
+  EmptyState,
+  NoticeCard,
+  statusCardToneClasses,
+  statusIconToneClasses,
+} from '@/components/ui/message-cards';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { SectionHeader } from '@/components/ui/section-header';
@@ -43,6 +48,47 @@ import { compareText } from '@/lib/i18n/locale';
 import { hasCustomStandard, isStandardsReadyForOrgCreation } from '@/lib/standards/readiness';
 import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
+
+function SetupStepRow({
+  done,
+  label,
+  targetId,
+}: {
+  done: boolean;
+  label: string;
+  targetId: string;
+}) {
+  const Icon = done ? CheckCircle2 : Circle;
+  return (
+    <li>
+      <button
+        type="button"
+        disabled={done}
+        onClick={() =>
+          document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+        className="group flex w-full items-start gap-2 text-left text-sm"
+      >
+        <Icon
+          className={cn(
+            'mt-0.5 h-4 w-4 shrink-0',
+            done ? statusIconToneClasses.success : 'text-[var(--text-secondary)]',
+          )}
+          aria-hidden
+        />
+        <span
+          className={cn(
+            done
+              ? 'text-[var(--text-primary)]'
+              : 'text-[var(--text-secondary)] underline-offset-2 group-hover:text-[var(--text-primary)] group-hover:underline',
+          )}
+        >
+          {label}
+        </span>
+      </button>
+    </li>
+  );
+}
 
 function StandardsPageInner() {
   const params = useParams();
@@ -466,168 +512,202 @@ function StandardsPageInner() {
                   </h2>
                 </div>
               </Card>
-            ) : null}
-
-            <Card className="p-3 sm:p-4">
-              <SectionHeader
-                className="mb-3"
-                title={t('admin.standards.step1Title')}
-                subtitle={t('admin.standards.bundlesHint')}
-              />
-              {standards.length === 0 ? (
-                <EmptyState>{t('admin.standards.empty')}</EmptyState>
-              ) : (
-                <div className="space-y-4">
-                  {systemStandards.length > 0 ? (
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
-                        {t('admin.standards.systemSectionTitle')}
-                      </h3>
-                      <ListContainer
-                        label={t('admin.standards.systemSectionTitle')}
-                        variant="inset"
-                        className="mt-2"
-                      >
-                        {systemStandards.map(renderStandardRow)}
-                      </ListContainer>
-                    </div>
-                  ) : null}
-
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
-                      {t('admin.standards.customSectionTitle')}
-                    </h3>
-                    {customStandards.length === 0 ? (
-                      <p className="mt-2 rounded-lg border border-dashed border-[var(--border-color)] px-3 py-2.5 text-sm text-[var(--text-secondary)]">
-                        {t('admin.standards.customEmpty')}
-                      </p>
-                    ) : (
-                      <ListContainer
-                        label={t('admin.standards.customSectionTitle')}
-                        variant="inset"
-                        className="mt-2"
-                      >
-                        {customStandards.map(renderStandardRow)}
-                      </ListContainer>
-                    )}
+            ) : (
+              <Card className={cn('p-3 sm:p-4', statusCardToneClasses.warning)}>
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle
+                    className={cn('mt-0.5 h-5 w-5 shrink-0', statusIconToneClasses.warning)}
+                    aria-hidden
+                  />
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                      {t('admin.standards.setupOpenTitle')}
+                    </h2>
+                    <ol className="mt-3 space-y-2">
+                      <SetupStepRow
+                        done={cloneStepDone}
+                        label={
+                          cloneStepDone
+                            ? t('admin.standards.setupCloneDone')
+                            : t('admin.standards.setupCloneStep')
+                        }
+                        targetId="standards-templates"
+                      />
+                      <SetupStepRow
+                        done={false}
+                        label={t('admin.standards.setupAssignStep')}
+                        targetId="standards-assignments"
+                      />
+                    </ol>
                   </div>
                 </div>
-              )}
-            </Card>
+              </Card>
+            )}
 
-            <Card className="p-3 sm:p-4">
-              <SectionHeader
-                className="mb-3"
-                title={t('admin.standards.step2Title')}
-                subtitle={t('admin.standards.assignmentHint')}
-              />
-              <ListContainer label={t('admin.standards.assignmentsTitle')} variant="inset">
-                {organizationTypes
-                  .filter((type) => type.active)
-                  .map((orgType) => {
-                    const typeLabel = orgType.name;
-                    const assignedId = assignmentFor(orgType.id);
-                    const isSaving = assigningType === orgType.id;
-                    const isAssigned = assignedId != null;
-                    return (
-                      <ListRow
-                        key={orgType.id}
-                        accent={false}
-                        chevron={false}
-                        compact
-                        title={typeLabel}
-                        trailing={
-                          isAssigned ? (
-                            <CheckCircle2
-                              className={`h-3.5 w-3.5 shrink-0 ${statusIconToneClasses.success}`}
-                              aria-hidden
-                            />
-                          ) : (
-                            <Circle
-                              className="h-3.5 w-3.5 shrink-0 text-[var(--text-secondary)]"
-                              aria-hidden
-                            />
-                          )
-                        }
-                        actions={
-                          <Select
-                            size="sm"
-                            width="auto"
-                            aria-label={`${typeLabel} - ${t('admin.standards.assignmentsTitle')}`}
-                            value={assignedId != null ? String(assignedId) : ''}
-                            disabled={busy || assignableStandards.length === 0 || isSaving}
-                            title={
-                              assignableStandards.length === 0
-                                ? t('admin.standards.assignmentNeedsClone')
-                                : undefined
-                            }
-                            options={assignmentOptionsFor(orgType.id)}
-                            onChange={(e) => {
-                              const nextId = Number.parseInt(e.target.value, 10);
-                              if (!Number.isFinite(nextId) || nextId === assignedId) return;
-                              void handleAssign(orgType.id, nextId);
-                            }}
-                          />
-                        }
-                      />
-                    );
-                  })}
-              </ListContainer>
-
-              <div className="mt-4 border-t border-[var(--border-color)] pt-4">
+            <div id="standards-templates" className="scroll-mt-20">
+              <Card className="p-3 sm:p-4">
                 <SectionHeader
                   className="mb-3"
-                  title={t('admin.standards.overridesSection.title')}
-                  subtitle={t('admin.standards.overridesSection.hint')}
-                  action={
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="xs"
-                      onClick={() => void openAddOverride()}
-                      disabled={busy || !cloneStepDone || customStandards.length === 0}
-                      title={
-                        !cloneStepDone || customStandards.length === 0
-                          ? t('admin.standards.assignmentNeedsClone')
-                          : undefined
-                      }
-                      fullWidth="responsive"
-                    >
-                      {t('common.add')}
-                    </Button>
-                  }
+                  title={t('admin.standards.templatesTitle')}
+                  subtitle={t('admin.standards.bundlesHint')}
                 />
-                {overrides.length === 0 ? (
-                  <EmptyState>{t('admin.standards.overridesSection.empty')}</EmptyState>
+                {standards.length === 0 ? (
+                  <EmptyState>{t('admin.standards.empty')}</EmptyState>
                 ) : (
-                  <ListContainer
-                    label={t('admin.standards.overridesSection.title')}
-                    variant="inset"
-                  >
-                    {overrides.map((override) => (
-                      <ListRow
-                        key={override.organizationId}
-                        compact
-                        onClick={() =>
-                          router.push(
-                            `/admin/tenants/${tenantId}/organizations/${override.organizationId}`,
-                          )
-                        }
-                        title={override.organizationName}
-                        subtitle={organizationTypeNames.get(override.organizationTypeId) ?? ''}
-                        meta={
-                          override.standardName ? (
-                            <div className="mt-1 flex flex-wrap gap-1.5">
-                              <Badge tone="accent">{override.standardName}</Badge>
-                            </div>
-                          ) : undefined
-                        }
-                      />
-                    ))}
-                  </ListContainer>
+                  <div className="space-y-4">
+                    {systemStandards.length > 0 ? (
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+                          {t('admin.standards.systemSectionTitle')}
+                        </h3>
+                        <ListContainer
+                          label={t('admin.standards.systemSectionTitle')}
+                          variant="inset"
+                          className="mt-2"
+                        >
+                          {systemStandards.map(renderStandardRow)}
+                        </ListContainer>
+                      </div>
+                    ) : null}
+
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+                        {t('admin.standards.customSectionTitle')}
+                      </h3>
+                      {customStandards.length === 0 ? (
+                        <p className="mt-2 rounded-lg border border-dashed border-[var(--border-color)] px-3 py-2.5 text-sm text-[var(--text-secondary)]">
+                          {t('admin.standards.customEmpty')}
+                        </p>
+                      ) : (
+                        <ListContainer
+                          label={t('admin.standards.customSectionTitle')}
+                          variant="inset"
+                          className="mt-2"
+                        >
+                          {customStandards.map(renderStandardRow)}
+                        </ListContainer>
+                      )}
+                    </div>
+                  </div>
                 )}
-              </div>
-            </Card>
+              </Card>
+            </div>
+
+            <div id="standards-assignments" className="scroll-mt-20">
+              <Card className="p-3 sm:p-4">
+                <SectionHeader
+                  className="mb-3"
+                  title={t('admin.standards.typeAssignmentTitle')}
+                  subtitle={t('admin.standards.assignmentHint')}
+                />
+                <ListContainer label={t('admin.standards.assignmentsTitle')} variant="inset">
+                  {organizationTypes
+                    .filter((type) => type.active)
+                    .map((orgType) => {
+                      const typeLabel = orgType.name;
+                      const assignedId = assignmentFor(orgType.id);
+                      const isSaving = assigningType === orgType.id;
+                      const isAssigned = assignedId != null;
+                      return (
+                        <ListRow
+                          key={orgType.id}
+                          accent={false}
+                          chevron={false}
+                          compact
+                          title={typeLabel}
+                          trailing={
+                            isAssigned ? (
+                              <CheckCircle2
+                                className={`h-3.5 w-3.5 shrink-0 ${statusIconToneClasses.success}`}
+                                aria-hidden
+                              />
+                            ) : (
+                              <Circle
+                                className="h-3.5 w-3.5 shrink-0 text-[var(--text-secondary)]"
+                                aria-hidden
+                              />
+                            )
+                          }
+                          actions={
+                            <Select
+                              size="sm"
+                              width="auto"
+                              aria-label={`${typeLabel} - ${t('admin.standards.assignmentsTitle')}`}
+                              value={assignedId != null ? String(assignedId) : ''}
+                              disabled={busy || assignableStandards.length === 0 || isSaving}
+                              title={
+                                assignableStandards.length === 0
+                                  ? t('admin.standards.assignmentNeedsClone')
+                                  : undefined
+                              }
+                              options={assignmentOptionsFor(orgType.id)}
+                              onChange={(e) => {
+                                const nextId = Number.parseInt(e.target.value, 10);
+                                if (!Number.isFinite(nextId) || nextId === assignedId) return;
+                                void handleAssign(orgType.id, nextId);
+                              }}
+                            />
+                          }
+                        />
+                      );
+                    })}
+                </ListContainer>
+
+                <div className="mt-4 border-t border-[var(--border-color)] pt-4">
+                  <SectionHeader
+                    className="mb-3"
+                    title={t('admin.standards.overridesSection.title')}
+                    subtitle={t('admin.standards.overridesSection.hint')}
+                    action={
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="xs"
+                        onClick={() => void openAddOverride()}
+                        disabled={busy || !cloneStepDone || customStandards.length === 0}
+                        title={
+                          !cloneStepDone || customStandards.length === 0
+                            ? t('admin.standards.assignmentNeedsClone')
+                            : undefined
+                        }
+                        fullWidth="responsive"
+                      >
+                        {t('common.add')}
+                      </Button>
+                    }
+                  />
+                  {overrides.length === 0 ? (
+                    <EmptyState>{t('admin.standards.overridesSection.empty')}</EmptyState>
+                  ) : (
+                    <ListContainer
+                      label={t('admin.standards.overridesSection.title')}
+                      variant="inset"
+                    >
+                      {overrides.map((override) => (
+                        <ListRow
+                          key={override.organizationId}
+                          compact
+                          onClick={() =>
+                            router.push(
+                              `/admin/tenants/${tenantId}/organizations/${override.organizationId}`,
+                            )
+                          }
+                          title={override.organizationName}
+                          subtitle={organizationTypeNames.get(override.organizationTypeId) ?? ''}
+                          meta={
+                            override.standardName ? (
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                <Badge tone="accent">{override.standardName}</Badge>
+                              </div>
+                            ) : undefined
+                          }
+                        />
+                      ))}
+                    </ListContainer>
+                  )}
+                </div>
+              </Card>
+            </div>
           </>
         )}
       </div>

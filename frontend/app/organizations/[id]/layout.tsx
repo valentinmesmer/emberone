@@ -7,8 +7,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { ManagementActivationBanner } from '@/components/management/ManagementActivationBanner';
 import { MobileNavigationLayout } from '@/components/layout/MobileNavigationLayout';
+import { ManagementActivationBanner } from '@/components/management/ManagementActivationBanner';
 
 export default function OrganizationIdLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();

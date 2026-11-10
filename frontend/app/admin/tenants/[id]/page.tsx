@@ -58,6 +58,7 @@ function TenantDetailPageInner() {
     isLoading: authLoading,
   } = useAuth();
   const t = useTranslation();
+  const [createRootOrgSignal, setCreateRootOrgSignal] = useState(0);
   const { showSuccess, showError } = useToast();
 
   const [tenant, setTenant] = useState<TenantAdminDetailDto | null>(null);
@@ -244,6 +245,14 @@ function TenantDetailPageInner() {
             hasOrganizations={tenant.rootOrganizations.length > 0}
             leaderSummary={leaderSummary}
             hasLeaderIssueHint={hasLeaderIssueHint}
+            standardsHref={getAdminStandardsPath(tenant.id)}
+            orgTreeAnchorId="tenant-org-tree"
+            firstLeaderIssueHref={
+              leaderSummary?.firstOrgId != null
+                ? `/admin/tenants/${tenant.id}/organizations/${leaderSummary.firstOrgId}`
+                : null
+            }
+            onCreateRootOrg={() => setCreateRootOrgSignal((n) => n + 1)}
           />
 
           <ListContainer>
@@ -264,16 +273,19 @@ function TenantDetailPageInner() {
             />
           </ListContainer>
 
-          <OrgTreeSection
-            tenantId={tenant.id}
-            rootOrganizations={tenant.rootOrganizations}
-            isGlobalAdmin={isGlobalAdmin}
-            standardsConfiguredForOrgCreation={tenant.standardsConfiguredForOrgCreation}
-            onRootOrgCreated={handleCreateRootOrg}
-            creatingRootOrg={creatingRootOrg}
-            onTreeLoaded={setTreeRoots}
-            showLeaderIssueBanner={false}
-          />
+          <div id="tenant-org-tree" className="scroll-mt-20">
+            <OrgTreeSection
+              tenantId={tenant.id}
+              rootOrganizations={tenant.rootOrganizations}
+              isGlobalAdmin={isGlobalAdmin}
+              standardsConfiguredForOrgCreation={tenant.standardsConfiguredForOrgCreation}
+              onRootOrgCreated={handleCreateRootOrg}
+              creatingRootOrg={creatingRootOrg}
+              onTreeLoaded={setTreeRoots}
+              showLeaderIssueBanner={false}
+              openCreateSignal={createRootOrgSignal}
+            />
+          </div>
 
           {isGlobalAdmin ? (
             <>

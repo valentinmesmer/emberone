@@ -50,7 +50,7 @@ export function SelfCourseOfferingParticipationCard({
             ? t('myArea.courseRegistrations.detail.cancellationPendingHint')
             : t(`myArea.courseRegistrations.detail.status.${myRegistration.status}`)}
         </p>
-        <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+        <div className="mt-0.5 space-y-0.5 text-xs text-[var(--text-secondary)]">
           {[
             t('myArea.courseRegistrations.registrations.registeredAt', {
               date: formatDateShort(myRegistration.registeredAt),
@@ -62,8 +62,10 @@ export function SelfCourseOfferingParticipationCard({
               : null,
           ]
             .filter(Boolean)
-            .join(' · ')}
-        </p>
+            .map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+        </div>
         {myRegistration.endReason ? (
           <p className="mt-1 text-xs text-[var(--text-secondary)]">{myRegistration.endReason}</p>
         ) : null}

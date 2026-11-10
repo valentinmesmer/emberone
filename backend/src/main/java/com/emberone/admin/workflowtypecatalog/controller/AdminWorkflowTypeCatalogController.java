@@ -8,6 +8,7 @@ package com.emberone.admin.workflowtypecatalog.controller;
 
 import com.emberone.platform.web.list.BoundedList;
 import com.emberone.workflow.dto.WorkflowTypeCatalogDto;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import com.emberone.workflow.spi.WorkflowHandler;
 import com.emberone.workflow.spi.WorkflowHandlerRegistry;
 import java.util.Comparator;
@@ -49,6 +50,8 @@ public class AdminWorkflowTypeCatalogController {
                 .allowsMultipleConcurrentOpen(handler.allowsMultipleConcurrentOpen())
                 .openScope(handler.openScope())
                 .listedInBeginnableCatalog(handler.listedInBeginnableCatalog())
+                .routingDimension(handler.routingDimension().orElse(null))
+                .approverSlotRoles(WorkflowApproverSlotRoles.rolesOf(handler))
                 .build();
     }
 }

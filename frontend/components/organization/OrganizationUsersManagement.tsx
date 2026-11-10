@@ -62,8 +62,9 @@ export function OrganizationUsersManagement({
   const canWrite = hasPermission(organizationId, PermissionTypeEnum.USER_WRITE);
 
   const memberListState = useUrlSyncedListState(organizationMemberListDefinition);
-  const { showMembers, showInvitations, showSectionHeadings } =
-    resolveOrganizationMemberListVisibility(memberListState.listQuery);
+  const { showMembers, showInvitations } = resolveOrganizationMemberListVisibility(
+    memberListState.listQuery,
+  );
 
   const memberApiQuery = useMemo(
     () => toOrganizationMemberApiListQuery(memberListState.listQuery),
@@ -157,11 +158,6 @@ export function OrganizationUsersManagement({
       >
         {showInvitations && invitations.length > 0 ? (
           <section>
-            {showSectionHeadings ? (
-              <h2 className="mb-1 text-sm font-medium text-muted-foreground">
-                {t('userManagement.listFilter.invited')}
-              </h2>
-            ) : null}
             <ListContainer label={t('userManagement.listFilter.invited')}>
               {invitations.map((invitation) => (
                 <ListRow
@@ -187,11 +183,6 @@ export function OrganizationUsersManagement({
 
         {showMembers && members.length > 0 ? (
           <section>
-            {showSectionHeadings ? (
-              <h2 className="mb-1 text-sm font-medium text-muted-foreground">
-                {t('userManagement.listFilter.active')}
-              </h2>
-            ) : null}
             <ListContainer label={t('userManagement.tabs.users')}>
               {members.map((user) => (
                 <ListRow

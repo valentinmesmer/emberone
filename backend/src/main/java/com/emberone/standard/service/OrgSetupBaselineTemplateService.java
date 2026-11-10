@@ -25,10 +25,13 @@ import com.emberone.rank.standard.RankStandardDomain;
 import com.emberone.standard.domain.Standard;
 import com.emberone.trainingcourse.standard.TrainingCourseStandardDomain;
 import com.emberone.workflow.domain.WorkflowType;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
+import com.emberone.workflow.spi.WorkflowHandlerRegistry;
 import com.emberone.workflow.standard.WorkflowDefinitionTemplate;
 import com.emberone.workflow.standard.WorkflowDefinitionTemplateRepository;
 import com.emberone.workflow.standard.WorkflowTypeMappingTemplate;
 import com.emberone.workflow.standard.WorkflowTypeMappingTemplateRepository;
+import com.emberone.workflow.standard.WorkflowTypeMappingTemplateSlot;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
@@ -48,6 +51,7 @@ public class OrgSetupBaselineTemplateService {
     private final PermissionGroupTemplateRepository permissionGroupTemplateRepository;
     private final OrgGroupPermissionGroupTemplateRepository groupMappingTemplateRepository;
     private final WorkflowTypeMappingTemplateRepository workflowTypeMappingTemplateRepository;
+    private final WorkflowHandlerRegistry workflowHandlerRegistry;
     private final WorkflowDefinitionTemplateRepository workflowDefinitionTemplateRepository;
     private final CertificationStandardDomain certificationStandardDomain;
     private final TrainingCourseStandardDomain trainingCourseStandardDomain;
@@ -167,18 +171,14 @@ public class OrgSetupBaselineTemplateService {
                                     .build());
             template.setWorkflowTypeId(item.workflowTypeId());
             if (isNew) {
-                template.setOrgGroupConfigKey(item.orgGroupConfigKey());
-                template.setAutoApprove(item.autoApprove());
-                template.setSelfApproveAllowed(item.selfApproveAllowed());
                 template.setEnabled(
                         standard.isSystem()
                                 ? item.enabled()
                                 : enableNewWorkflowMappings && item.enabled());
+                applyBaselineToSlots(template, item);
             } else if (standard.isSystem()) {
-                template.setOrgGroupConfigKey(item.orgGroupConfigKey());
-                template.setAutoApprove(item.autoApprove());
-                template.setSelfApproveAllowed(item.selfApproveAllowed());
                 template.setEnabled(item.enabled());
+                applyBaselineToSlots(template, item);
             }
             workflowTypeMappingTemplateRepository.save(template);
         }
@@ -197,8 +197,6 @@ public class OrgSetupBaselineTemplateService {
             if (existing.isPresent()) {
                 WorkflowDefinitionTemplate template = existing.get();
                 template.setWorkflowTypeId(item.workflowTypeId());
-                template.setStaticApproversExclusive(item.staticApproversExclusive());
-                template.getStaticOrganizations().clear();
                 workflowDefinitionTemplateRepository.save(template);
             } else {
                 workflowDefinitionTemplateRepository.save(
@@ -207,8 +205,6 @@ public class OrgSetupBaselineTemplateService {
                                 .standardId(standardId)
                                 .configKey(item.configKey())
                                 .workflowTypeId(item.workflowTypeId())
-                                .staticApproversExclusive(item.staticApproversExclusive())
-                                .staticOrganizations(new ArrayList<>())
                                 .build());
             }
         }
@@ -249,5 +245,32 @@ public class OrgSetupBaselineTemplateService {
             return permissionGroupNamingService.resolveLocalizedName(type, tenantId);
         }
         return name;
+    }
+
+    /** Every role of the workflow type starts with the values of the baseline item. */
+    private void applyBaselineToSlots(
+            WorkflowTypeMappingTemplate template, WorkflowTypeMappingBaseline item) {
+        if (!WorkflowType.isKnownId(item.workflowTypeId())) {
+            return;
+        }
+        for (String role :
+                WorkflowApproverSlotRoles.rolesOf(
+                        workflowHandlerRegistry.require(item.workflowTypeId()))) {
+            WorkflowTypeMappingTemplateSlot slot =
+                    template.findSlot(role)
+                            .orElseGet(() -> {
+                                WorkflowTypeMappingTemplateSlot created =
+                                        WorkflowTypeMappingTemplateSlot.builder()
+                                                .tenantId(template.getTenantId())
+                                                .template(template)
+                                                .slotRole(role)
+                                                .build();
+                                template.getSlots().add(created);
+                                return created;
+                            });
+            slot.setOrgGroupConfigKey(item.orgGroupConfigKey());
+            slot.setAutoApprove(item.autoApprove());
+            slot.setSelfApproveAllowed(item.selfApproveAllowed());
+        }
     }
 }

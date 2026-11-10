@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { DetailCardHeader } from '@/components/ui/detail-card-header';
 import { FieldDisplay } from '@/components/ui/field-display';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { EmptyState } from '@/components/ui/message-cards';
 import { RecordSourceLinkSection } from '@/components/ui/record-source-link-section';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -121,16 +121,14 @@ export function DrivingLicenseView({
                     licenseClass.abbreviation ??
                     `#${licenseClass.tenantDrivingLicenseDefinitionId}`
                   }
-                  subtitle={[
+                  subtitle={subtitleLines([
                     licenseClass.grantDate?.trim()
                       ? `${t('drivingLicense.classes.grantDateLabel')}: ${formatDateLong(licenseClass.grantDate)}`
                       : null,
                     licenseClass.expirationDate?.trim()
                       ? `${t('drivingLicense.classes.expirationDateLabel')}: ${formatDateLong(licenseClass.expirationDate)}`
                       : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
+                  ])}
                   badges={
                     !classValid ? (
                       <Badge tone="danger">{t('drivingLicense.classExpired')}</Badge>
@@ -143,40 +141,35 @@ export function DrivingLicenseView({
         )}
       </section>
 
-      {getDocumentHref ? (
+      {getDocumentHref && linkedDocuments.length > 0 ? (
         <section>
           <h3 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
             {t('common.record.documentsTitle')}
           </h3>
-          {linkedDocuments.length === 0 ? (
-            <EmptyState>{t('common.record.noDocuments')}</EmptyState>
-          ) : (
-            <ListContainer label={t('common.record.documentsTitle')} rowSeparator="inset">
-              {linkedDocuments.map((doc) => (
-                <ListRow
-                  key={doc.id}
-                  compact
-                  href={getDocumentHref(doc.id)}
-                  chevron
-                  leading={
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-[var(--text-secondary)]">
-                      <FileText className="h-4 w-4" aria-hidden />
-                    </div>
-                  }
-                  title={doc.title}
-                  subtitle={
-                    <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                      <span className="truncate">{doc.fileName}</span>
-                      <span className="shrink-0 text-[var(--text-secondary)]/50" aria-hidden>
-                        ·
-                      </span>
-                      <span className="shrink-0 tabular-nums">{formatFileSize(doc.sizeBytes)}</span>
-                    </span>
-                  }
-                />
-              ))}
-            </ListContainer>
-          )}
+          <ListContainer label={t('common.record.documentsTitle')} rowSeparator="inset">
+            {linkedDocuments.map((doc) => (
+              <ListRow
+                key={doc.id}
+                compact
+                href={getDocumentHref(doc.id)}
+                chevron
+                leading={
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-[var(--text-secondary)]">
+                    <FileText className="h-4 w-4" aria-hidden />
+                  </div>
+                }
+                title={doc.title}
+                subtitle={subtitleLines([
+                  <span key="name" className="block truncate">
+                    {doc.fileName}
+                  </span>,
+                  <span key="size" className="tabular-nums">
+                    {formatFileSize(doc.sizeBytes)}
+                  </span>,
+                ])}
+              />
+            ))}
+          </ListContainer>
         </section>
       ) : null}
     </div>

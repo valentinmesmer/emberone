@@ -6,7 +6,7 @@
 
 package com.emberone.management.service;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -74,7 +74,7 @@ class ManagementAudienceCleanupListenerTest {
         listener.onStandardEnabledModulesChanged(
                 new StandardEnabledModulesChangedEvent(TENANT_ID, 3L));
 
-        verify(audienceRepository).deleteAll(any(Iterable.class));
+        verify(audienceRepository).deleteAll(anyList());
         verify(activationService).endSystemActivationsThrough(MODULE_OFF_ORG_ID);
         verify(activationService).endSystemActivationsThrough(ACCESS_LOST_ORG_ID);
         verify(audienceRepository, never())

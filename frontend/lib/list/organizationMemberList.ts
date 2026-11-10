@@ -54,7 +54,6 @@ export const organizationMemberListDefinition = defineList({
 export type OrganizationMemberListVisibility = {
   showMembers: boolean;
   showInvitations: boolean;
-  showSectionHeadings: boolean;
 };
 
 function normalizeAudienceSelection(query: ListQuery): readonly string[] {
@@ -79,15 +78,11 @@ export function resolveOrganizationMemberListVisibility(
 ): OrganizationMemberListVisibility {
   const selected = normalizeAudienceSelection(query);
   if (selected.length === 0) {
-    return { showMembers: true, showInvitations: true, showSectionHeadings: true };
+    return { showMembers: true, showInvitations: true };
   }
   const showMembers = selected.includes(OrganizationMemberListAudienceParam.MEMBERS);
   const showInvitations = selected.includes(OrganizationMemberListAudienceParam.INVITED);
-  return {
-    showMembers,
-    showInvitations,
-    showSectionHeadings: showMembers && showInvitations,
-  };
+  return { showMembers, showInvitations };
 }
 
 /** Drops UI-only `audience` before calling member or invitation list APIs. */

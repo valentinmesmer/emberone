@@ -7,8 +7,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { LoadingState } from '@/components/ui/loading';
 import { WorkflowInboxView } from '@/components/my-area/workflows/WorkflowInboxView';
+import { LoadingState } from '@/components/ui/loading';
 
 export default function MyWorkflowInboxPage() {
   return (

@@ -70,12 +70,16 @@
     "hub": {
       "ungrouped": "Weitere Bereiche",
       "groups": {
-        "myAreaPersonal": "Profil & Dokumente",
-        "myAreaTimeAttendance": "Zeit & Abwesenheit",
         "myAreaInbox": "Posteingang",
+        "myAreaProfile": "Profil",
+        "myAreaTraining": "Ausbildung",
+        "myAreaTimeAttendance": "Zeit & Abwesenheit",
         "myAreaAccount": "Konto",
         "orgDepartment": "Dienstbetrieb",
-        "orgMembersAndAbsences": "Mitglieder"
+        "orgMembers": "Mitglieder",
+        "orgTraining": "Ausbildung",
+        "orgAdministration": "Verwaltung",
+        "userRequestsAndActions": "Anträge & Aktionen"
       }
     },
     "a11y": {
@@ -107,7 +111,6 @@
     },
     "record": {
       "documentsTitle": "Dokumente",
-      "noDocuments": "Keine Dokumente vorhanden.",
       "notesLabel": "Notizen (optional)"
     }
   },
@@ -402,6 +405,10 @@
         "USER_MASTER": {
           "title": "Personenstammdaten",
           "start": "nach Austritt"
+        },
+        "MANAGEMENT_ACCESS": {
+          "title": "Verwaltungszugriffe",
+          "start": "nach Ende der Aktivierung"
         }
       },
       "tables": {
@@ -432,6 +439,7 @@
         "onb_invitations": "Eintrittseinladungen",
         "onb_org_document_definitions": "Org-Eintrittsdokumente",
         "operation_events": "Einsätze",
+        "org_management_activations": "Verwaltungsaktivierungen",
         "qual_user_org_decisions": "Qualifikationsentscheidungen",
         "service_events": "Dienste",
         "todo_excluded_users": "Aufgaben-Ausschlüsse",
@@ -623,19 +631,15 @@
       "removeHint": "Den Eintrag entfernen; laufende Verwaltungen verlieren sofort den Zugriff",
       "notFound": "Eintrag nicht gefunden",
       "durationLabel": "Höchstdauer (Minuten)",
-      "durationInvalid": "Die Höchstdauer muss mindestens 1 Minute betragen.",
-      "targetRequired": "Bitte ein Ziel wählen.",
       "duplicate": "Für dieses Ziel gibt es bereits einen Eintrag.",
       "removeEntry": "Eintrag entfernen",
       "deleteTitle": "Eintrag entfernen",
       "deleteMessage": "Der Eintrag wird entfernt. Laufende Verwaltungen über diesen Umfang verlieren den Zugriff sofort.",
       "deleted": "Eintrag entfernt",
-      "save": "Speichern",
       "saved": "Verwaltung gespeichert",
       "saveFailed": "Verwaltung konnte nicht gespeichert werden.",
       "loadError": "Verwaltung konnte nicht geladen werden",
       "permissionsLabel": "Erlaubte Berechtigungen",
-      "permissionsRequired": "Mindestens eine Berechtigung auswählen.",
       "selectAll": "Alle"
     },
     "orgTree": {
@@ -664,9 +668,14 @@
       "bundlesHint": "Enthalten Org-Gruppen, Berechtigungsgruppen und zugehörige Antragstypen. Öffnen zum Bearbeiten, klonen für eigene Varianten.",
       "manageOrgStandardsLink": "Organisationsstandards verwalten",
       "setupCompleteTitle": "Einrichtung abgeschlossen",
+      "setupOpenTitle": "Einrichtung offen",
+      "setupCloneStep": "Standard klonen",
+      "setupCloneDone": "Standard geklont",
+      "setupAssignStep": "Standard jedem Organisationstyp zuordnen",
+      "setupAssignDone": "Standards zugeordnet",
       "orgCreationBlockedHint": "Zuerst einen Standard klonen und zuordnen, bevor Organisationen angelegt werden können.",
-      "step1Title": "Schritt 1 · Vorlage klonen",
-      "step2Title": "Schritt 2 · Organisationstyp zuordnen",
+      "templatesTitle": "Standard-Vorlagen",
+      "typeAssignmentTitle": "Organisationstypen zuordnen",
       "empty": "Noch keine Standards vorhanden.",
       "system": "System",
       "custom": "Benutzerdefiniert",
@@ -802,7 +811,7 @@
         "grantsTitle": "Funktionszuordnung",
         "grantsSummaryEmpty": "Keine Funktionen zugeordnet.",
         "grantTargetsUnset": "Noch nicht vergeben",
-        "grantTargetSummary": "{{group}} · {{role}}",
+        "grantTargetSummary": "{{group}} ({{role}})",
         "noGrant": "Keine Funktion",
         "emptyCatalog": "Noch keine Funktionen im Mandanten-Katalog.",
         "loadCatalogFailed": "Funktionskatalog konnte nicht geladen werden.",
@@ -868,8 +877,7 @@
       },
       "permissionsLabel": "Berechtigungen",
       "noPermissions": "Keine Berechtigungen",
-      "approverLabel": "Genehmigt durch",
-      "approverGroupHint": "Nur Führung oder benutzerdefinierte Gruppen können Anträge genehmigen, nicht „Alle Mitglieder“.",
+      "approverLabel": "Freigabe durch",
       "detailsSaved": "Standard aktualisiert.",
       "addOrgGroup": "Gruppe hinzufügen",
       "addPermissionGroup": "Berechtigungsgruppe hinzufügen",
@@ -879,16 +887,29 @@
       "editWorkflow": "Antrag bearbeiten",
       "fields": {
         "autoApprove": "Automatisch genehmigen",
-        "autoApproveHint": "Anträge werden ohne manuelle Freigabe sofort genehmigt.",
-        "enabled": "Aktiviert",
+        "autoApproveHint": "Anträge werden sofort genehmigt, ohne Freigabe durch eine Person.",
         "disabled": "Deaktiviert",
-        "enabledHint": "Antrag steht den Mitgliedern zur Verfügung.",
-        "selfApproveAllowed": "Selbstgenehmigung erlaubt",
-        "selfApproveAllowedHint": "Antragsteller dürfen ihren eigenen Antrag genehmigen."
+        "selfApproveAllowed": "Eigene Anträge freigeben",
+        "selfApproveAllowedHint": "Antragstellende dürfen ihren eigenen Antrag freigeben."
       },
       "itemSaved": "Eintrag gespeichert.",
       "itemDeleted": "Eintrag entfernt.",
       "workflowSaved": "Antrag gespeichert.",
+      "workflow": {
+        "slotsTitle": "Freigaben",
+        "summaryAuto": "automatisch",
+        "summaryManual": "manuell",
+        "summarySelfAllowed": "eigene Anträge",
+        "summarySelfBlocked": "keine eigenen Anträge",
+        "disable": "Workflow deaktivieren",
+        "disableHint": "Mitglieder können diesen Antrag nicht mehr stellen.",
+        "disableMessage": "„{{name}}“ deaktivieren?",
+        "disableDone": "Workflow deaktiviert.",
+        "enable": "Workflow aktivieren",
+        "enableHint": "Mitglieder können diesen Antrag wieder stellen.",
+        "enableMessage": "„{{name}}“ aktivieren?",
+        "enableDone": "Workflow aktiviert."
+      },
       "errors": {
         "loadFailed": "Standards konnten nicht geladen werden.",
         "cloneFailed": "Standard konnte nicht geklont werden.",
@@ -1113,8 +1134,7 @@
         "saveFailed": "Dienstgrad konnte nicht gespeichert werden.",
         "loadFailed": "Dienstgrade konnten nicht geladen werden.",
         "empty": "Noch keine Dienstgrade definiert.",
-        "configKey": "Schlüssel",
-        "abbreviation": "Abkürzung",
+        "abbreviation": "Kürzel",
         "sortOrder": "Reihenfolge",
         "archiveConfirm": "Dienstgrad wirklich archivieren?",
         "unarchiveConfirm": "Dienstgrad wirklich entarchivieren?",
@@ -1133,9 +1153,7 @@
         "saveFailed": "Funktion konnte nicht gespeichert werden.",
         "loadFailed": "Funktionen konnten nicht geladen werden.",
         "empty": "Noch keine Funktionen definiert.",
-        "configKey": "Schlüssel",
-        "abbreviation": "Abkürzung",
-        "sortOrder": "Reihenfolge",
+        "abbreviation": "Kürzel",
         "archiveConfirm": "Funktion wirklich archivieren?",
         "unarchiveConfirm": "Funktion wirklich entarchivieren?",
         "archived": "Funktion archiviert.",
@@ -1187,7 +1205,7 @@
       "staticOrgsTitle": "Zusätzliche Freigabe-Orgs",
       "noStaticOrgs": "Noch keine Freigabe-Org hinzugefügt.",
       "addStaticOrg": "Freigabe-Org hinzufügen",
-      "removeStaticOrg": "{name} entfernen",
+      "removeStaticOrg": "{{name}} entfernen",
       "selectStaticOrg": "Organisation wählen",
       "selectStaticOrgPlaceholder": "Organisation wählen …",
       "staticExclusive": "Nur Freigabe durch diese Orgs",
@@ -1197,9 +1215,10 @@
       "badgeStaticOrgs": "{{count}} Freigabe-Org(s)",
       "badgeExclusive": "Exklusiv",
       "badgeCustomized": "Angepasst",
-      "restore": "Standard wiederherstellen",
-      "restoreTitle": "Standard wiederherstellen",
-      "restoreMessage": "Workflow-Einstellungen auf die System-Vorgabe zurücksetzen?",
+      "restore": "Auf Standard zurücksetzen",
+      "restoreHint": "Setzt Freigabe-Orgs und Regeln auf die System-Vorgabe zurück.",
+      "restoreTitle": "Auf Standard zurücksetzen",
+      "restoreMessage": "Freigabe-Orgs und alle Regeln auf die System-Vorgabe zurücksetzen?",
       "restored": "System-Vorgabe wiederhergestellt.",
       "restoreFailed": "Standard konnte nicht wiederhergestellt werden.",
       "errors": {
@@ -1207,6 +1226,47 @@
       },
       "success": {
         "tenantDefaultSaved": "Workflow-Einstellungen gespeichert."
+      },
+      "routing": {
+        "title": "Regeln je {{singular}}",
+        "subtitle": "Abweichende Freigabe-Orgs für einzelne {{plural}}.",
+        "defaultRuleHint": "Gilt für alle {{plural}} ohne eigene Regel.",
+        "add": "Regel hinzufügen",
+        "empty": "Noch keine Regel. Alle {{plural}} nutzen die Standard-Regel.",
+        "createTitle": "Regel hinzufügen",
+        "editTitle": "Regel bearbeiten",
+        "noSubjectsAvailable": "Alle verfügbaren Einträge sind bereits in einer anderen Regel vergeben.",
+        "saved": "Regel gespeichert.",
+        "deleted": "Regel gelöscht.",
+        "deleteTitle": "Regel löschen",
+        "deleteHint": "Die Einträge dieser Regel nutzen danach wieder die Standard-Regel.",
+        "deleteConfirm": "Die Regel löschen? Die betroffenen {{plural}} nutzen danach wieder die Standard-Regel.",
+        "detail": {
+          "appliesTo": "Gilt für",
+          "loadFailed": "Regel konnte nicht geladen werden."
+        },
+        "dimension": {
+          "CERTIFICATION_DEFINITION": {
+            "singular": "Zertifizierung",
+            "plural": "Zertifizierungen"
+          },
+          "TRAINING_COURSE_TYPE": {
+            "singular": "Lehrgangstyp",
+            "plural": "Lehrgangstypen"
+          },
+          "DRIVING_LICENSE_DEFINITION": {
+            "singular": "Führerscheinklasse",
+            "plural": "Führerscheinklassen"
+          },
+          "RANK": {
+            "singular": "Dienstgrad",
+            "plural": "Dienstgrade"
+          }
+        },
+        "errors": {
+          "saveFailed": "Regel konnte nicht gespeichert werden.",
+          "deleteFailed": "Regel konnte nicht gelöscht werden."
+        }
       }
     },
     "users": {
@@ -1255,14 +1315,8 @@
       "sort": {
         "activatedAtDesc": "Zuletzt aktiviert",
         "activatedAtAsc": "Zuerst aktiviert",
-        "validUntilDesc": "Gültig bis, neueste zuerst",
-        "validUntilAsc": "Gültig bis, älteste zuerst",
         "personAsc": "Person A-Z",
-        "personDesc": "Person Z-A",
-        "managingAsc": "Verwaltende Organisation A-Z",
-        "managingDesc": "Verwaltende Organisation Z-A",
-        "targetAsc": "Ziel-Organisation A-Z",
-        "targetDesc": "Ziel-Organisation Z-A"
+        "personDesc": "Person Z-A"
       }
     },
     "tenants": {
@@ -1343,18 +1397,18 @@
     "menu": {
       "masterData": "Stammdaten",
       "absence": "Abwesenheiten",
-      "emergencyContact": "Notfallkontakt",
-      "documents": "Meine Dokumente",
+      "emergencyContact": "Notfallkontakte",
+      "documents": "Dokumente",
       "certifications": "Nachweise",
       "qualifications": "Qualifikationen",
       "rank": "Dienstgrad & Funktionen",
       "trainingCourses": "Lehrgänge",
-      "courseRegistrations": "Lehrgangsanmeldung",
+      "courseRegistrations": "Lehrgangsanmeldungen",
       "drivingLicenses": "Führerschein",
       "timeEntries": "Zeiterfassung",
       "workflowsInbox": "Anträge",
       "notifications": "Benachrichtigungen",
-      "todos": "Meine Aufgaben",
+      "todos": "Aufgaben",
       "onboarding": "Eintritt",
       "settings": "Einstellungen"
     },
@@ -1519,7 +1573,6 @@
         "organization": "Organisation",
         "invitedAt": "Eingeladen am",
         "documentsTitle": "Dokumente",
-        "noDocuments": "Keine Dokumente vorhanden.",
         "alreadyFulfilledStepsTitle": "Bereits erfüllt",
         "alreadyFulfilledStepsHint": "Diese Schritte waren schon erledigt und wurden in diesem Eintritt nicht erneut erfasst."
       }
@@ -1688,6 +1741,7 @@
       "approvalSlotNotFound": "Diese Freigabe wurde nicht gefunden oder du hast keinen Zugriff.",
       "approvalSlotDetailSection": "Status",
       "approvalSlotOrganization": "Organisation",
+      "approvalSlotRole": "Rolle",
       "approvalSlotGroup": "Gruppe",
       "approvalSlotStatus": "Freigabe-Status",
       "approvalSlotActionsSection": "Aktionen",
@@ -1698,7 +1752,7 @@
       "reviewWorkflowLinkHint": "Antragsdaten, Nachweise und Diskussion prüfen",
       "approvalStatusHandler": "Bearbeiter/in: {{name}}",
       "approvalStatusHandlerNone": "Noch nicht übernommen",
-      "approvalStatusDecided": "Entschieden: {{name}} · {{when}}",
+      "approvalStatusDecided": "Entschieden von {{name}}, {{when}}",
       "approvalStatusAutoApproved": "Automatisch genehmigt",
       "claimSlotHint": "Diese Freigabe gehört deiner Gruppe. Übernimm sie, um zu entscheiden.",
       "chooseApprovalSlotHint": "Wähle, welche Freigabe du bearbeiten willst.",
@@ -2127,18 +2181,18 @@
       },
       "tileLabels": {
         "appointments": "Termine",
-        "service": "Dienstleistung",
-        "operation": "Einsatz",
+        "service": "Dienstleistungen",
+        "operation": "Einsätze",
         "absences": "Abwesenheiten",
         "certifications": "Nachweise",
         "qualifications": "Qualifikationen",
-        "ranks": "Dienstgrade und Funktionen",
+        "ranks": "Dienstgrade & Funktionen",
         "manageUsers": "Mitglieder",
         "groups": "Gruppen",
         "workflows": "Anträge",
         "courseOfferings": "Lehrgangsangebote",
         "courseRegistrations": "Lehrgangsanmeldungen",
-        "management": "Verwaltung"
+        "management": "Verwaltete Organisationen"
       },
       "tiles": {
         "hintAppointments": "Termine",
@@ -2185,7 +2239,7 @@
       "notFound": "Organisation nicht gefunden"
     },
     "management": {
-      "switcherBadge": "Verwaltung · bis {{time}}"
+      "switcherBadge": "Verwaltung bis {{time}}"
     }
   },
   "organizationManagement": {
@@ -2814,6 +2868,80 @@
       "sort": {
         "openedAtDesc": "Zuletzt eröffnet",
         "openedAtAsc": "Zuerst eröffnet"
+      }
+    },
+    "slotRoles": {
+      "CONTEXT": "Hauptorganisation",
+      "ADDITIONAL": "Zusätzliche Freigabe-Orgs",
+      "NEW_MAIN_ORG": "Neue Hauptorganisation",
+      "TARGET_ORG": "Beitritts-Organisation",
+      "HOME_ORG": "Hauptorganisation der teilnehmenden Person",
+      "MAIN_ORGANIZATION_CHANGE": {
+        "CONTEXT": "Bisherige Hauptorganisation"
+      },
+      "ORGANIZATION_USER_MAIN_ORGANIZATION_CHANGE": {
+        "CONTEXT": "Bisherige Hauptorganisation"
+      },
+      "ORGANIZATION_JOIN_REQUEST": {
+        "CONTEXT": "Bisherige Hauptorganisation"
+      },
+      "COURSE_OFFERING_REGISTRATION": {
+        "CONTEXT": "Veranstalter"
+      },
+      "COURSE_REGISTRATION_CANCELLATION": {
+        "CONTEXT": "Veranstalter"
+      },
+      "ORGANIZATION_LEAVE_REQUEST": {
+        "CONTEXT": "Organisation"
+      },
+      "ORGANIZATION_MEMBERSHIP_END_REQUEST": {
+        "CONTEXT": "Organisation"
+      },
+      "ORGANIZATION_GROUP_JOIN_REQUEST": {
+        "CONTEXT": "Organisation der Gruppe"
+      },
+      "ORGANIZATION_GROUP_LEAVE_REQUEST": {
+        "CONTEXT": "Organisation der Gruppe"
+      },
+      "ONBOARDING_SUBMISSION": {
+        "CONTEXT": "Einladende Organisation"
+      }
+    },
+    "slotRoleHints": {
+      "CONTEXT": "Hauptorganisation der antragstellenden Person",
+      "ADDITIONAL": "Aus den Mandanteneinstellungen",
+      "NEW_MAIN_ORG": "Organisation, zu der gewechselt wird",
+      "TARGET_ORG": "Organisation, bei der der Beitritt beantragt wird",
+      "HOME_ORG": "Hauptorganisation der Person, die teilnimmt",
+      "MAIN_ORGANIZATION_CHANGE": {
+        "CONTEXT": "Hauptorganisation vor dem Wechsel"
+      },
+      "ORGANIZATION_USER_MAIN_ORGANIZATION_CHANGE": {
+        "CONTEXT": "Hauptorganisation der Person vor dem Wechsel"
+      },
+      "ORGANIZATION_JOIN_REQUEST": {
+        "CONTEXT": "Hauptorganisation der antragstellenden Person"
+      },
+      "COURSE_OFFERING_REGISTRATION": {
+        "CONTEXT": "Organisation, die den Lehrgang anbietet"
+      },
+      "COURSE_REGISTRATION_CANCELLATION": {
+        "CONTEXT": "Organisation, die den Lehrgang anbietet"
+      },
+      "ORGANIZATION_LEAVE_REQUEST": {
+        "CONTEXT": "Organisation, die verlassen wird"
+      },
+      "ORGANIZATION_MEMBERSHIP_END_REQUEST": {
+        "CONTEXT": "Organisation, die verlassen wird"
+      },
+      "ORGANIZATION_GROUP_JOIN_REQUEST": {
+        "CONTEXT": "Organisation, zu der die Gruppe gehört"
+      },
+      "ORGANIZATION_GROUP_LEAVE_REQUEST": {
+        "CONTEXT": "Organisation, zu der die Gruppe gehört"
+      },
+      "ONBOARDING_SUBMISSION": {
+        "CONTEXT": "Organisation, die zum Eintritt eingeladen hat"
       }
     }
   },

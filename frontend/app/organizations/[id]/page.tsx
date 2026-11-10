@@ -12,13 +12,13 @@ import { HubOrganizationSwitch, HubPage } from '@/components/hub';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard, NotFoundState } from '@/components/ui/message-cards';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useOrganizationMembership } from '@/hooks/useWorkspaceOrganizations';
 import {
   buildFlatOrgNavItems,
   getOrganizationHubGroupTitle,
   ORG_HUB_GROUP_ORDER,
 } from '@/lib/navigation/organizationNavItems';
 import { usePermissions } from '@/lib/permission/PermissionContext';
-import { useOrganizationMembership } from '@/hooks/useWorkspaceOrganizations';
 import { useAppointmentUnreadCount, useOrganizationById } from '@/lib/store';
 
 export default function OrganizationHubPage() {

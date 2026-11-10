@@ -43,6 +43,7 @@ class UserDocumentListSpecsTest {
         verify(cb).equal(any(), org.mockito.ArgumentMatchers.eq("application/pdf"));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void viewedUnreadIsNullViewedAt() {
         CriteriaBuilder cb = mock(CriteriaBuilder.class);

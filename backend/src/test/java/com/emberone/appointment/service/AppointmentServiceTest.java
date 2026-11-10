@@ -6,6 +6,7 @@
 
 package com.emberone.appointment.service;
 
+import static com.emberone.testsupport.SpecificationMatchers.anySpecification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,7 +55,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentServiceTest {
@@ -200,7 +200,7 @@ class AppointmentServiceTest {
                         eq(3L), eq(10L), any()))
                 .thenReturn(List.of());
         Page<Appointment> page = new PageImpl<>(List.of(visible), PageRequest.of(0, 50), 1);
-        when(appointmentRepository.findAll(any(Specification.class), any(PageRequest.class)))
+        when(appointmentRepository.findAll(anySpecification(), any(PageRequest.class)))
                 .thenReturn(page);
         when(appointmentRepository.findWithOrganizationAndAudienceByIdIn(List.of(1L)))
                 .thenReturn(List.of(visible));

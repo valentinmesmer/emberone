@@ -13,8 +13,6 @@ import {
   type LocalOnboardingStep,
   normalizeOnboardingSteps,
   onboardingStepHasConfig,
-  readOnboardingDocumentKeys,
-  readOnboardingMinimumCount,
 } from '@/components/admin/standards/onboardingStepUtils';
 import { StandardOnboardingStepAddModal } from '@/components/admin/standards/StandardOnboardingStepAddModal';
 import { StandardOnboardingStepCard } from '@/components/admin/standards/StandardOnboardingStepCard';
@@ -26,8 +24,7 @@ import { useOnboardingStepReorder } from '@/components/admin/standards/useOnboar
 import type { StandardContentState } from '@/components/admin/standards/useStandardContent';
 import { OrganizationManageSection } from '@/components/organization/OrganizationManageSection';
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { ListContainer } from '@/components/ui/list';
+import { ListContainer, subtitleLines } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard } from '@/components/ui/message-cards';
 import { SectionActions } from '@/components/ui/section-header';
@@ -60,7 +57,6 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
   const [editOpen, setEditOpen] = useState(false);
   const [configDraft, setConfigDraft] = useState<OnboardingStepConfigDraft | null>(null);
   const [pendingAddType, setPendingAddType] = useState<OnboardingStepType | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<OnboardingStepType | null>(null);
 
   const loadCatalog = useCallback(async () => {
     try {
@@ -171,27 +167,6 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
     setAddOpen(false);
   }
 
-  async function handleDelete() {
-    if (deleteTarget == null) return;
-    const ok = await persistSteps(steps.filter((step) => step.stepType !== deleteTarget));
-    if (ok) {
-      showSuccess(t('admin.standards.onboardingSteps.deleted'));
-      setDeleteTarget(null);
-    }
-  }
-
-  function openEdit(step: LocalOnboardingStep) {
-    setConfigDraft({
-      stepType: step.stepType,
-      documentKeys: readOnboardingDocumentKeys(step.config),
-      minimumCount: String(readOnboardingMinimumCount(step.config)),
-    });
-    if (step.stepType === 'ENTRY_DOCUMENTS' && !catalogReady) {
-      void loadCatalog();
-    }
-    setEditOpen(true);
-  }
-
   function closeConfigModal() {
     if (saving) return;
     setEditOpen(false);
@@ -225,7 +200,10 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
 
   const subtitle =
     steps.length > 1
-      ? `${t('admin.standards.onboardingSteps.count', { count: steps.length })} · ${t('admin.standards.onboardingSteps.dragHint')}`
+      ? subtitleLines([
+          t('admin.standards.onboardingSteps.count', { count: steps.length }),
+          t('admin.standards.onboardingSteps.dragHint'),
+        ])
       : steps.length === 1
         ? t('admin.standards.onboardingSteps.count', { count: steps.length })
         : t('admin.standards.onboardingSteps.subtitle');
@@ -262,17 +240,11 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
           step={step}
           sortIndex={index}
           href={getAdminStandardOnboardingStepPath(tenantId, standardId, step.stepType)}
-          configurable={onboardingStepHasConfig(step.stepType)}
           isReordering={saving}
           isDragging={reorder.draggedType === step.stepType}
           isDragOver={reorder.dragOverType === step.stepType}
           reorderable={editable && steps.length > 1}
           onReorderPointerDown={(event) => reorder.onHandlePointerDown(step.stepType, event)}
-          onEdit={
-            editable && onboardingStepHasConfig(step.stepType) ? () => openEdit(step) : undefined
-          }
-          onDelete={() => setDeleteTarget(step.stepType)}
-          actionsDisabled={saving || !editable}
         />
       ))}
     </ListContainer>
@@ -309,17 +281,6 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
           saving={saving}
         />
       ) : null}
-
-      <ConfirmDialog
-        isOpen={deleteTarget != null}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => void handleDelete()}
-        title={t('admin.standards.onboardingSteps.deleteConfirmTitle')}
-        message={t('admin.standards.onboardingSteps.deleteConfirm')}
-        confirmText={t('common.delete')}
-        isLoading={saving}
-        variant="danger"
-      />
     </>
   );
 }

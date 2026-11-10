@@ -7,8 +7,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { LoadingState } from '@/components/ui/loading';
 import { AbsenceList } from '@/components/my-area/absence';
+import { LoadingState } from '@/components/ui/loading';
 
 export default function AbsencePage() {
   return (

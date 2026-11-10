@@ -7,6 +7,9 @@
 package com.emberone.workflow.domain;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import lombok.*;
 
 @Entity
@@ -36,12 +39,6 @@ public class WorkflowTypeMapping {
     @Column(name = "workflow_type_id", nullable = false)
     private Long workflowTypeId;
 
-    @Column(name = "organization_group_id")
-    private Long organizationGroupId;
-
-    @Column(name = "auto_approve", nullable = false)
-    private boolean autoApprove;
-
     /**
      * Stable key linking this instance row to the standard template (= workflow type id); null for
      * ad-hoc rows.
@@ -55,4 +52,13 @@ public class WorkflowTypeMapping {
      */
     @Column(name = "standard_origin_id")
     private Long standardOriginId;
+
+    /** One row per approver slot role of the type; group and approval flags live here. */
+    @OneToMany(mappedBy = "mapping", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<WorkflowTypeMappingSlot> slots = new ArrayList<>();
+
+    public Optional<WorkflowTypeMappingSlot> findSlot(String slotRole) {
+        return slots.stream().filter(slot -> slot.getSlotRole().equals(slotRole)).findFirst();
+    }
 }

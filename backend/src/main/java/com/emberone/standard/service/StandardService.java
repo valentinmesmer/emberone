@@ -44,6 +44,7 @@ import com.emberone.standard.spi.StandardContentItem;
 import com.emberone.standard.spi.StandardDomainRegistry;
 import com.emberone.trainingcourse.standard.TrainingCourseStandardDomain;
 import com.emberone.workflow.standard.WorkflowTypeMappingStandardDomain;
+import com.emberone.workflow.standard.WorkflowTypeMappingTemplate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -372,26 +373,38 @@ public class StandardService {
                 standard, orgGroupConfigKey, permissionGroupConfigKey, organizationsFor(standard));
     }
 
+    @Transactional(readOnly = true)
+    public WorkflowTypeMappingTemplate getWorkflowTemplate(Long standardId, String configKey) {
+        Standard standard = getStandard(standardId);
+        return workflowTypeMappingStandardDomain
+                .findTemplate(standard, configKey)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Workflow mapping '"
+                                        + configKey
+                                        + "' not found in standard "
+                                        + standardId));
+    }
+
+    /** The approver slot roles of a workflow type in display order. */
+    public List<String> workflowSlotRoles(Long workflowTypeId) {
+        return workflowTypeMappingStandardDomain.rolesOf(workflowTypeId);
+    }
+
     @Transactional
     public void updateWorkflow(
             Long standardId,
             String configKey,
-            String approverOrgGroupConfigKey,
-            boolean autoApprove,
             boolean enabled,
-            boolean selfApproveAllowed) {
+            List<WorkflowTypeMappingStandardDomain.SlotSettings> slots) {
         Standard standard = requireCustomStandard(standardId);
-        organizationGroupStandardDomain.requireWorkflowApproverOrgGroup(
-                standard, approverOrgGroupConfigKey);
+        for (WorkflowTypeMappingStandardDomain.SlotSettings slot : slots) {
+            organizationGroupStandardDomain.requireWorkflowApproverOrgGroup(
+                    standard, slot.orgGroupConfigKey());
+        }
         List<Organization> orgs = organizationsFor(standard);
         workflowTypeMappingStandardDomain.updateMappingTemplate(
-                standard,
-                configKey,
-                approverOrgGroupConfigKey,
-                autoApprove,
-                enabled,
-                selfApproveAllowed,
-                orgs);
+                standard, configKey, enabled, slots, orgs);
     }
 
     // --- Certifications (selection only; definitions live in tenant catalog) -------------------

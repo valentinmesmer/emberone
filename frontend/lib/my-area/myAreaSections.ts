@@ -86,13 +86,17 @@ export function getMyAreaDrivingLicensesPath(): string {
 }
 
 /** Hub subsection for scanning many my-area sections (see `common.hub.groups`). */
-export type MyAreaHubGroupId = 'personal' | 'timeAttendance' | 'inbox' | 'account';
+export type MyAreaHubGroupId = 'inbox' | 'timeAttendance' | 'training' | 'profile' | 'account';
 
-/** Same order as my-area hub tiles / {@link HubNavPanel} `groups` on `/my-area`. */
+/**
+ * Group order for hub tiles and workspace sidebar on `/my-area`: by how often and how urgently
+ * members act on them. Inbox first, rarely changed profile data and account settings last.
+ */
 export const MY_AREA_HUB_GROUP_ORDER: readonly MyAreaHubGroupId[] = [
-  'personal',
   'inbox',
   'timeAttendance',
+  'training',
+  'profile',
   'account',
 ];
 
@@ -101,87 +105,23 @@ export function getMyAreaHubGroupTitle(
   t: (key: string) => string,
 ): string {
   switch (groupId) {
-    case 'personal':
-      return t('common.hub.groups.myAreaPersonal');
-    case 'timeAttendance':
-      return t('common.hub.groups.myAreaTimeAttendance');
     case 'inbox':
       return t('common.hub.groups.myAreaInbox');
+    case 'profile':
+      return t('common.hub.groups.myAreaProfile');
+    case 'training':
+      return t('common.hub.groups.myAreaTraining');
+    case 'timeAttendance':
+      return t('common.hub.groups.myAreaTimeAttendance');
     case 'account':
       return t('common.hub.groups.myAreaAccount');
   }
 }
 
+/**
+ * Tile order within a group follows the array order (hub and sidebar), most used first.
+ */
 export const MY_AREA_SECTIONS = [
-  {
-    id: 'master-data',
-    path: `${MY_AREA_BASE_PATH}/master-data`,
-    labelKey: 'myArea.menu.masterData',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-  },
-  {
-    id: 'emergency-contact',
-    path: `${MY_AREA_BASE_PATH}/emergency-contact`,
-    labelKey: 'myArea.menu.emergencyContact',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-  },
-  {
-    id: 'documents',
-    path: `${MY_AREA_BASE_PATH}/documents`,
-    labelKey: 'myArea.menu.documents',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-  },
-  {
-    id: 'training-courses',
-    path: `${MY_AREA_BASE_PATH}/training-courses`,
-    labelKey: 'myArea.menu.trainingCourses',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-  },
-  {
-    id: 'course-registrations',
-    path: `${MY_AREA_BASE_PATH}/course-registrations`,
-    labelKey: 'myArea.menu.courseRegistrations',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-    requiresOrganizationMembership: true,
-  },
-  {
-    id: 'driving-licenses',
-    path: `${MY_AREA_BASE_PATH}/driving-licenses`,
-    labelKey: 'myArea.menu.drivingLicenses',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-  },
-  {
-    id: 'certifications',
-    path: `${MY_AREA_BASE_PATH}/certifications`,
-    labelKey: 'myArea.menu.certifications',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-  },
-  {
-    id: 'qualifications',
-    path: `${MY_AREA_BASE_PATH}/qualifications`,
-    labelKey: 'myArea.menu.qualifications',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-  },
-  {
-    id: 'rank',
-    path: `${MY_AREA_BASE_PATH}/rank`,
-    labelKey: 'myArea.menu.rank',
-    hubGroupId: 'personal' satisfies MyAreaHubGroupId,
-  },
-  {
-    id: 'absence',
-    path: `${MY_AREA_BASE_PATH}/absence`,
-    labelKey: 'myArea.menu.absence',
-    hubGroupId: 'timeAttendance' satisfies MyAreaHubGroupId,
-    requiresOrganizationMembership: true,
-  },
-  {
-    id: 'time-entries',
-    path: `${MY_AREA_BASE_PATH}/time-entries`,
-    labelKey: 'myArea.menu.timeEntries',
-    hubGroupId: 'timeAttendance' satisfies MyAreaHubGroupId,
-    requiresOrganizationMembership: true,
-  },
   {
     id: 'todos',
     path: MY_AREA_TODOS_PATH,
@@ -189,9 +129,9 @@ export const MY_AREA_SECTIONS = [
     hubGroupId: 'inbox' satisfies MyAreaHubGroupId,
   },
   {
-    id: 'onboarding',
-    path: MY_AREA_ONBOARDING_PATH,
-    labelKey: 'myArea.menu.onboarding',
+    id: 'workflows',
+    path: MY_AREA_WORKFLOW_INBOX_PATH,
+    labelKey: 'myArea.menu.workflowsInbox',
     hubGroupId: 'inbox' satisfies MyAreaHubGroupId,
   },
   {
@@ -201,10 +141,80 @@ export const MY_AREA_SECTIONS = [
     hubGroupId: 'inbox' satisfies MyAreaHubGroupId,
   },
   {
-    id: 'workflows',
-    path: MY_AREA_WORKFLOW_INBOX_PATH,
-    labelKey: 'myArea.menu.workflowsInbox',
-    hubGroupId: 'inbox' satisfies MyAreaHubGroupId,
+    id: 'time-entries',
+    path: `${MY_AREA_BASE_PATH}/time-entries`,
+    labelKey: 'myArea.menu.timeEntries',
+    hubGroupId: 'timeAttendance' satisfies MyAreaHubGroupId,
+    requiresOrganizationMembership: true,
+  },
+  {
+    id: 'absence',
+    path: `${MY_AREA_BASE_PATH}/absence`,
+    labelKey: 'myArea.menu.absence',
+    hubGroupId: 'timeAttendance' satisfies MyAreaHubGroupId,
+    requiresOrganizationMembership: true,
+  },
+  {
+    id: 'course-registrations',
+    path: `${MY_AREA_BASE_PATH}/course-registrations`,
+    labelKey: 'myArea.menu.courseRegistrations',
+    hubGroupId: 'training' satisfies MyAreaHubGroupId,
+    requiresOrganizationMembership: true,
+  },
+  {
+    id: 'qualifications',
+    path: `${MY_AREA_BASE_PATH}/qualifications`,
+    labelKey: 'myArea.menu.qualifications',
+    hubGroupId: 'training' satisfies MyAreaHubGroupId,
+  },
+  {
+    id: 'certifications',
+    path: `${MY_AREA_BASE_PATH}/certifications`,
+    labelKey: 'myArea.menu.certifications',
+    hubGroupId: 'training' satisfies MyAreaHubGroupId,
+  },
+  {
+    id: 'training-courses',
+    path: `${MY_AREA_BASE_PATH}/training-courses`,
+    labelKey: 'myArea.menu.trainingCourses',
+    hubGroupId: 'training' satisfies MyAreaHubGroupId,
+  },
+  {
+    id: 'driving-licenses',
+    path: `${MY_AREA_BASE_PATH}/driving-licenses`,
+    labelKey: 'myArea.menu.drivingLicenses',
+    hubGroupId: 'training' satisfies MyAreaHubGroupId,
+  },
+  {
+    id: 'master-data',
+    path: `${MY_AREA_BASE_PATH}/master-data`,
+    labelKey: 'myArea.menu.masterData',
+    hubGroupId: 'profile' satisfies MyAreaHubGroupId,
+  },
+  {
+    id: 'rank',
+    path: `${MY_AREA_BASE_PATH}/rank`,
+    labelKey: 'myArea.menu.rank',
+    hubGroupId: 'profile' satisfies MyAreaHubGroupId,
+  },
+  {
+    id: 'emergency-contact',
+    path: `${MY_AREA_BASE_PATH}/emergency-contact`,
+    labelKey: 'myArea.menu.emergencyContact',
+    hubGroupId: 'profile' satisfies MyAreaHubGroupId,
+  },
+  {
+    id: 'documents',
+    path: `${MY_AREA_BASE_PATH}/documents`,
+    labelKey: 'myArea.menu.documents',
+    hubGroupId: 'profile' satisfies MyAreaHubGroupId,
+  },
+  {
+    id: 'onboarding',
+    path: MY_AREA_ONBOARDING_PATH,
+    labelKey: 'myArea.menu.onboarding',
+    hubGroupId: 'profile' satisfies MyAreaHubGroupId,
+    requiresOnboardingInvitation: true,
   },
   {
     id: 'settings',
@@ -219,6 +229,7 @@ export type MyAreaSectionId = (typeof MY_AREA_SECTIONS)[number]['id'];
 export function isMyAreaSectionAccessible(
   section: (typeof MY_AREA_SECTIONS)[number],
   hasOrganizationMembership: boolean,
+  hasOnboardingInvitation = true,
 ): boolean {
   if (
     'requiresOrganizationMembership' in section &&
@@ -227,11 +238,22 @@ export function isMyAreaSectionAccessible(
   ) {
     return false;
   }
+  // Onboarding is a one-off record: only show the section when an invitation exists.
+  if (
+    'requiresOnboardingInvitation' in section &&
+    section.requiresOnboardingInvitation &&
+    !hasOnboardingInvitation
+  ) {
+    return false;
+  }
   return true;
 }
 
-export function getAccessibleMyAreaSections(hasOrganizationMembership: boolean) {
+export function getAccessibleMyAreaSections(
+  hasOrganizationMembership: boolean,
+  hasOnboardingInvitation = true,
+) {
   return MY_AREA_SECTIONS.filter((section) =>
-    isMyAreaSectionAccessible(section, hasOrganizationMembership),
+    isMyAreaSectionAccessible(section, hasOrganizationMembership, hasOnboardingInvitation),
   );
 }

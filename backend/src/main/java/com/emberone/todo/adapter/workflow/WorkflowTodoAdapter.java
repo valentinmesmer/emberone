@@ -258,7 +258,7 @@ public class WorkflowTodoAdapter implements WorkflowEventListener {
 
     private boolean blocksSelfApprove(Workflow workflow, WorkflowParticipant participant) {
         return workflow.getOpenedByUserId() != null
-                && !selfApproveService.isAllowed(workflow, participant.getOrganizationId());
+                && !selfApproveService.isAllowed(workflow, participant);
     }
 
     private void openGroupClaimTodo(

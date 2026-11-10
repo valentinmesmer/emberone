@@ -6,17 +6,19 @@
 
 package com.emberone.admin.standard.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.Data;
 
-/** Update per-standard workflow approval routing (approver group + auto-approve). */
+/**
+ * Update the per-standard workflow approval settings: the enabled flag and the settings of every
+ * approver slot role of the workflow type (all roles required, unknown roles are rejected).
+ */
 @Data
 public class UpdateWorkflowRequest {
 
-    /** Approver organization group config key (e.g. LEADERSHIP). */
-    @NotBlank(message = "approverOrgGroupConfigKey is required") private String approverOrgGroupConfigKey;
-
-    private boolean autoApprove;
     private boolean enabled;
-    private boolean selfApproveAllowed;
+
+    @NotNull(message = "slots is required") @Valid private List<UpdateWorkflowSlotRequest> slots;
 }

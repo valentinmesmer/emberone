@@ -23,6 +23,8 @@ export interface OrganizationEmergencyContactDetailViewProps {
   organizationId: number;
   organizationName: string;
   contactId: number;
+  /** When set, the contact must belong to this user (user-scoped route). */
+  userId?: number;
 }
 
 function resolveUserName(
@@ -41,6 +43,7 @@ export function OrganizationEmergencyContactDetailView({
   organizationId,
   organizationName,
   contactId,
+  userId,
 }: OrganizationEmergencyContactDetailViewProps) {
   const t = useTranslation();
   const { data: contacts = [], isLoading: loadingContacts } =
@@ -56,7 +59,7 @@ export function OrganizationEmergencyContactDetailView({
     return <LoadingState variant="embedded" size="sm" />;
   }
 
-  if (!contact) {
+  if (!contact || (userId != null && contact.userId !== userId)) {
     return <NotFoundState message={t('myArea.emergencyContact.error.notFound')} />;
   }
 

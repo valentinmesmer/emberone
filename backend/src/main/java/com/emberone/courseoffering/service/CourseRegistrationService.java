@@ -237,6 +237,20 @@ public class CourseRegistrationService {
 
     // --- cancellation by the user (workflow) and waitlist withdrawal ---
 
+    /** The training course type an offering grants; used for approver routing. */
+    @Transactional(readOnly = true)
+    public Optional<Long> findTrainingCourseTypeIdByOffering(Long offeringId) {
+        return offeringRepository.findById(offeringId).map(CourseOffering::getTrainingCourseTypeId);
+    }
+
+    /** The training course type of a registration's offering; used for approver routing. */
+    @Transactional(readOnly = true)
+    public Optional<Long> findTrainingCourseTypeIdByRegistration(Long registrationId) {
+        return registrationRepository
+                .findById(registrationId)
+                .map(registration -> registration.getOffering().getTrainingCourseTypeId());
+    }
+
     /** A participant's registration that may be cancelled right now, with its offering. */
     public record CancellationCandidate(CourseRegistration registration, CourseOffering offering) {}
 

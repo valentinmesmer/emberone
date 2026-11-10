@@ -14,6 +14,7 @@ import com.emberone.platform.security.TenantScopeGuard;
 import com.emberone.rank.dto.*;
 import com.emberone.rank.tenant.TenantRank;
 import com.emberone.rank.tenant.TenantRankRepository;
+import com.emberone.rank.util.RankAbbreviation;
 import java.time.Instant;
 import java.util.List;
 import java.util.function.Supplier;
@@ -39,6 +40,11 @@ public class TenantRankCatalogService {
                                 .toList());
     }
 
+    @Transactional(readOnly = true)
+    public TenantRankDto get(long tenantId, String configKey) {
+        return withTenantContext(tenantId, () -> toRankDto(requireRank(configKey)));
+    }
+
     @Transactional
     public void seedBaselineIfMissing(long tenantId, List<RankBaseline> ranks) {
         withTenantContext(
@@ -53,7 +59,6 @@ public class TenantRankCatalogService {
                                         .tenantId(tenantId)
                                         .configKey(item.configKey())
                                         .name(item.name())
-                                        .abbreviation(item.abbreviation())
                                         .sortOrder(item.sortOrder())
                                         .active(true)
                                         .build());
@@ -67,7 +72,7 @@ public class TenantRankCatalogService {
         return withTenantContext(
                 tenantId,
                 () -> {
-                    String configKey = request.getConfigKey().trim();
+                    String configKey = RankAbbreviation.requireValid(request.getAbbreviation());
                     if (rankRepository.existsByConfigKeyAndArchivedFalse(configKey)) {
                         throw new ConflictException("Rank already exists: " + configKey);
                     }
@@ -77,7 +82,6 @@ public class TenantRankCatalogService {
                                             .tenantId(tenantId)
                                             .configKey(configKey)
                                             .name(request.getName().trim())
-                                            .abbreviation(request.getAbbreviation().trim())
                                             .sortOrder(request.getSortOrder())
                                             .active(request.isActive())
                                             .build());
@@ -97,9 +101,6 @@ public class TenantRankCatalogService {
                     }
                     if (request.getName() != null) {
                         rank.setName(request.getName().trim());
-                    }
-                    if (request.getAbbreviation() != null) {
-                        rank.setAbbreviation(request.getAbbreviation().trim());
                     }
                     if (request.getSortOrder() != null) {
                         rank.setSortOrder(request.getSortOrder());
@@ -168,7 +169,7 @@ public class TenantRankCatalogService {
                 .id(rank.getId())
                 .configKey(rank.getConfigKey())
                 .name(rank.getName())
-                .abbreviation(rank.getAbbreviation())
+                .abbreviation(rank.getConfigKey())
                 .sortOrder(rank.getSortOrder())
                 .active(rank.isActive())
                 .archived(rank.isArchived())

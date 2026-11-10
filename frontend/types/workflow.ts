@@ -73,6 +73,13 @@ export type WorkflowTypeId = (typeof WORKFLOW_TYPE_IDS)[keyof typeof WORKFLOW_TY
 
 export type WorkflowOpenScope = 'SELF' | 'ORGANIZATION';
 
+/** Catalog a workflow type can be split by in tenant-wide routing rules. */
+export type WorkflowRoutingDimension =
+  | 'CERTIFICATION_DEFINITION'
+  | 'TRAINING_COURSE_TYPE'
+  | 'DRIVING_LICENSE_DEFINITION'
+  | 'RANK';
+
 export interface WorkflowTypeCatalogDto {
   workflowTypeId: number;
   workflowTypeKey: string;
@@ -81,6 +88,10 @@ export interface WorkflowTypeCatalogDto {
   openScope: WorkflowOpenScope;
   /** When false, start only from a dedicated UI - omitted from Anträge → Hinzufügen. */
   listedInBeginnableCatalog: boolean;
+  /** Catalog the type can be split by in routing rules; null when only the default rule exists. */
+  routingDimension?: WorkflowRoutingDimension | null;
+  /** Approver slot roles in display order (CONTEXT first, ADDITIONAL last). */
+  approverSlotRoles?: string[];
 }
 
 export interface WorkflowOpenStateDto {
@@ -94,12 +105,26 @@ export interface WorkflowOpenConcurrencyKeysDto {
   keys: string[];
 }
 
+/** Routing rule for a set of subtypes (catalog ids of the type's routing dimension). */
+export interface WorkflowRoutingRuleDto {
+  id: number;
+  subjectIds: number[];
+  staticApproverOrganizationIds: number[];
+}
+
+export interface SaveWorkflowRoutingRuleRequest {
+  subjectIds: number[];
+  staticApproverOrganizationIds: number[];
+}
+
 export interface TenantWorkflowDefinitionDto {
   id: number;
   workflowTypeId: number;
+  /** Default rule: applies to every subtype without a rule of its own. */
   staticApproversExclusive: boolean;
   staticApproverOrganizationIds: number[];
   customized: boolean;
+  routingRules: WorkflowRoutingRuleDto[];
 }
 
 export interface UpdateWorkflowDefinitionRequest {
@@ -279,7 +304,9 @@ export interface WorkflowParticipantDto {
   principalType: WorkflowPrincipalType;
   principalId: number | null;
   organizationId: number | null;
-  /** Resolved from the slot organization's current workflow definition (not stored). */
+  /** Role the organization decides in (e.g. CONTEXT, ADDITIONAL, NEW_MAIN_ORG, TARGET_ORG, HOME_ORG). */
+  slotRole?: string;
+  /** Resolved from the settings of the slot's role in the organization (not stored). */
   selfApproveAllowed?: boolean;
   organizationDisplayName?: string | null;
   slotStatus: WorkflowParticipantSlotStatus | null;

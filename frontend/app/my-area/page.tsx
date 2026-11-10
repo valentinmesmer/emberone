@@ -6,15 +6,13 @@
 
 'use client';
 
-import type { ReactNode } from 'react';
-import { useMemo } from 'react';
 import {
   Award,
   Bell,
   CalendarOff,
-  ClipboardList,
   Car,
   CheckSquare,
+  ClipboardList,
   Clock,
   FolderOpen,
   GraduationCap,
@@ -26,23 +24,25 @@ import {
   Settings,
   Star,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useMemo } from 'react';
+import { HubPage } from '@/components/hub';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useUserInfo } from '@/hooks/useUserInfo';
-import { useSelf } from '@/lib/store';
-import { HubPage } from '@/components/hub';
 import {
-  getMyAreaHubGroupTitle,
   getAccessibleMyAreaSections,
+  getMyAreaHubGroupTitle,
   MY_AREA_HUB_GROUP_ORDER,
   type MyAreaSectionId,
 } from '@/lib/my-area/myAreaSections';
 import {
-  useUnreadNotificationCount,
-  useOpenTodoCount,
-  useMyWorkflowPendingCount,
-  useUnreadDocumentCount,
   useHasActiveOrganizationMembership,
-  useSelfPendingOnboardingInvitations,
+  useMyWorkflowPendingCount,
+  useOpenTodoCount,
+  useSelf,
+  useSelfOnboardingInvitations,
+  useUnreadDocumentCount,
+  useUnreadNotificationCount,
 } from '@/lib/store';
 
 const SECTION_ICONS: Record<MyAreaSectionId, ReactNode> = {
@@ -74,11 +74,12 @@ export default function MyAreaHubPage() {
   const { data: openTodoCount } = useOpenTodoCount();
   const { data: pendingWorkflowCount } = useMyWorkflowPendingCount();
   const { data: unreadDocumentCount } = useUnreadDocumentCount();
-  const { data: pendingOnboardings = [] } = useSelfPendingOnboardingInvitations();
+  const { data: onboardingInvitations = [] } = useSelfOnboardingInvitations();
+  const pendingOnboardingCount = onboardingInvitations.filter((i) => i.status === 'OPEN').length;
   const { hasOrganizationMembership } = useHasActiveOrganizationMembership();
   const accessibleSections = useMemo(
-    () => getAccessibleMyAreaSections(hasOrganizationMembership),
-    [hasOrganizationMembership],
+    () => getAccessibleMyAreaSections(hasOrganizationMembership, onboardingInvitations.length > 0),
+    [hasOrganizationMembership, onboardingInvitations.length],
   );
   const sectionBadges = useMemo<Partial<Record<MyAreaSectionId, number>>>(
     () => ({
@@ -86,14 +87,14 @@ export default function MyAreaHubPage() {
       todos: openTodoCount,
       workflows: pendingWorkflowCount,
       documents: unreadDocumentCount?.count,
-      onboarding: pendingOnboardings.length > 0 ? pendingOnboardings.length : undefined,
+      onboarding: pendingOnboardingCount > 0 ? pendingOnboardingCount : undefined,
     }),
     [
       unreadNotificationCount?.count,
       openTodoCount,
       pendingWorkflowCount,
       unreadDocumentCount?.count,
-      pendingOnboardings.length,
+      pendingOnboardingCount,
     ],
   );
 

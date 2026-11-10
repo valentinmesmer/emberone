@@ -59,4 +59,30 @@ class AdminTenantRankControllerSecurityTest {
                                 .with(SecurityTestFixtures.tenantAdminJwt()))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void getRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/admin/tenants/7/ranks/FM"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getForbiddenWithoutTenantAccess() throws Exception {
+        when(coreSecurityService.canAccessTenant(SecurityTestFixtures.TENANT_ID)).thenReturn(false);
+
+        mockMvc.perform(
+                        get("/api/v1/auth/admin/tenants/7/ranks/FM")
+                                .with(SecurityTestFixtures.tenantAdminJwt()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getAllowedWithTenantAccess() throws Exception {
+        when(coreSecurityService.canAccessTenant(SecurityTestFixtures.TENANT_ID)).thenReturn(true);
+
+        mockMvc.perform(
+                        get("/api/v1/auth/admin/tenants/7/ranks/FM")
+                                .with(SecurityTestFixtures.tenantAdminJwt()))
+                .andExpect(status().isOk());
+    }
 }

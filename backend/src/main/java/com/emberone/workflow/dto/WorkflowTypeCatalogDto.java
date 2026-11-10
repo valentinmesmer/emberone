@@ -8,6 +8,8 @@ package com.emberone.workflow.dto;
 
 import com.emberone.workflow.domain.WorkflowMode;
 import com.emberone.workflow.domain.WorkflowOpenScope;
+import com.emberone.workflow.domain.WorkflowRoutingDimension;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,4 +40,16 @@ public class WorkflowTypeCatalogDto {
      * those UIs).
      */
     private boolean listedInBeginnableCatalog;
+
+    /**
+     * The catalog the type can be split by in tenant-wide routing rules, or {@code null} when only
+     * the default rule exists.
+     */
+    private WorkflowRoutingDimension routingDimension;
+
+    /**
+     * The approver slot roles of the type in display order, {@code CONTEXT} first and {@code
+     * ADDITIONAL} last. The standard configures group and approval flags per role.
+     */
+    private List<String> approverSlotRoles;
 }

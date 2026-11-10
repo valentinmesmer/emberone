@@ -112,7 +112,7 @@ export function buildHomeSearchItems({
       });
     }
 
-    const settingsSubtitle = `${t('home.search.category.myArea')} · ${t('myArea.menu.settings')}`;
+    const settingsSubtitle = `${t('home.search.category.myArea')} › ${t('myArea.menu.settings')}`;
     for (const section of MY_AREA_SETTINGS_SECTIONS) {
       if (!section.path) continue;
       items.push({
@@ -143,7 +143,7 @@ export function buildHomeSearchItems({
       id: `org-${org.id}`,
       label: org.name,
       subtitle: org.main
-        ? `${t('home.search.category.organization')} · ${t('home.navigation.organizations.mainBadge')}`
+        ? `${t('home.search.category.organization')} (${t('home.navigation.organizations.mainBadge')})`
         : t('home.search.category.organization'),
       href: getOrganizationWorkspaceEntryPath(org.id),
       category: 'organization',
@@ -155,7 +155,7 @@ export function buildHomeSearchItems({
       items.push({
         id: navItem.id,
         label: navItem.label,
-        subtitle: `${org.name} · ${navItem.hint}`,
+        subtitle: `${org.name} › ${navItem.hint}`,
         href: navItem.href,
         category: 'orgSection',
         keywords: [navItem.hint],
@@ -164,7 +164,7 @@ export function buildHomeSearchItems({
 
     if (canAccessUserManagement(org.id, hasPermission)) {
       const manageUsersLabel = t('organization.hub.navigation.manageUsers');
-      const manageUsersSubtitle = `${org.name} · ${manageUsersLabel}`;
+      const manageUsersSubtitle = `${org.name} › ${manageUsersLabel}`;
 
       for (const section of getVisibleUserManagementSections(org.id, hasPermission)) {
         if (ORG_NAV_USER_MANAGEMENT_SECTION_IDS.has(section.id)) {
@@ -209,7 +209,7 @@ export function buildHomeSearchItems({
         items.push({
           id: `admin-tenant-standards-${authTenantId}`,
           label: t('admin.tenantStandards.manageLink'),
-          subtitle: `${t('home.search.category.admin')} · ${t('admin.tenantStandards.title')}`,
+          subtitle: `${t('home.search.category.admin')} › ${t('admin.tenantStandards.title')}`,
           href: getAdminTenantStandardsPath(authTenantId),
           category: 'admin',
           keywords: [t('admin.tenantStandards.title'), t('admin.tenantStandards.subtitle')],
@@ -217,7 +217,7 @@ export function buildHomeSearchItems({
         items.push({
           id: `admin-org-standards-${authTenantId}`,
           label: t('admin.standards.manageOrgStandardsLink'),
-          subtitle: `${t('home.search.category.admin')} · ${t('admin.standards.title')}`,
+          subtitle: `${t('home.search.category.admin')} › ${t('admin.standards.title')}`,
           href: getAdminStandardsPath(authTenantId),
           category: 'admin',
           keywords: [t('admin.standards.title'), t('admin.standards.subtitle')],

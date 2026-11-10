@@ -214,11 +214,27 @@ export interface CreateGroupMappingRequest {
   permissionGroupConfigKey: string;
 }
 
-export interface UpdateWorkflowRequest {
+/** Approver group and approval flags of one approver slot role of a workflow type. */
+export interface StandardWorkflowSlotDto {
+  /** Role key, e.g. CONTEXT, ADDITIONAL, NEW_MAIN_ORG, TARGET_ORG, HOME_ORG. */
+  slotRole: string;
   approverOrgGroupConfigKey: string;
   autoApprove: boolean;
-  enabled: boolean;
   selfApproveAllowed: boolean;
+}
+
+/** One workflow type in a standard: enabled flag plus one slot per role, in display order. */
+export interface StandardWorkflowDto {
+  configKey: string;
+  workflowTypeId: number;
+  enabled: boolean;
+  slots: StandardWorkflowSlotDto[];
+}
+
+/** All roles of the workflow type are required; unknown roles are rejected. */
+export interface UpdateWorkflowRequest {
+  enabled: boolean;
+  slots: StandardWorkflowSlotDto[];
 }
 
 const base = (tenantId: number) => `/api/v1/auth/admin/tenants/${tenantId}/standards`;
@@ -355,6 +371,12 @@ export const standardsApi = {
   ): Promise<StandardContentDto> {
     return apiClient.delete<StandardContentDto>(
       `${base(tenantId)}/${id}/group-mappings/${encodeURIComponent(orgGroupConfigKey)}/${encodeURIComponent(permissionGroupConfigKey)}`,
+    );
+  },
+
+  getWorkflow(tenantId: number, id: number, configKey: string): Promise<StandardWorkflowDto> {
+    return apiClient.get<StandardWorkflowDto>(
+      `${base(tenantId)}/${id}/workflows/${encodeURIComponent(configKey)}`,
     );
   },
 

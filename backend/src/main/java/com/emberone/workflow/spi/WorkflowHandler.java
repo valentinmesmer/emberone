@@ -10,6 +10,7 @@ import com.emberone.permission.domain.PermissionType;
 import com.emberone.workflow.domain.Workflow;
 import com.emberone.workflow.domain.WorkflowMode;
 import com.emberone.workflow.domain.WorkflowOpenScope;
+import com.emberone.workflow.domain.WorkflowRoutingDimension;
 import com.emberone.workflow.domain.WorkflowStatus;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.WorkflowDocumentPromotionDefaults;
@@ -17,6 +18,7 @@ import com.emberone.workflow.dto.WorkflowDocumentPromotionMetadata;
 import com.emberone.workflow.exception.WorkflowValidationException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Business logic for a single workflow type. One Spring bean per {@link WorkflowType}. The engine
@@ -205,9 +207,42 @@ public interface WorkflowHandler<P> {
 
     /**
      * Additional approver orgs computed at runtime; only relevant for {@link WorkflowMode#DYNAMIC}.
+     * Every {@link ApproverOrg#slotRole()} must be one of {@link #approverSlotRoles()}.
      */
     default List<ApproverOrg> resolveDynamicOrganizations(WorkflowOpenContext<P> ctx) {
         return List.of();
+    }
+
+    /**
+     * The approver slot roles this type declares: {@link WorkflowApproverSlotRoles#CONTEXT} (the
+     * context organization) and one role per kind of dynamic org returned by {@link
+     * #resolveDynamicOrganizations}. {@link WorkflowApproverSlotRoles#ADDITIONAL} (extra orgs from
+     * the tenant settings) must not be listed; the engine adds it to every type. The standard
+     * configures group, auto-approve and self-approve per role; roles that are new for an existing
+     * standard are added by the baseline sync with the values of {@code CONTEXT}.
+     */
+    default List<String> approverSlotRoles() {
+        return List.of(WorkflowApproverSlotRoles.CONTEXT);
+    }
+
+    /**
+     * The catalog this workflow type can be split by in the tenant-wide routing rules (one rule per
+     * certification, training course type, ...). Empty (the default) means the type has only the
+     * default rule. A handler returning a dimension also overrides {@link
+     * #resolveRoutingSubjectIds(WorkflowOpenContext)}.
+     */
+    default Optional<WorkflowRoutingDimension> routingDimension() {
+        return Optional.empty();
+    }
+
+    /**
+     * Ids (in the catalog of {@link #routingDimension()}) of the subtypes an open request concerns.
+     * Resolve them server side from the payload or from the entities it references, never from
+     * client-supplied display fields. Empty means the default rule applies. Called on open, on
+     * payload update and on reconcile.
+     */
+    default Set<Long> resolveRoutingSubjectIds(WorkflowOpenContext<P> ctx) {
+        return Set.of();
     }
 
     /** Additional USER approvers or viewers (person/group) contributed by the handler. */

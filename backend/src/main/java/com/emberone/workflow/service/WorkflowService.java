@@ -62,6 +62,7 @@ public class WorkflowService {
     private final WorkflowTypeMappingService mappingService;
     private final WorkflowSelfApproveService selfApproveService;
     private final WorkflowResolverService resolverService;
+    private final WorkflowApproverRoutingService approverRoutingService;
     private final WorkflowRepository workflowRepository;
     private final WorkflowListSearch workflowListSearch;
     private final WorkflowParticipantRepository participantRepository;
@@ -182,10 +183,8 @@ public class WorkflowService {
                             + " is disabled for organization "
                             + resolution.contextOrgId());
         }
-        List<Long> staticOrgIds =
-                definition.getStaticOrganizations().stream()
-                        .map(WorkflowDefinitionStaticOrg::getApproverOrganizationId)
-                        .toList();
+        WorkflowApproverRoutingService.Routing routing =
+                approverRoutingService.resolve(workflowTypeId, resolution.routingSubjectIds());
 
         Workflow workflow =
                 Workflow.builder()
@@ -207,10 +206,13 @@ public class WorkflowService {
                 openedByUserId,
                 workflowTypeId,
                 resolution.contextOrgId(),
-                staticOrgIds,
-                definition.isStaticApproversExclusive(),
-                definition.isSelfApproveAllowed(),
-                resolution.dynamicOrgIds(),
+                routing.staticOrganizationIds(),
+                routing.staticApproversExclusive(),
+                selfApproveService.isAllowedForSlot(
+                        resolution.contextOrgId(),
+                        workflowTypeId,
+                        WorkflowApproverSlotRoles.CONTEXT),
+                resolution.dynamicOrgs(),
                 resolution.additional());
 
         Workflow saved = workflowRepository.save(workflow);
@@ -906,17 +908,21 @@ public class WorkflowService {
             workflowRepository.save(workflow);
         }
 
+        // Locks first: the slot sync below may approve the workflow, which releases them.
         openExclusivityService.replaceLocks(
                 handler, workflow.getTenantId(), workflowId, exclusivityKeys);
 
+        // The handler sees the new input before a possible approval below.
         invokeHandlerInputUpdated(handler, requireWorkflowWithDetails(workflowId));
+        eventPublisher.publish(
+                requireWorkflowWithDetails(workflowId),
+                WorkflowLifecycleEvent.INPUT_UPDATED,
+                WorkflowEventContext.ofActor(null, userId));
+
+        syncApproverSlotsAfterPayloadUpdate(handler, workflowId);
 
         log.info("Updated payload on workflow {}", workflowId);
         Workflow updated = requireWorkflowWithDetails(workflowId);
-        eventPublisher.publish(
-                updated,
-                WorkflowLifecycleEvent.INPUT_UPDATED,
-                WorkflowEventContext.ofActor(null, userId));
         eventPublisher.publish(updated, WorkflowLifecycleEvent.UPDATED);
         return toEnrichedDto(updated);
     }
@@ -952,33 +958,7 @@ public class WorkflowService {
                         ex.getMessage());
                 continue;
             }
-            WorkflowDefinition definition =
-                    definitionService.resolveEffectiveDefinition(
-                            workflowTypeId, resolution.contextOrgId());
-            List<Long> staticOrgIds =
-                    definition.getStaticOrganizations().stream()
-                            .map(WorkflowDefinitionStaticOrg::getApproverOrganizationId)
-                            .toList();
-
-            WorkflowResolverService.OrgApproverSlotSyncResult slotSync =
-                    resolverService.syncOrgApproverSlots(
-                            workflow,
-                            workflowTypeId,
-                            resolution.contextOrgId(),
-                            staticOrgIds,
-                            definition.isStaticApproversExclusive(),
-                            resolution.dynamicOrgIds());
-            for (WorkflowParticipant removed : slotSync.removedPendingParticipants()) {
-                if (removed.getId() == null) {
-                    continue;
-                }
-                eventPublisher.publish(
-                        workflow,
-                        WorkflowLifecycleEvent.APPROVER_SLOT_REMOVED,
-                        WorkflowEventContext.ofActor(removed.getId(), null));
-            }
-
-            boolean changed = slotSync.changed();
+            boolean changed = syncApproverSlots(workflow, workflowTypeId, resolution);
             boolean refreshApproverTodos = tenantWide;
             for (WorkflowParticipant participant : new ArrayList<>(workflow.getParticipants())) {
                 if (!participant.isApprover()
@@ -993,21 +973,22 @@ public class WorkflowService {
                     }
                     refreshApproverTodos = true;
                     Long orgId = participant.getOrganizationId();
-                    WorkflowTypeMapping mapping =
-                            mappingService.requireMapping(orgId, workflowTypeId);
-                    WorkflowDefinition orgDefinition =
-                            definitionService.resolveEffectiveDefinition(workflowTypeId, orgId);
+                    WorkflowTypeMappingSlot slot =
+                            mappingService.requireSlot(
+                                    orgId, workflowTypeId, participant.getSlotRole());
                     ReconcileParticipantResult result =
-                            reconcileApproverParticipant(
-                                    workflow, participant, mapping, orgDefinition);
+                            reconcileApproverParticipant(workflow, participant, slot);
                     changed = changed || result.hasChanges();
                 } else if (participant.getPrincipalType() == PrincipalType.USER) {
                     refreshApproverTodos = true;
-                    WorkflowDefinition userDefinition =
-                            definitionService.resolveEffectiveDefinition(
-                                    workflowTypeId, resolution.contextOrgId());
+                    boolean userSelfApproveAllowed =
+                            selfApproveService.isAllowedForSlot(
+                                    resolution.contextOrgId(),
+                                    workflowTypeId,
+                                    WorkflowApproverSlotRoles.CONTEXT);
                     ReconcileParticipantResult result =
-                            reconcileUserApproverParticipant(workflow, participant, userDefinition);
+                            reconcileUserApproverParticipant(
+                                    workflow, participant, userSelfApproveAllowed);
                     changed = changed || result.hasChanges();
                 }
             }
@@ -1029,6 +1010,108 @@ public class WorkflowService {
                     "Reconciled open workflow {} after configuration change for type id {}",
                     workflow.getId(),
                     workflowTypeId);
+        }
+    }
+
+    /**
+     * Ids of the open instances that still carry the {@code V3} migration default: several org
+     * approver slots, none with a role other than {@code CONTEXT}. Migrated instances never match
+     * again. Runs for the active tenant.
+     */
+    @Transactional(readOnly = true)
+    public List<Long> findWorkflowIdsAwaitingSlotRoleBackfill() {
+        return workflowRepository.findOpenIdsAwaitingSlotRoleBackfill();
+    }
+
+    /**
+     * Sets {@code slot_role} on the org approver slots of one open instance opened before slot
+     * roles existed. Re-resolves it through its handler; decisions, claims and events are
+     * untouched. Runs in its own transaction so a failing instance does not roll back the others;
+     * resolution errors propagate to the caller.
+     *
+     * @return the number of slots whose role changed
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public int backfillApproverSlotRoles(Long workflowId) {
+        Workflow workflow = requireWorkflowWithDetails(workflowId);
+        WorkflowHandler<?> handler = handlerRegistry.require(workflow.getWorkflowTypeId());
+        OpenResolution resolution = resolveOpenContext(handler, workflow);
+        WorkflowApproverRoutingService.Routing routing =
+                approverRoutingService.resolve(
+                        handler.workflowTypeId(), resolution.routingSubjectIds());
+        int changed =
+                resolverService.applySlotRoles(
+                        workflow,
+                        resolution.contextOrgId(),
+                        routing.staticOrganizationIds(),
+                        routing.staticApproversExclusive(),
+                        resolution.dynamicOrgs());
+        if (changed > 0) {
+            workflowRepository.save(workflow);
+        }
+        return changed;
+    }
+
+    /**
+     * Aligns the org approver slots of an open instance with the current routing (context org,
+     * handler orgs, tenant-wide extra orgs for its subtypes). Pending slots that are no longer
+     * expected are removed (with {@link WorkflowLifecycleEvent#APPROVER_SLOT_REMOVED}), missing
+     * ones are added, and a pending slot whose role changed takes the group and auto-approve of its
+     * new role (as {@code reconcileApproverParticipant} does). The caller records auto-approve
+     * decisions and completes the workflow.
+     *
+     * @return whether a slot was added or removed
+     */
+    private boolean syncApproverSlots(
+            Workflow workflow, Long workflowTypeId, OpenResolution resolution) {
+        WorkflowApproverRoutingService.Routing routing =
+                approverRoutingService.resolve(workflowTypeId, resolution.routingSubjectIds());
+        WorkflowResolverService.OrgApproverSlotSyncResult slotSync =
+                resolverService.syncOrgApproverSlots(
+                        workflow,
+                        workflowTypeId,
+                        resolution.contextOrgId(),
+                        routing.staticOrganizationIds(),
+                        routing.staticApproversExclusive(),
+                        resolution.dynamicOrgs());
+        for (WorkflowParticipant reroled : slotSync.reroledPendingParticipants()) {
+            reconcileApproverParticipant(
+                    workflow,
+                    reroled,
+                    mappingService.requireSlot(
+                            reroled.getOrganizationId(), workflowTypeId, reroled.getSlotRole()));
+        }
+        for (WorkflowParticipant removed : slotSync.removedPendingParticipants()) {
+            if (removed.getId() == null) {
+                continue;
+            }
+            eventPublisher.publish(
+                    workflow,
+                    WorkflowLifecycleEvent.APPROVER_SLOT_REMOVED,
+                    WorkflowEventContext.ofActor(removed.getId(), null));
+        }
+        return slotSync.changed();
+    }
+
+    /**
+     * After the payload of an open instance changed (e.g. another certification), the extra
+     * approver orgs may differ: re-sync the slots from the freshly stored payload.
+     */
+    private void syncApproverSlotsAfterPayloadUpdate(WorkflowHandler<?> handler, Long workflowId) {
+        Workflow workflow = requireWorkflowWithDetails(workflowId);
+        if (!workflow.getStatus().isActive()) {
+            return;
+        }
+        OpenResolution resolution = resolveOpenContext(handler, workflow);
+        if (!syncApproverSlots(workflow, workflow.getWorkflowTypeId(), resolution)) {
+            return;
+        }
+        workflowRepository.save(workflow);
+        recordAutoApproveDecisions(workflow);
+        Workflow refreshed = requireWorkflowWithDetails(workflowId);
+        completeIfAllApproved(refreshed, handler);
+        if (hasPendingApproverSlots(refreshed)) {
+            eventPublisher.publish(refreshed, WorkflowLifecycleEvent.OPENED);
         }
     }
 
@@ -1116,7 +1199,8 @@ public class WorkflowService {
         }
         for (WorkflowParticipantDto participant : dto.getParticipants()) {
             participant.setSelfApproveAllowed(
-                    selfApproveService.isAllowed(workflow, participant.getOrganizationId()));
+                    selfApproveService.isAllowed(
+                            workflow, participant.getOrganizationId(), participant.getSlotRole()));
         }
     }
 
@@ -1227,7 +1311,7 @@ public class WorkflowService {
     }
 
     private ReconcileParticipantResult reconcileUserApproverParticipant(
-            Workflow workflow, WorkflowParticipant participant, WorkflowDefinition definition) {
+            Workflow workflow, WorkflowParticipant participant, boolean selfApproveAllowed) {
         if (participant.getSlotStatus() != ParticipantSlotStatus.PENDING
                 || participant.getPrincipalType() != PrincipalType.USER) {
             return ReconcileParticipantResult.unchanged();
@@ -1238,7 +1322,7 @@ public class WorkflowService {
             return ReconcileParticipantResult.unchanged();
         }
         boolean changed = false;
-        if (!definition.isSelfApproveAllowed()) {
+        if (!selfApproveAllowed) {
             if (participant.getClaimedByUserId() != null) {
                 participantClaimService.releasePendingClaim(
                         participant, participant.getClaimedByUserId());
@@ -1256,13 +1340,10 @@ public class WorkflowService {
     }
 
     private ReconcileParticipantResult reconcileApproverParticipant(
-            Workflow workflow,
-            WorkflowParticipant participant,
-            WorkflowTypeMapping mapping,
-            WorkflowDefinition definition) {
+            Workflow workflow, WorkflowParticipant participant, WorkflowTypeMappingSlot slot) {
         boolean changed = false;
 
-        Long newGroupId = mapping.getOrganizationGroupId();
+        Long newGroupId = slot.getOrganizationGroupId();
         if (newGroupId != null && !newGroupId.equals(participant.getPrincipalId())) {
             if (participant.getSlotStatus() == ParticipantSlotStatus.PENDING
                     && participant.getClaimedByUserId() != null) {
@@ -1273,8 +1354,7 @@ public class WorkflowService {
             changed = true;
         }
 
-        if (mapping.isAutoApprove()
-                && participant.getSlotStatus() == ParticipantSlotStatus.PENDING) {
+        if (slot.isAutoApprove() && participant.getSlotStatus() == ParticipantSlotStatus.PENDING) {
             participant.setClaimedByUserId(null);
             participant.setClaimedAt(null);
             participant.setSlotStatus(ParticipantSlotStatus.APPROVED);
@@ -1285,7 +1365,7 @@ public class WorkflowService {
         if (participant.getSlotStatus() == ParticipantSlotStatus.PENDING
                 && participant.getClaimedByUserId() != null
                 && participant.getClaimedByUserId().equals(workflow.getOpenedByUserId())
-                && !definition.isSelfApproveAllowed()) {
+                && !slot.isSelfApproveAllowed()) {
             participantClaimService.releasePendingClaim(
                     participant, participant.getClaimedByUserId());
             changed = true;
@@ -1557,14 +1637,11 @@ public class WorkflowService {
                     "Handler did not resolve a context organization for type id "
                             + handler.workflowTypeId());
         }
-        List<Long> dynamicOrgIds =
-                handler.mode() == WorkflowMode.DYNAMIC
-                        ? handler.resolveDynamicOrganizations(ctx).stream()
-                                .map(ApproverOrg::organizationId)
-                                .toList()
-                        : List.of();
+        List<ApproverOrg> dynamicOrgs = resolveDynamicOrganizations(handler, ctx);
         List<ParticipantSpec> additional = handler.additionalParticipants(ctx);
-        return new OpenResolution(contextOrgId, dynamicOrgIds, additional, List.of(), List.of());
+        Set<Long> routingSubjectIds = handler.resolveRoutingSubjectIds(ctx);
+        return new OpenResolution(
+                contextOrgId, dynamicOrgs, additional, List.of(), List.of(), routingSubjectIds);
     }
 
     @SuppressWarnings("unchecked")
@@ -1641,19 +1718,20 @@ public class WorkflowService {
                                         + handler.workflowTypeId());
                     }
                 });
-        List<Long> dynamicOrgIds =
-                handler.mode() == WorkflowMode.DYNAMIC
-                        ? handler.resolveDynamicOrganizations(ctx).stream()
-                                .map(ApproverOrg::organizationId)
-                                .toList()
-                        : List.of();
+        List<ApproverOrg> dynamicOrgs = resolveDynamicOrganizations(handler, ctx);
         List<ParticipantSpec> additional = handler.additionalParticipants(ctx);
         List<String> concurrencyKeys = handler.resolveOpenConcurrencyKeys(ctx, null);
         openConcurrencyService.assertNoConflict(handler, openerId, concurrencyKeys, null);
         List<String> exclusivityKeys = handler.resolveOpenExclusivityKeys(ctx, null);
         openExclusivityService.assertNoConflict(handler, exclusivityKeys, null);
+        Set<Long> routingSubjectIds = handler.resolveRoutingSubjectIds(ctx);
         return new OpenResolution(
-                contextOrgId, dynamicOrgIds, additional, concurrencyKeys, exclusivityKeys);
+                contextOrgId,
+                dynamicOrgs,
+                additional,
+                concurrencyKeys,
+                exclusivityKeys,
+                routingSubjectIds);
     }
 
     private WorkflowOpenStateDto buildOpenState(Long userId, long workflowTypeId) {
@@ -1681,10 +1759,34 @@ public class WorkflowService {
         }
     }
 
+    /**
+     * The handler's dynamic approver orgs (only for {@link WorkflowMode#DYNAMIC}); every role must
+     * be one the handler declares in {@link WorkflowHandler#approverSlotRoles()}.
+     */
+    private static <P> List<ApproverOrg> resolveDynamicOrganizations(
+            WorkflowHandler<P> handler, WorkflowOpenContext<P> ctx) {
+        if (handler.mode() != WorkflowMode.DYNAMIC) {
+            return List.of();
+        }
+        List<ApproverOrg> dynamicOrgs = handler.resolveDynamicOrganizations(ctx);
+        List<String> declaredRoles = WorkflowApproverSlotRoles.rolesOf(handler);
+        for (ApproverOrg dynamicOrg : dynamicOrgs) {
+            if (!declaredRoles.contains(dynamicOrg.slotRole())) {
+                throw new WorkflowConfigurationException(
+                        "Workflow handler for type id "
+                                + handler.workflowTypeId()
+                                + " returned an approver org with the undeclared role "
+                                + dynamicOrg.slotRole());
+            }
+        }
+        return dynamicOrgs;
+    }
+
     private record OpenResolution(
             Long contextOrgId,
-            List<Long> dynamicOrgIds,
+            List<ApproverOrg> dynamicOrgs,
             List<ParticipantSpec> additional,
             List<String> openConcurrencyKeys,
-            List<String> openExclusivityKeys) {}
+            List<String> openExclusivityKeys,
+            Set<Long> routingSubjectIds) {}
 }

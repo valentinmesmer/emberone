@@ -6,18 +6,27 @@
 
 package com.emberone.admin.workflowdefinition.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.emberone.testsupport.SecurityTestFixtures;
 import com.emberone.testsupport.SecurityWebMvcTestConfig;
 import com.emberone.workflow.dto.TenantWorkflowDefinitionDto;
+import com.emberone.workflow.dto.WorkflowRoutingRuleDto;
 import com.emberone.workflow.service.WorkflowDefinitionService;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -52,5 +61,88 @@ class AdminWorkflowDefinitionControllerSecurityTest {
                         get("/api/v1/auth/admin/tenants/7/workflow-definitions/1")
                                 .with(SecurityTestFixtures.tenantAdminJwt()))
                 .andExpect(status().isOk());
+    }
+
+    private static final String RULE_BODY = "{\"subjectIds\":[5]}";
+
+    @Test
+    void routingRuleEndpointsRequireAuthentication() throws Exception {
+        mockMvc.perform(
+                        post("/api/v1/auth/admin/tenants/7/workflow-definitions/3/routing-rules")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(RULE_BODY))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(
+                        put("/api/v1/auth/admin/tenants/7/workflow-definitions/3/routing-rules/9")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(RULE_BODY))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(
+                        delete(
+                                "/api/v1/auth/admin/tenants/7/workflow-definitions/3/routing-rules/9"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/auth/admin/tenants/7/workflow-definitions/3/routing-rules/9"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void routingRuleEndpointsForbiddenForForeignTenant() throws Exception {
+        mockMvc.perform(
+                        post("/api/v1/auth/admin/tenants/8/workflow-definitions/3/routing-rules")
+                                .with(SecurityTestFixtures.tenantAdminJwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(RULE_BODY))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(
+                        put("/api/v1/auth/admin/tenants/8/workflow-definitions/3/routing-rules/9")
+                                .with(SecurityTestFixtures.tenantAdminJwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(RULE_BODY))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(
+                        delete(
+                                        "/api/v1/auth/admin/tenants/8/workflow-definitions/3/routing-rules/9")
+                                .with(SecurityTestFixtures.tenantAdminJwt()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(
+                        get("/api/v1/auth/admin/tenants/8/workflow-definitions/3/routing-rules/9")
+                                .with(SecurityTestFixtures.tenantAdminJwt()))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(definitionService);
+    }
+
+    @Test
+    void routingRuleEndpointsAllowedForOwnTenant() throws Exception {
+        WorkflowRoutingRuleDto rule =
+                WorkflowRoutingRuleDto.builder().id(9L).subjectIds(List.of(5L)).build();
+        when(definitionService.getRoutingRule(SecurityTestFixtures.TENANT_ID, 3L, 9L))
+                .thenReturn(rule);
+        when(definitionService.createRoutingRule(eq(SecurityTestFixtures.TENANT_ID), eq(3L), any()))
+                .thenReturn(rule);
+        when(definitionService.updateRoutingRule(
+                        eq(SecurityTestFixtures.TENANT_ID), eq(3L), eq(9L), any()))
+                .thenReturn(rule);
+
+        mockMvc.perform(
+                        get("/api/v1/auth/admin/tenants/7/workflow-definitions/3/routing-rules/9")
+                                .with(SecurityTestFixtures.tenantAdminJwt()))
+                .andExpect(status().isOk());
+        mockMvc.perform(
+                        post("/api/v1/auth/admin/tenants/7/workflow-definitions/3/routing-rules")
+                                .with(SecurityTestFixtures.tenantAdminJwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(RULE_BODY))
+                .andExpect(status().isCreated());
+        mockMvc.perform(
+                        put("/api/v1/auth/admin/tenants/7/workflow-definitions/3/routing-rules/9")
+                                .with(SecurityTestFixtures.tenantAdminJwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(RULE_BODY))
+                .andExpect(status().isOk());
+        mockMvc.perform(
+                        delete(
+                                        "/api/v1/auth/admin/tenants/7/workflow-definitions/3/routing-rules/9")
+                                .with(SecurityTestFixtures.tenantAdminJwt()))
+                .andExpect(status().isNoContent());
     }
 }

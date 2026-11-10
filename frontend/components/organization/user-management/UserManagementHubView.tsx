@@ -92,7 +92,7 @@ export function UserManagementHubView({ organizationId, userId }: UserManagement
       title: string;
       icon: ReactNode;
       onClick: () => void;
-      groupId?: string;
+      groupId: string;
     }> = [];
     if (canRequestMembershipEnd) {
       tiles.push({
@@ -100,6 +100,7 @@ export function UserManagementHubView({ organizationId, userId }: UserManagement
         title: t('userManagement.organizationMembership.requestEnd'),
         icon: <CalendarX2 className="h-4 w-4" aria-hidden />,
         onClick: () => setEndMembershipOpen(true),
+        groupId: 'requests',
       });
     }
     if (canRequestMainChange) {
@@ -108,6 +109,7 @@ export function UserManagementHubView({ organizationId, userId }: UserManagement
         title: t('userManagement.mainOrganizationChange.action'),
         icon: <ArrowRightLeft className="h-4 w-4" aria-hidden />,
         onClick: () => setMainChangeOpen(true),
+        groupId: 'requests',
       });
     }
     return tiles;
@@ -121,11 +123,7 @@ export function UserManagementHubView({ organizationId, userId }: UserManagement
       icon: USER_MANAGEMENT_SECTION_ICONS[section.id],
       groupId: section.hubGroupId,
     }));
-    const withGroup = actionTiles.map((tile) => ({
-      ...tile,
-      groupId: 'actions',
-    }));
-    return [...sectionTiles, ...withGroup];
+    return [...sectionTiles, ...actionTiles];
   }, [visibleSections, organizationId, userId, t, actionTiles]);
 
   if (permLoading || usersLoading || overviewLoading) {
@@ -171,8 +169,6 @@ export function UserManagementHubView({ organizationId, userId }: UserManagement
     }
   };
 
-  const hasActionTiles = actionTiles.length > 0;
-
   return (
     <>
       <HubPage
@@ -183,11 +179,7 @@ export function UserManagementHubView({ organizationId, userId }: UserManagement
           density: 'compact',
         }}
         tiles={tiles}
-        groups={
-          hasActionTiles
-            ? [...hubGroups, { id: 'actions', title: t('admin.userDetail.actionsSection') }]
-            : hubGroups
-        }
+        groups={hubGroups}
         fallbackGroupTitle={t('common.hub.ungrouped')}
       />
       {canRequestMembershipEnd && activeOrgMembership ? (

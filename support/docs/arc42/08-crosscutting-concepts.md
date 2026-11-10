@@ -47,7 +47,7 @@ Vollständiger Index: [`support/docs/concept/00-index.md`](../concept/00-index.m
 Architektur-Kern (Details in den Concept-Docs):
 
 - JWT-Claims für Auth: nur `userId`, `tenantId`, `app_role` - keine Gruppen-/Org-Permissions im Token
-- Filter-Kette: `RequestIdFilter` → Bearer → `TenantContextWebFilter` → `DeactivatedUserWebFilter` → `TenantBaselineSyncFilter`
+- Filter-Kette: `RequestIdFilter` → Bearer → `TenantContextWebFilter` → `DeactivatedUserWebFilter`
 - Org-AuthZ über `SecurityService` / Access-Services aus der DB; App-Rolle aus JWT
 - IdP: Authentik fest verdrahtet; Provisioning einseitig App→IdP
 

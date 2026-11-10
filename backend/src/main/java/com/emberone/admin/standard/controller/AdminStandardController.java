@@ -167,6 +167,13 @@ public class AdminStandardController {
                         tenantId, id, orgGroupConfigKey, permissionGroupConfigKey));
     }
 
+    @GetMapping("/{id}/workflows/{configKey}")
+    @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
+    public ResponseEntity<StandardWorkflowDto> getWorkflow(
+            @PathVariable long tenantId, @PathVariable Long id, @PathVariable String configKey) {
+        return ResponseEntity.ok(adminStandardService.getWorkflow(tenantId, id, configKey));
+    }
+
     @PutMapping("/{id}/workflows/{configKey}")
     @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
     public ResponseEntity<StandardContentDto> updateWorkflow(

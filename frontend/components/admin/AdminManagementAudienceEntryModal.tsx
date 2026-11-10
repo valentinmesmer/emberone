@@ -11,6 +11,7 @@ import { StandardCatalogCheckboxList } from '@/components/admin/standards/Standa
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
+import { ModalFooter } from '@/components/ui/modal-footer';
 import { Select } from '@/components/ui/select';
 import { useTranslation } from '@/hooks/useTranslation';
 import type {
@@ -20,6 +21,7 @@ import type {
   ManagementOptionDto,
 } from '@/lib/api/admin';
 import { managementPermissionLabel } from '@/lib/utils/managementActivation';
+import { formBlockers } from '@/lib/utils/validation';
 import { PermissionTypeEnum } from '@/types/permission';
 
 const KINDS: ManagementAudienceKind[] = ['ORG', 'ORG_SUBTREE', 'ORG_TYPE', 'TENANT'];
@@ -85,11 +87,16 @@ export function AdminManagementAudienceEntryModal({
     (other) => other.kind === kind && (kind === 'TENANT' || other.refId === targetValue),
   );
 
-  let error: string | null = null;
-  if (selected.size === 0) error = t('admin.managementAudience.permissionsRequired');
-  else if (!durationValid) error = t('admin.managementAudience.durationInvalid');
-  else if (targetMissing) error = t('admin.managementAudience.targetRequired');
-  else if (duplicate) error = t('admin.managementAudience.duplicate');
+  const blockers = formBlockers([
+    [
+      needsTarget
+        ? t('admin.managementAudience.targetLabel')
+        : t('admin.managementAudience.kindLabel'),
+      !targetMissing && !duplicate,
+    ],
+    [t('admin.managementAudience.permissionsLabel'), selected.size > 0],
+    [t('admin.managementAudience.durationLabel'), durationValid],
+  ]);
 
   const togglePermission = (permission: string) => {
     setSelected((current) => {
@@ -124,14 +131,7 @@ export function AdminManagementAudienceEntryModal({
         entry ? t('admin.managementAudience.editTitle') : t('admin.managementAudience.addTitle')
       }
       footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            {t('common.cancel')}
-          </Button>
-          <Button onClick={submit} disabled={error != null || isSaving}>
-            {t('admin.managementAudience.save')}
-          </Button>
-        </div>
+        <ModalFooter onCancel={onClose} onSave={submit} blockers={blockers} isLoading={isSaving} />
       }
     >
       <div className="space-y-4">
@@ -205,9 +205,9 @@ export function AdminManagementAudienceEntryModal({
           value={duration}
           onChange={(event) => setDuration(event.target.value)}
         />
-        {error ? (
+        {duplicate ? (
           <p role="alert" className="text-sm text-[var(--status-danger-accent)]">
-            {error}
+            {t('admin.managementAudience.duplicate')}
           </p>
         ) : null}
       </div>

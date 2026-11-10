@@ -14,7 +14,7 @@ export function formatDutyFunctionListSubtitle(
   period: string,
 ): string {
   const organizationName = fn.organizationName.trim();
-  return multipleOrganizations && organizationName ? `${organizationName} · ${period}` : period;
+  return multipleOrganizations && organizationName ? `${organizationName}: ${period}` : period;
 }
 
 /** Period of an ended function, e.g. "01.01.2020 - 01.06.2025". */

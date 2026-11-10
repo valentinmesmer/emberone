@@ -6,8 +6,8 @@
 
 package com.emberone.courseoffering.service;
 
+import static com.emberone.testsupport.SpecificationMatchers.anySpecification;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.emberone.courseoffering.domain.CourseOffering;
@@ -28,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.jpa.domain.Specification;
 
 /**
  * The detail of an offering is visible even if the user already holds its course type. The held
@@ -63,8 +62,7 @@ class SelfCourseOfferingServiceTest {
                         .status(CourseOfferingStatus.PUBLISHED)
                         .build();
         when(submissionRepository.findGrantedTypeIdsByUser(USER_ID)).thenReturn(List.of(TYPE_ID));
-        when(offeringRepository.findOne(any(Specification.class)))
-                .thenReturn(Optional.of(offering));
+        when(offeringRepository.findOne(anySpecification())).thenReturn(Optional.of(offering));
         when(trainingCourseTypeRepository.findById(TYPE_ID))
                 .thenReturn(
                         Optional.of(

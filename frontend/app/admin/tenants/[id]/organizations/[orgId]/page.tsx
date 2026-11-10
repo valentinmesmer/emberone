@@ -318,8 +318,11 @@ function TenantOrganizationDetailInner() {
               title={org.name}
               subtitle={
                 <>
-                  {org.organizationCode} ·{' '}
-                  {organizationTypes.find((type) => type.id === org.organizationTypeId)?.name ?? ''}
+                  <div>{org.organizationCode}</div>
+                  <div>
+                    {organizationTypes.find((type) => type.id === org.organizationTypeId)?.name ??
+                      ''}
+                  </div>
                 </>
               }
               badges={

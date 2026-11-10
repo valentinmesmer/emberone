@@ -17,6 +17,7 @@ import {
   type CreateTenantFunctionRequest,
   type TenantFunctionDto,
   tenantFunctionsApi,
+  type UpdateTenantFunctionRequest,
 } from '@/lib/api/tenantFunctions';
 import { formBlockers } from '@/lib/utils';
 
@@ -38,25 +39,18 @@ export function AdminTenantFunctionEditModal({
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
   const [busy, setBusy] = useState(false);
-  const [configKey, setConfigKey] = useState('');
   const [name, setName] = useState('');
   const [abbreviation, setAbbreviation] = useState('');
-  const [sortOrder, setSortOrder] = useState('0');
   const [active, setActive] = useState(true);
 
   useEffect(() => {
     if (!isOpen) return;
-    setConfigKey(editing?.configKey ?? '');
     setName(editing?.name ?? '');
     setAbbreviation(editing?.abbreviation ?? '');
-    setSortOrder(String(editing?.sortOrder ?? 0));
     setActive(editing?.active ?? true);
   }, [isOpen, editing]);
 
   const blockers = formBlockers([
-    ...(editing
-      ? []
-      : ([[t('admin.tenantStandards.functions.configKey'), configKey.trim() !== '']] as const)),
     [t('common.name'), name.trim() !== ''],
     [t('admin.tenantStandards.functions.abbreviation'), abbreviation.trim() !== ''],
   ]);
@@ -65,16 +59,15 @@ export function AdminTenantFunctionEditModal({
     if (blockers.length > 0) return;
     setBusy(true);
     try {
-      const payload: CreateTenantFunctionRequest = {
-        configKey: (editing?.configKey ?? configKey).trim(),
-        name: name.trim(),
-        abbreviation: abbreviation.trim(),
-        sortOrder: Number.parseInt(sortOrder, 10) || 0,
-        active,
-      };
       if (editing) {
+        const payload: UpdateTenantFunctionRequest = { name: name.trim(), active };
         await tenantFunctionsApi.update(tenantId, editing.configKey, payload);
       } else {
+        const payload: CreateTenantFunctionRequest = {
+          name: name.trim(),
+          abbreviation: abbreviation.trim(),
+          active,
+        };
         await tenantFunctionsApi.create(tenantId, payload);
       }
       showSuccess(t('admin.tenantStandards.functions.saved'));
@@ -106,15 +99,6 @@ export function AdminTenantFunctionEditModal({
       }
     >
       <div className="space-y-3">
-        {!editing ? (
-          <Input
-            label={t('admin.tenantStandards.functions.configKey')}
-            value={configKey}
-            onChange={(e) => setConfigKey(e.target.value)}
-            disabled={busy}
-            required
-          />
-        ) : null}
         <Input
           label={t('common.name')}
           value={name}
@@ -126,14 +110,8 @@ export function AdminTenantFunctionEditModal({
           label={t('admin.tenantStandards.functions.abbreviation')}
           value={abbreviation}
           onChange={(e) => setAbbreviation(e.target.value)}
-          disabled={busy}
+          disabled={busy || editing != null}
           required
-        />
-        <Input
-          label={t('admin.tenantStandards.functions.sortOrder')}
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          disabled={busy}
         />
         <Checkbox
           checked={active}

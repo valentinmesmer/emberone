@@ -53,12 +53,14 @@ import { EventType } from '@/types/event';
 import { PermissionTypeEnum } from '@/types/permission';
 
 /** Hub grouping for many org tiles (see `common.hub.groups`). */
-export type OrgHubGroupId = 'department' | 'membersAndAbsences';
+export type OrgHubGroupId = 'department' | 'members' | 'training' | 'administration';
 
 /** Same order as org hub tiles / {@link HubNavPanel} `groups` on `/organizations/[id]`. */
 export const ORG_HUB_GROUP_ORDER: readonly OrgHubGroupId[] = [
   'department',
-  'membersAndAbsences',
+  'members',
+  'training',
+  'administration',
 ] as const;
 
 export function getOrganizationHubGroupTitle(
@@ -68,8 +70,12 @@ export function getOrganizationHubGroupTitle(
   switch (groupId) {
     case 'department':
       return t('common.hub.groups.orgDepartment');
-    case 'membersAndAbsences':
-      return t('common.hub.groups.orgMembersAndAbsences');
+    case 'members':
+      return t('common.hub.groups.orgMembers');
+    case 'training':
+      return t('common.hub.groups.orgTraining');
+    case 'administration':
+      return t('common.hub.groups.orgAdministration');
   }
 }
 
@@ -176,7 +182,8 @@ export function buildFlatOrgNavItems(
     });
   }
 
-  for (const section of DEPARTMENT_EVENT_SECTIONS) {
+  // Operations first: more time-critical for a fire department than service events.
+  for (const section of [...DEPARTMENT_EVENT_SECTIONS].reverse()) {
     const eventType = getEventTypeForSection(section);
     if (!eventType) continue;
     const readPerm = getReadPermissionForEventType(eventType);
@@ -209,27 +216,8 @@ export function buildFlatOrgNavItems(
       ),
       hint: t('organization.hub.tiles.hintManageUsers'),
       active: usersActive,
-      hubGroupId: 'membersAndAbsences',
+      hubGroupId: 'members',
       icon: <User {...orgNavIconProps(usersActive, iconVariant)} />,
-    });
-  }
-
-  if (hasPermission(org.id, PermissionTypeEnum.MANAGEMENT_ACCESS)) {
-    const href = getOrganizationManagementPath(org.id);
-    const active = isOrganizationPathActive(href, pathname);
-    items.push({
-      id: `org-${org.id}-management`,
-      href,
-      label: orgHubTileLabel(
-        iconVariant,
-        'organization.hub.tileLabels.management',
-        'management.page.title',
-        t,
-      ),
-      hint: t('organization.hub.tiles.hintManagement'),
-      active,
-      hubGroupId: 'department',
-      icon: <Building2 {...orgNavIconProps(active, iconVariant)} />,
     });
   }
 
@@ -247,46 +235,8 @@ export function buildFlatOrgNavItems(
       ),
       hint: t('organization.hub.tiles.hintOrgAbsences'),
       active: absActive,
-      hubGroupId: 'membersAndAbsences',
+      hubGroupId: 'members',
       icon: <CalendarOff {...orgNavIconProps(absActive, iconVariant)} />,
-    });
-  }
-
-  if (hasPermission(org.id, PermissionTypeEnum.WORKFLOW_READ)) {
-    const workflowsPath = getOrganizationWorkflowsPath(org.id);
-    const workflowsActive = isOrganizationWorkflowsPathActive(org.id, pathname);
-    items.push({
-      id: `org-${org.id}-workflows`,
-      href: workflowsPath,
-      label: orgHubTileLabel(
-        iconVariant,
-        'organization.hub.tileLabels.workflows',
-        'userManagement.sections.workflows',
-        t,
-      ),
-      hint: t('organization.hub.tiles.hintWorkflows'),
-      active: workflowsActive,
-      hubGroupId: 'membersAndAbsences',
-      icon: <Inbox {...orgNavIconProps(workflowsActive, iconVariant)} />,
-    });
-  }
-
-  if (hasPermission(org.id, PermissionTypeEnum.CERTIFICATION_READ)) {
-    const certificationsPath = getOrganizationCertificationsPath(org.id);
-    const certificationsActive = isOrganizationCertificationsPathActive(org.id, pathname);
-    items.push({
-      id: `org-${org.id}-certifications`,
-      href: certificationsPath,
-      label: orgHubTileLabel(
-        iconVariant,
-        'organization.hub.tileLabels.certifications',
-        'userManagement.sections.certifications',
-        t,
-      ),
-      hint: t('organization.hub.tiles.hintCertifications'),
-      active: certificationsActive,
-      hubGroupId: 'membersAndAbsences',
-      icon: <ShieldCheck {...orgNavIconProps(certificationsActive, iconVariant)} />,
     });
   }
 
@@ -304,8 +254,27 @@ export function buildFlatOrgNavItems(
       ),
       hint: t('organization.hub.tiles.hintRanks'),
       active: ranksActive,
-      hubGroupId: 'membersAndAbsences',
+      hubGroupId: 'members',
       icon: <Star {...orgNavIconProps(ranksActive, iconVariant)} />,
+    });
+  }
+
+  if (hasPermission(org.id, PermissionTypeEnum.ORGANIZATION_GROUP_READ)) {
+    const groupsPath = getOrganizationGroupsPath(org.id);
+    const groupsActive = isOrganizationGroupsPathActive(org.id, pathname);
+    items.push({
+      id: `org-${org.id}-groups`,
+      href: groupsPath,
+      label: orgHubTileLabel(
+        iconVariant,
+        'organization.hub.tileLabels.groups',
+        'organization.groups.title',
+        t,
+      ),
+      hint: t('organization.hub.tiles.hintGroups'),
+      active: groupsActive,
+      hubGroupId: 'members',
+      icon: <UsersIcon {...orgNavIconProps(groupsActive, iconVariant)} />,
     });
   }
 
@@ -323,8 +292,46 @@ export function buildFlatOrgNavItems(
       ),
       hint: t('organization.hub.tiles.hintQualifications'),
       active: qualificationsActive,
-      hubGroupId: 'membersAndAbsences',
+      hubGroupId: 'training',
       icon: <Medal {...orgNavIconProps(qualificationsActive, iconVariant)} />,
+    });
+  }
+
+  if (hasPermission(org.id, PermissionTypeEnum.CERTIFICATION_READ)) {
+    const certificationsPath = getOrganizationCertificationsPath(org.id);
+    const certificationsActive = isOrganizationCertificationsPathActive(org.id, pathname);
+    items.push({
+      id: `org-${org.id}-certifications`,
+      href: certificationsPath,
+      label: orgHubTileLabel(
+        iconVariant,
+        'organization.hub.tileLabels.certifications',
+        'userManagement.sections.certifications',
+        t,
+      ),
+      hint: t('organization.hub.tiles.hintCertifications'),
+      active: certificationsActive,
+      hubGroupId: 'training',
+      icon: <ShieldCheck {...orgNavIconProps(certificationsActive, iconVariant)} />,
+    });
+  }
+
+  if (hasPermission(org.id, PermissionTypeEnum.COURSE_OFFERING_READ)) {
+    const courseOfferingsPath = getOrganizationCourseOfferingsPath(org.id);
+    const courseOfferingsActive = isOrganizationCourseOfferingsPathActive(org.id, pathname);
+    items.push({
+      id: `org-${org.id}-course-offerings`,
+      href: courseOfferingsPath,
+      label: orgHubTileLabel(
+        iconVariant,
+        'organization.hub.tileLabels.courseOfferings',
+        'courseOfferings.title',
+        t,
+      ),
+      hint: t('organization.hub.tiles.hintCourseOfferings'),
+      active: courseOfferingsActive,
+      hubGroupId: 'training',
+      icon: <GraduationCap {...orgNavIconProps(courseOfferingsActive, iconVariant)} />,
     });
   }
 
@@ -345,46 +352,46 @@ export function buildFlatOrgNavItems(
       ),
       hint: t('organization.hub.tiles.hintCourseRegistrations'),
       active: courseRegistrationsActive,
-      hubGroupId: 'membersAndAbsences',
+      hubGroupId: 'training',
       icon: <ClipboardList {...orgNavIconProps(courseRegistrationsActive, iconVariant)} />,
     });
   }
 
-  if (hasPermission(org.id, PermissionTypeEnum.COURSE_OFFERING_READ)) {
-    const courseOfferingsPath = getOrganizationCourseOfferingsPath(org.id);
-    const courseOfferingsActive = isOrganizationCourseOfferingsPathActive(org.id, pathname);
+  if (hasPermission(org.id, PermissionTypeEnum.WORKFLOW_READ)) {
+    const workflowsPath = getOrganizationWorkflowsPath(org.id);
+    const workflowsActive = isOrganizationWorkflowsPathActive(org.id, pathname);
     items.push({
-      id: `org-${org.id}-course-offerings`,
-      href: courseOfferingsPath,
+      id: `org-${org.id}-workflows`,
+      href: workflowsPath,
       label: orgHubTileLabel(
         iconVariant,
-        'organization.hub.tileLabels.courseOfferings',
-        'courseOfferings.title',
+        'organization.hub.tileLabels.workflows',
+        'userManagement.sections.workflows',
         t,
       ),
-      hint: t('organization.hub.tiles.hintCourseOfferings'),
-      active: courseOfferingsActive,
-      hubGroupId: 'department',
-      icon: <GraduationCap {...orgNavIconProps(courseOfferingsActive, iconVariant)} />,
+      hint: t('organization.hub.tiles.hintWorkflows'),
+      active: workflowsActive,
+      hubGroupId: 'administration',
+      icon: <Inbox {...orgNavIconProps(workflowsActive, iconVariant)} />,
     });
   }
 
-  if (hasPermission(org.id, PermissionTypeEnum.ORGANIZATION_GROUP_READ)) {
-    const groupsPath = getOrganizationGroupsPath(org.id);
-    const groupsActive = isOrganizationGroupsPathActive(org.id, pathname);
+  if (hasPermission(org.id, PermissionTypeEnum.MANAGEMENT_ACCESS)) {
+    const href = getOrganizationManagementPath(org.id);
+    const active = isOrganizationPathActive(href, pathname);
     items.push({
-      id: `org-${org.id}-groups`,
-      href: groupsPath,
+      id: `org-${org.id}-management`,
+      href,
       label: orgHubTileLabel(
         iconVariant,
-        'organization.hub.tileLabels.groups',
-        'organization.groups.title',
+        'organization.hub.tileLabels.management',
+        'management.page.title',
         t,
       ),
-      hint: t('organization.hub.tiles.hintGroups'),
-      active: groupsActive,
-      hubGroupId: 'membersAndAbsences',
-      icon: <UsersIcon {...orgNavIconProps(groupsActive, iconVariant)} />,
+      hint: t('organization.hub.tiles.hintManagement'),
+      active,
+      hubGroupId: 'administration',
+      icon: <Building2 {...orgNavIconProps(active, iconVariant)} />,
     });
   }
 

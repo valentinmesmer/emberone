@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-import type { Metadata, Viewport } from 'next';
-import { Sora, Manrope, JetBrains_Mono } from 'next/font/google';
 import { SerwistProvider } from '@serwist/turbopack/react';
+import type { Metadata, Viewport } from 'next';
+import { JetBrains_Mono, Manrope, Sora } from 'next/font/google';
 import './globals.css';
-import { t } from '@/lib/i18n/translations';
-import { ClientAuthProvider } from '@/components/auth/ClientProviders';
 import { AuthLayout } from '@/components/auth/AuthLayout';
-import { ThemeChromeSync, ThemeProvider } from '@/components/theme';
+import { ClientAuthProvider } from '@/components/auth/ClientProviders';
 import { LocaleProvider } from '@/components/locale';
-import { PermissionProvider } from '@/lib/permission';
+import { ThemeChromeSync, ThemeProvider } from '@/components/theme';
 import { ToastProvider } from '@/components/ui/toast';
-import { QueryProvider } from '@/lib/store/providers';
+import { t } from '@/lib/i18n/translations';
+import { PermissionProvider } from '@/lib/permission';
 import { RealtimeProvider } from '@/lib/realtime';
+import { QueryProvider } from '@/lib/store/providers';
 
 const sora = Sora({
   variable: '--font-sora',

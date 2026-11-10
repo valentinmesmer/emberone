@@ -4,25 +4,23 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-package com.emberone.workflow.standard;
+package com.emberone.workflow.tenant;
 
 import jakarta.persistence.*;
 import lombok.*;
 
-/** A static approver organization of a {@link WorkflowDefinitionTemplate}. */
 @Entity
 @Table(
-        name = "std_workflow_definition_template_static_orgs",
+        name = "tenant_workflow_routing_rule_orgs",
         uniqueConstraints = {
-            @UniqueConstraint(
-                    columnNames = {"tenant_id", "template_id", "approver_organization_id"})
+            @UniqueConstraint(columnNames = {"tenant_id", "rule_id", "approver_organization_id"})
         })
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class WorkflowDefinitionTemplateStaticOrg {
+public class TenantWorkflowRoutingRuleOrg {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,8 +31,8 @@ public class WorkflowDefinitionTemplateStaticOrg {
     private Long tenantId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "template_id", nullable = false)
-    private WorkflowDefinitionTemplate template;
+    @JoinColumn(name = "rule_id", nullable = false)
+    private TenantWorkflowRoutingRule rule;
 
     @Column(name = "approver_organization_id", nullable = false)
     private Long approverOrganizationId;

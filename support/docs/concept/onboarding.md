@@ -53,7 +53,7 @@ Abgrenzung: Katalog-Selections (Nachweise, Lehrgänge, …) filtern, welche Mand
 
 `completionEnabled` = `status == OPEN && allStepsFulfilled`. `saveStep` nur bei `OPEN`. Self-Edit und Org-Pending-Liste gelten nicht für Einladungen, deren User in der Ziel-Org schon aktives Mitglied ist (Admin-Erfassung).
 
-Workflow-Subject: `"ONBOARDING_INVITATION"` + `invitationId`. Concurrency-Key: `org:{targetOrganizationId}`. Start nur aus dem Wizard (`listedInBeginnableCatalog() = false`). Pre-Open-Security: `canSubmitOnboardingInvitation(invitationId)` prüft eigene offene Einladung und aktivierte Workflow-Definition der Ziel-Org. Tenant-Baseline (inkl. neue Workflow-Typen) wird zentral per `TenantBaselineSyncFilter` vor `/api/v1/self` und `/api/v1/auth` synchronisiert.
+Workflow-Subject: `"ONBOARDING_INVITATION"` + `invitationId`. Concurrency-Key: `org:{targetOrganizationId}`. Start nur aus dem Wizard (`listedInBeginnableCatalog() = false`). Pre-Open-Security: `canSubmitOnboardingInvitation(invitationId)` prüft eigene offene Einladung und aktivierte Workflow-Definition der Ziel-Org. Tenant-Baseline (inkl. neue Workflow-Typen) wird beim Anlegen des Mandanten geseedet und per `POST …/tenants/{id}/baseline-sync` nachgezogen (siehe [Standards](standard.md#baseline-sync)).
 
 ## Mandanten-Katalog Eintrittsdokumente
 
@@ -282,7 +282,7 @@ Prefix: `/api/v1/auth/admin/tenants/{tenantId}/organizations/{organizationId}/on
 - Standard-Detail: `StandardOnboardingStepManagement`
 - Mandanten-Katalog: `AdminTenantOnboardingDocumentManagement`; Org-Detail: Org-Eintrittsdokumente wenn Step `ORGANIZATION_ENTRY_DOCUMENTS`
 - Mitgliederverwaltung: Einladungen und Mitglieder in einer Liste; Status-Badge (`OPEN`/`SUBMITTED`/…); Hub-Section **Eintritt** (`USER_READ`)
-- My-Area: `/my-area/onboarding` (`MyAreaOnboardingList`); Wizard (`MyAreaOnboardingWizard`) unter `/my-area/onboarding/[invitationId]`; Session-Hinweis `OnboardingReminderPrompt`
+- My-Area: `/my-area/onboarding` (`MyAreaOnboardingList`); die Hub-/Sidebar-Kachel (Gruppe Profil) erscheint nur, wenn mindestens eine Einladung existiert, das Badge zählt `OPEN`; Wizard (`MyAreaOnboardingWizard`) unter `/my-area/onboarding/[invitationId]`; Session-Hinweis `OnboardingReminderPrompt`
 - Wizard: „Nicht zustimmen“ bei freiwilligen Docs (nur während des Eintritts), Bestätigungstext mit Version/Datum
 - App-Link: `AppLinkType.ONBOARDING_INVITATION` → `AppNavigationResolver` → `/my-area/onboarding/{invitationId}`
 - Workflow-Review (`ONBOARDING_SUBMISSION`): Input-Display-Plugin; Opener Self-API, Approver Org-API (`USER_READ`)

@@ -73,7 +73,7 @@ Anmeldung ist auch bei vollem Angebot möglich (`SelfCourseOfferingDto.full` fü
 
 **Mitgliederansicht.** `GET /api/v1/auth/organizations/{orgId}/users/{userId}/course-registrations` (paginiert, `search` über den Lehrgangsnamen, Sort `startDate` (Standard absteigend) / `registeredAt` / `courseType`, Filter `status` (mehrfach) und `upcoming=true` für nur Angebote, deren letzte Sitzung noch nicht vorbei ist; die UI setzt `upcoming` standardmäßig) zeigt Angebot, Lehrgang, anbietende Org, Zeitraum und Status. Berechtigung ist `TRAINING_COURSE_READ` der Org (Basisbereich), **nicht** `COURSE_OFFERING_READ`: die Anmeldungen sind Mitgliederdaten und können Angeboten anderer Orgs gehören, deshalb darf das Modul Lehrgangsangebote der eigenen Org keinen Einfluss haben. Der User muss aktives Mitglied der Org sein; ausgeliefert werden nur Status-Informationen.
 
-**Lehrgangsanmeldungen der Org.** `GET /api/v1/auth/organizations/{orgId}/course-registrations` (paginiert, Suche nach Name des Mitglieds, Sort `startDate` (Standard aufsteigend) / `name`, Filter `status` (mehrfach) und `upcoming=true` für nur anstehende Angebote; die UI setzt `upcoming` und die Status `PENDING`, `PARTICIPANT`, `WAITLIST` standardmäßig) listet die Anmeldungen zu den Angeboten der Org, mit Mitglied, Lehrgang, Zeitraum und Status. Berechtigung ist ebenfalls `TRAINING_COURSE_READ`. Der Bereich liegt im Menü unter Mitglieder (`/organizations/[id]/course-registrations`); Zeile → Angebot.
+**Lehrgangsanmeldungen der Org.** `GET /api/v1/auth/organizations/{orgId}/course-registrations` (paginiert, Suche nach Name des Mitglieds, Sort `startDate` (Standard aufsteigend) / `name`, Filter `status` (mehrfach) und `upcoming=true` für nur anstehende Angebote; die UI setzt `upcoming` und die Status `PENDING`, `PARTICIPANT`, `WAITLIST` standardmäßig) listet die Anmeldungen zu den Angeboten der Org, mit Mitglied, Lehrgang, Zeitraum und Status. Berechtigung ist ebenfalls `TRAINING_COURSE_READ`. Der Bereich liegt im Hub und in der Sidebar in der Gruppe Ausbildung (`/organizations/[id]/course-registrations`); Zeile → Angebot.
 
 **Aufbewahrung.** `course_registrations` hängt per `ON DELETE CASCADE` an der Person und läuft mit `USER_MASTER` ab; der Bezug zum Anmelde- und zum Absage-Workflow (`workflow_id`, `cancellation_workflow_id`) ist `ON DELETE SET NULL`, damit die Workflow-Retention die Anmeldung nicht berührt.
 
@@ -179,7 +179,7 @@ Getrennte Flächen wie im Backend ([Detail-Routing](frontend-detail-routing.md))
 
 | Fläche | Route | Gate / Hinweis |
 |--------|-------|----------------|
-| **Org-Hub** | Kachel im Abteilungs-Hub | `COURSE_OFFERING_READ`, Modul `COURSE_OFFERINGS` |
+| **Org-Hub** | Kachel in der Hub-Gruppe Ausbildung | `COURSE_OFFERING_READ`, Modul `COURSE_OFFERINGS` |
 | **Org-Liste** | `/organizations/[id]/course-offerings` | `CourseOfferingListView`, Filter `status`; „Vorlagen“ öffnet ein Modal mit allen Vorlagen (Klick → Detailseite zum Bearbeiten, Löschen per Zeilenaktion; angelegt werden Vorlagen über „Als Vorlage speichern“ am Angebot); „Hinzufügen“ fragt „Neues Angebot“ oder „Aus Vorlage“ (Vorlage wählen, Datum des ersten Termins → Entwurf) |
 | **Org-Anmeldungen** | `/organizations/[id]/course-offerings/[offeringId]/registrations` | Teilnehmerliste mit Suche, Status-Filter und Sortierung; offene Anträge hervorgehoben, Zeilen-Actions Nachrücken/Entfernen |
 | **Org-Anmeldung** | `…/registrations/[registrationId]` | Details (Status, Zeiten, Begründung), Link zum Anmeldeantrag (Freigabe/Ablehnung läuft im Workflow), Entscheidungen Nachrücken/Entfernen |
@@ -191,7 +191,7 @@ Getrennte Flächen wie im Backend ([Detail-Routing](frontend-detail-routing.md))
 | **Admin Org** | `/admin/tenants/[id]/organizations/[orgId]` Karte „Anbietbare Lehrgänge“ | `AdminOrganizationCourseOfferingTypeSection`, API `…/organizations/{orgId}/course-offering-types`, nur bei aktivem Modul |
 | **Mein Bereich** | `/my-area/course-registrations` | Eine Liste berechtigter Angebote inkl. eigener aktiver Anmeldung (`myRegistration` am `SelfCourseOfferingDto`); Zeile → `…/offerings/[id]`; Anmelden nur per Listen-Action bzw. auf der Detailseite (`CourseOfferingRegisterDialog`) |
 | **Mitglied** | Org-Benutzerverwaltung, Section `course-registrations` | `UserCourseRegistrationsSection`, `TRAINING_COURSE_READ` (nicht `COURSE_OFFERING_READ`) |
-| **Org Mitglieder** | `/organizations/[id]/course-registrations` | `OrganizationCourseRegistrationListView`, Menüpunkt unter Mitglieder, `TRAINING_COURSE_READ` (nicht `COURSE_OFFERING_READ`) |
+| **Org Mitglieder** | `/organizations/[id]/course-registrations` | `OrganizationCourseRegistrationListView`, Kachel in der Hub-Gruppe Ausbildung, `TRAINING_COURSE_READ` (nicht `COURSE_OFFERING_READ`) |
 
 Workflow-Anzeige: Input-Plugins `courseOfferingRegistration` und `courseRegistrationCancellation` in `lib/workflows/inputDisplay/plugins/` (Payload-Parsing in `payloadParsers.ts`, Typen in `types/workflow.ts`). Öffnen: `openCourseOfferingRegistration` / `openCourseRegistrationCancellation` in `lib/api/workflows.ts`.
 

@@ -10,11 +10,12 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { ListContainer } from '@/components/ui/list';
+import { ListContainer, subtitleLines } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard, ErrorState } from '@/components/ui/message-cards';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/components/ui/toast';
+import { useCreateIntent } from '@/hooks/useCreateIntent';
 import { useTranslation } from '@/hooks/useTranslation';
 import { MY_AREA_BASE_PATH } from '@/lib/my-area/myAreaSections';
 import {
@@ -28,7 +29,6 @@ import { cn } from '@/lib/utils/cn';
 import { EmergencyContactCard } from './EmergencyContactCard';
 import { EmergencyContactFormModal } from './EmergencyContactFormModal';
 import { useEmergencyContactReorder } from './useEmergencyContactReorder';
-import { useCreateIntent } from '@/hooks/useCreateIntent';
 
 export function EmergencyContactList() {
   const t = useTranslation();
@@ -70,7 +70,10 @@ export function EmergencyContactList() {
 
   const subtitle =
     contacts.length > 1
-      ? `${t('myArea.emergencyContact.count', { count: contacts.length })} · ${t('myArea.emergencyContact.dragHint')}`
+      ? subtitleLines([
+          t('myArea.emergencyContact.count', { count: contacts.length }),
+          t('myArea.emergencyContact.dragHint'),
+        ])
       : contacts.length === 1
         ? t('myArea.emergencyContact.count', { count: contacts.length })
         : t('myArea.emergencyContact.subtitle');

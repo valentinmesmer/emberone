@@ -20,13 +20,14 @@ import { PageHeader } from '@/components/ui/page-header';
 import { PaginatedListView, paginatedListEmptyCard } from '@/components/ui/paginated-list';
 import { SectionActions } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
+import { useCreateIntent } from '@/hooks/useCreateIntent';
 import { useTranslation } from '@/hooks/useTranslation';
 import { orgCourseOfferingListDefinition } from '@/lib/list/courseOfferingList';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateCourseOffering,
-  useOrganizationById,
   useOfferableCourseTypes,
+  useOrganizationById,
   useOrganizationCourseOfferings,
   useOrgCourseOfferingListState,
 } from '@/lib/store';
@@ -35,7 +36,6 @@ import { courseOfferingStatusLabelKey } from '@/lib/utils/courseOffering';
 import { formatDateShort } from '@/lib/utils/date';
 import type { CourseOfferingDto } from '@/types/courseOffering';
 import { PermissionTypeEnum } from '@/types/permission';
-import { useCreateIntent } from '@/hooks/useCreateIntent';
 
 interface Props {
   organizationId: number;

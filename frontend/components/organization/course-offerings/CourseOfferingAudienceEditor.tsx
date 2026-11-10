@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { IconButton } from '@/components/ui/icon-button';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { SectionActions, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -146,12 +146,10 @@ export function CourseOfferingAudienceEditor({ organizationId, offering, canWrit
   };
 
   const groupSubtitle = (entry: (typeof restrictions)[number]) =>
-    [
+    subtitleLines([
       targetName(entry),
       entry.quota != null ? t('courseOfferings.audience.quota', { count: entry.quota }) : null,
-    ]
-      .filter(Boolean)
-      .join(' · ') || undefined;
+    ]);
 
   return (
     <Card className="p-3 sm:p-4">

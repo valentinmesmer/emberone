@@ -6,4 +6,4 @@
 
 package com.emberone.federalstate.baseline;
 
-public record RankBaseline(String configKey, String name, String abbreviation, int sortOrder) {}
+public record RankBaseline(String configKey, String name, int sortOrder) {}

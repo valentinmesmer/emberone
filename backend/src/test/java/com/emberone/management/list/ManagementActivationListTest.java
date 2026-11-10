@@ -81,12 +81,16 @@ class ManagementActivationListTest {
         Pageable person =
                 ManagementActivationListDefinition.INSTANCE.pageable(
                         new ListQuery(0, null, null, "person,asc"));
-        Pageable target =
+        Pageable activatedAt =
                 ManagementActivationListDefinition.INSTANCE.pageable(
-                        new ListQuery(0, null, null, "targetOrganization,desc"));
+                        new ListQuery(0, null, null, "activatedAt,asc"));
 
         assertThat(person.getSort().getOrderFor("user.lastName")).isNotNull();
-        assertThat(target.getSort().getOrderFor("targetOrganization.name")).isNotNull();
+        assertThat(activatedAt.getSort().getOrderFor("activatedAt")).isNotNull();
+        assertThatThrownBy(() ->
+                        ManagementActivationListDefinition.INSTANCE.pageable(
+                                new ListQuery(0, null, null, "targetOrganization,desc")))
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() ->
                         ManagementActivationListDefinition.INSTANCE.pageable(
                                 new ListQuery(0, null, null, "reason,asc")))

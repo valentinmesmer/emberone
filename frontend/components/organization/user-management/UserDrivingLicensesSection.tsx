@@ -28,6 +28,7 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { readNumber, readObjectArray, readString } from '@/lib/ai/extractionFields';
 import type {
   DrivingLicenseClassInput,
   DrivingLicenseDefinitionDto,
@@ -36,7 +37,6 @@ import {
   getOrganizationUserDocumentDetailPath,
   getOrganizationUserWorkflowDetailPath,
 } from '@/lib/navigation/userManagementSections';
-import { readNumber, readObjectArray, readString } from '@/lib/ai/extractionFields';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateDrivingLicense,

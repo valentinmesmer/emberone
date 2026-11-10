@@ -127,8 +127,8 @@ class WorkflowTodoAdapterTest {
         WorkflowParticipant blocked = orgGroupParticipant(6L, null);
         blocked.setOrganizationId(20L);
         Workflow workflow = workflowWithParticipants(allowed, blocked);
-        when(selfApproveService.isAllowed(workflow, 10L)).thenReturn(true);
-        when(selfApproveService.isAllowed(workflow, 20L)).thenReturn(false);
+        when(selfApproveService.isAllowed(workflow, allowed)).thenReturn(true);
+        when(selfApproveService.isAllowed(workflow, blocked)).thenReturn(false);
 
         adapter.onEvent(workflow, WorkflowLifecycleEvent.OPENED, WorkflowEventContext.empty());
 

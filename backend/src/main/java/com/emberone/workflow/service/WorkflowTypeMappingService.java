@@ -7,6 +7,7 @@
 package com.emberone.workflow.service;
 
 import com.emberone.workflow.domain.WorkflowTypeMapping;
+import com.emberone.workflow.domain.WorkflowTypeMappingSlot;
 import com.emberone.workflow.exception.WorkflowConfigurationException;
 import com.emberone.workflow.repository.WorkflowTypeMappingRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,5 +30,23 @@ public class WorkflowTypeMappingService {
                                         + organizationId
                                         + " and type id "
                                         + workflowTypeId));
+    }
+
+    /**
+     * The settings of one slot role of the org's mapping. A role without a row (a handler gained a
+     * role and neither the baseline sync nor a migration added it) is a configuration error, like a
+     * missing mapping.
+     */
+    @Transactional(readOnly = true)
+    public WorkflowTypeMappingSlot requireSlot(
+            Long organizationId, Long workflowTypeId, String slotRole) {
+        WorkflowTypeMapping mapping = requireMapping(organizationId, workflowTypeId);
+        return mapping.findSlot(slotRole)
+                .orElseThrow(() ->
+                        new WorkflowConfigurationException(
+                                "Workflow type mapping "
+                                        + mapping.getId()
+                                        + " has no approver slot settings for role "
+                                        + slotRole));
     }
 }

@@ -189,7 +189,7 @@ class WorkflowInstanceAccessTest {
 
         participant.setClaimedByUserId(USER_ID);
         workflow.setOpenedByUserId(USER_ID);
-        when(selfApproveService.isAllowed(workflow, ORGANIZATION_ID)).thenReturn(false);
+        when(selfApproveService.isAllowed(workflow, participant)).thenReturn(false);
         assertThat(access.canDecide(WORKFLOW_ID, PARTICIPANT_ID, USER_ID)).isFalse();
     }
 
@@ -216,7 +216,7 @@ class WorkflowInstanceAccessTest {
 
         participant.setClaimedByUserId(null);
         workflow.setOpenedByUserId(USER_ID);
-        when(selfApproveService.isAllowed(workflow, ORGANIZATION_ID)).thenReturn(false);
+        when(selfApproveService.isAllowed(workflow, participant)).thenReturn(false);
         assertThat(access.canClaim(WORKFLOW_ID, PARTICIPANT_ID, USER_ID)).isFalse();
     }
 
@@ -243,8 +243,8 @@ class WorkflowInstanceAccessTest {
                         .build();
         Workflow workflow = workflow(WorkflowStatus.OPEN, USER_ID, allowed, blocked);
         when(workflowRepository.findWithDetailsById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
-        when(selfApproveService.isAllowed(workflow, ORGANIZATION_ID)).thenReturn(true);
-        when(selfApproveService.isAllowed(workflow, otherOrganizationId)).thenReturn(false);
+        when(selfApproveService.isAllowed(workflow, allowed)).thenReturn(true);
+        when(selfApproveService.isAllowed(workflow, blocked)).thenReturn(false);
         when(membershipRepository.findActiveGroupIdsForUserInOrganization(
                         org.mockito.ArgumentMatchers.eq(USER_ID),
                         org.mockito.ArgumentMatchers.eq(ORGANIZATION_ID),

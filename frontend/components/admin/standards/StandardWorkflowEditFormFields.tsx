@@ -9,87 +9,82 @@
 import { Select } from '@/components/ui/select';
 import { SwitchField } from '@/components/ui/switch';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { StandardContentItemDto } from '@/lib/api/standards';
+import type { StandardContentItemDto, StandardWorkflowSlotDto } from '@/lib/api/standards';
 import { cn } from '@/lib/utils/cn';
+import { workflowSlotRoleHint, workflowSlotRoleLabel } from '@/lib/workflows/slotRoles';
 
 export interface StandardWorkflowEditFormFieldsProps {
-  approverOrgGroupConfigKey: string;
-  onApproverOrgGroupConfigKeyChange: (value: string) => void;
+  /** Workflow type enum key; selects the type-specific role names. */
+  typeKey: string;
+  /** One entry per approver slot role of the workflow type, in display order. */
+  slots: StandardWorkflowSlotDto[];
+  onSlotChange: (slotRole: string, patch: Partial<StandardWorkflowSlotDto>) => void;
   orgGroupItems: StandardContentItemDto[];
-  enabled: boolean;
-  onEnabledChange: (enabled: boolean) => void;
-  selfApproveAllowed: boolean;
-  onSelfApproveAllowedChange: (allowed: boolean) => void;
-  autoApprove: boolean;
-  onAutoApproveChange: (autoApprove: boolean) => void;
   disabled?: boolean;
 }
 
 export function StandardWorkflowEditFormFields({
-  approverOrgGroupConfigKey,
-  onApproverOrgGroupConfigKeyChange,
+  typeKey,
+  slots,
+  onSlotChange,
   orgGroupItems,
-  enabled,
-  onEnabledChange,
-  selfApproveAllowed,
-  onSelfApproveAllowedChange,
-  autoApprove,
-  onAutoApproveChange,
   disabled = false,
 }: StandardWorkflowEditFormFieldsProps) {
   const t = useTranslation();
 
   return (
-    <div className="space-y-4">
-      <div className="overflow-hidden rounded-lg border border-[var(--border-color)]/60 px-3">
-        <SwitchField
-          label={t('admin.standards.fields.enabled')}
-          description={t('admin.standards.fields.enabledHint')}
-          checked={enabled}
-          onCheckedChange={onEnabledChange}
-          disabled={disabled}
-        />
-      </div>
+    <div className="space-y-5">
+      {slots.map((slot) => {
+        const label = workflowSlotRoleLabel(slot.slotRole, t, typeKey);
+        const hint = workflowSlotRoleHint(slot.slotRole, t, typeKey);
+        return (
+          <section key={slot.slotRole} className="space-y-3" aria-label={label}>
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{label}</h3>
+              {hint ? <p className="text-xs text-[var(--text-secondary)]">{hint}</p> : null}
+            </div>
 
-      <div className="space-y-1.5">
-        <Select
-          label={t('admin.standards.approverLabel')}
-          value={approverOrgGroupConfigKey}
-          disabled={disabled}
-          options={orgGroupItems.map((i) => ({ value: i.configKey, label: i.title }))}
-          onChange={(e) => onApproverOrgGroupConfigKeyChange(e.target.value)}
-          required
-        />
-        <p className="text-xs text-[var(--text-secondary)]">
-          {t('admin.standards.approverGroupHint')}
-        </p>
-      </div>
+            <Select
+              label={t('admin.standards.approverLabel')}
+              value={slot.approverOrgGroupConfigKey}
+              disabled={disabled}
+              options={orgGroupItems.map((i) => ({ value: i.configKey, label: i.title }))}
+              onChange={(e) =>
+                onSlotChange(slot.slotRole, { approverOrgGroupConfigKey: e.target.value })
+              }
+              required
+            />
 
-      <div
-        className={cn(
-          'divide-y divide-[var(--border-color)]/60 overflow-hidden rounded-lg border border-[var(--border-color)]/60',
-          disabled && 'pointer-events-none opacity-70',
-        )}
-      >
-        <div className="px-3">
-          <SwitchField
-            label={t('admin.standards.fields.selfApproveAllowed')}
-            description={t('admin.standards.fields.selfApproveAllowedHint')}
-            checked={selfApproveAllowed}
-            onCheckedChange={onSelfApproveAllowedChange}
-            disabled={disabled}
-          />
-        </div>
-        <div className="px-3">
-          <SwitchField
-            label={t('admin.standards.fields.autoApprove')}
-            description={t('admin.standards.fields.autoApproveHint')}
-            checked={autoApprove}
-            onCheckedChange={onAutoApproveChange}
-            disabled={disabled}
-          />
-        </div>
-      </div>
+            <div
+              className={cn(
+                'divide-y divide-[var(--border-color)]/60 overflow-hidden rounded-lg border border-[var(--border-color)]/60',
+                disabled && 'pointer-events-none opacity-70',
+              )}
+            >
+              <div className="px-3">
+                <SwitchField
+                  label={t('admin.standards.fields.autoApprove')}
+                  description={t('admin.standards.fields.autoApproveHint')}
+                  checked={slot.autoApprove}
+                  onCheckedChange={(autoApprove) => onSlotChange(slot.slotRole, { autoApprove })}
+                  disabled={disabled}
+                />
+              </div>
+              <div className="px-3">
+                <SwitchField
+                  label={t('admin.standards.fields.selfApproveAllowed')}
+                  description={t('admin.standards.fields.selfApproveAllowedHint')}
+                  checked={slot.selfApproveAllowed}
+                  onCheckedChange={(selfApproveAllowed) =>
+                    onSlotChange(slot.slotRole, { selfApproveAllowed })
+                  }
+                  disabled={disabled}
+                />
+              </div>
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

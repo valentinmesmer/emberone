@@ -211,6 +211,28 @@ public interface WorkflowRepository
 
     @Query(
             """
+            SELECT w.id FROM Workflow w
+            WHERE w.status IN (
+                  com.emberone.workflow.domain.WorkflowStatus.OPEN,
+                  com.emberone.workflow.domain.WorkflowStatus.AWAITING_INPUT_CHANGE
+              )
+              AND (SELECT COUNT(p) FROM WorkflowParticipant p
+                   WHERE p.workflow = w
+                     AND p.role = com.emberone.workflow.domain.ParticipantRole.APPROVER
+                     AND p.principalType = com.emberone.workflow.domain.PrincipalType.ORGANIZATION_GROUP
+                     AND p.organizationId IS NOT NULL) > 1
+              AND NOT EXISTS (SELECT 1 FROM WorkflowParticipant p2
+                   WHERE p2.workflow = w
+                     AND p2.role = com.emberone.workflow.domain.ParticipantRole.APPROVER
+                     AND p2.principalType = com.emberone.workflow.domain.PrincipalType.ORGANIZATION_GROUP
+                     AND p2.organizationId IS NOT NULL
+                     AND p2.slotRole <> 'CONTEXT')
+            ORDER BY w.id
+            """)
+    List<Long> findOpenIdsAwaitingSlotRoleBackfill();
+
+    @Query(
+            """
             SELECT w FROM Workflow w
             WHERE w.openedByUserId = :userId
               AND w.workflowTypeId = :workflowTypeId

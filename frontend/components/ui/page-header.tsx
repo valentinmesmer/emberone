@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils/cn';
 
 interface PageHeaderProps {
   title: string;
-  description?: string;
+  description?: ReactNode;
   action?: ReactNode;
   size?: 'compact' | 'default';
   /** When centered, title and description span the full width and align to the middle (e.g. setup). */

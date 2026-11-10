@@ -24,6 +24,8 @@ import com.emberone.standard.repository.StandardAssignmentRepository;
 import com.emberone.standard.service.EffectiveStandardResolver;
 import com.emberone.standard.service.StandardService;
 import com.emberone.standard.spi.StandardContentItem;
+import com.emberone.workflow.standard.WorkflowTypeMappingStandardDomain;
+import com.emberone.workflow.standard.WorkflowTypeMappingTemplate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -288,6 +290,38 @@ public class AdminStandardService {
                 });
     }
 
+    @Transactional(readOnly = true)
+    public StandardWorkflowDto getWorkflow(long tenantId, Long id, String configKey) {
+        return withTenantContext(
+                tenantId,
+                () -> {
+                    WorkflowTypeMappingTemplate template =
+                            standardService.getWorkflowTemplate(id, configKey);
+                    List<String> roleOrder =
+                            standardService.workflowSlotRoles(template.getWorkflowTypeId());
+                    return StandardWorkflowDto.builder()
+                            .configKey(template.getConfigKey())
+                            .workflowTypeId(template.getWorkflowTypeId())
+                            .enabled(template.isEnabled())
+                            .slots(
+                                    template.getSlots().stream()
+                                            .sorted(
+                                                    Comparator.comparingInt(slot ->
+                                                            roleOrder.indexOf(slot.getSlotRole())))
+                                            .map(slot ->
+                                                    StandardWorkflowSlotDto.builder()
+                                                            .slotRole(slot.getSlotRole())
+                                                            .approverOrgGroupConfigKey(
+                                                                    slot.getOrgGroupConfigKey())
+                                                            .autoApprove(slot.isAutoApprove())
+                                                            .selfApproveAllowed(
+                                                                    slot.isSelfApproveAllowed())
+                                                            .build())
+                                            .toList())
+                            .build();
+                });
+    }
+
     @Transactional
     public StandardContentDto updateWorkflow(
             long tenantId, Long id, String configKey, UpdateWorkflowRequest request) {
@@ -297,10 +331,15 @@ public class AdminStandardService {
                     standardService.updateWorkflow(
                             id,
                             configKey,
-                            request.getApproverOrgGroupConfigKey(),
-                            request.isAutoApprove(),
                             request.isEnabled(),
-                            request.isSelfApproveAllowed());
+                            request.getSlots().stream()
+                                    .map(slot ->
+                                            new WorkflowTypeMappingStandardDomain.SlotSettings(
+                                                    slot.getSlotRole(),
+                                                    slot.getApproverOrgGroupConfigKey(),
+                                                    slot.isAutoApprove(),
+                                                    slot.isSelfApproveAllowed()))
+                                    .toList());
                     return buildContent(id);
                 });
     }

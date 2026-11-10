@@ -50,6 +50,7 @@ import {
   normalizeWorkflowStatus,
   slotGroupName,
   slotOrgName,
+  slotRoleName,
   slotStatusBadge,
 } from '@/lib/utils/workflowApprovalSlot';
 import {
@@ -326,6 +327,12 @@ export function WorkflowApprovalSlotDetailView({
             label={t('myArea.workflowDetail.approvalSlotOrganization')}
             value={slotOrgName(slot, t)}
           />
+          {slotRoleName(slot, t, wf.workflowTypeId) ? (
+            <FieldDisplay
+              label={t('myArea.workflowDetail.approvalSlotRole')}
+              value={slotRoleName(slot, t, wf.workflowTypeId) ?? ''}
+            />
+          ) : null}
           {groupName ? (
             <FieldDisplay label={t('myArea.workflowDetail.approvalSlotGroup')} value={groupName} />
           ) : null}

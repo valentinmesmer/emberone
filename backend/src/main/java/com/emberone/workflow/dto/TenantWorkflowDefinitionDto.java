@@ -19,4 +19,7 @@ public class TenantWorkflowDefinitionDto {
     boolean staticApproversExclusive;
     List<Long> staticApproverOrganizationIds;
     boolean customized;
+
+    /** Rules per subtype; subtypes without a rule use the default rule above. */
+    List<WorkflowRoutingRuleDto> routingRules;
 }

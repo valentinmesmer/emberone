@@ -9,8 +9,10 @@ package com.emberone.workflow.service;
 import com.emberone.federalstate.FederalStateService;
 import com.emberone.platform.security.TenantScopeGuard;
 import com.emberone.workflow.domain.WorkflowDefinition;
+import com.emberone.workflow.dto.SaveWorkflowRoutingRuleRequest;
 import com.emberone.workflow.dto.TenantWorkflowDefinitionDto;
 import com.emberone.workflow.dto.UpdateWorkflowDefinitionRequest;
+import com.emberone.workflow.dto.WorkflowRoutingRuleDto;
 import com.emberone.workflow.exception.WorkflowConfigurationException;
 import com.emberone.workflow.repository.WorkflowDefinitionRepository;
 import java.util.function.Supplier;
@@ -49,6 +51,32 @@ public class WorkflowDefinitionService {
                                 workflowTypeId,
                                 request.isStaticApproversExclusive(),
                                 request.getStaticApproverOrganizationIds()));
+    }
+
+    @Transactional
+    public WorkflowRoutingRuleDto getRoutingRule(long tenantId, Long workflowTypeId, Long ruleId) {
+        return tenantWorkflowDefinitionService.getRoutingRule(tenantId, workflowTypeId, ruleId);
+    }
+
+    @Transactional
+    public WorkflowRoutingRuleDto createRoutingRule(
+            long tenantId, Long workflowTypeId, SaveWorkflowRoutingRuleRequest request) {
+        return tenantWorkflowDefinitionService.createRoutingRule(tenantId, workflowTypeId, request);
+    }
+
+    @Transactional
+    public WorkflowRoutingRuleDto updateRoutingRule(
+            long tenantId,
+            Long workflowTypeId,
+            Long ruleId,
+            SaveWorkflowRoutingRuleRequest request) {
+        return tenantWorkflowDefinitionService.updateRoutingRule(
+                tenantId, workflowTypeId, ruleId, request);
+    }
+
+    @Transactional
+    public void deleteRoutingRule(long tenantId, Long workflowTypeId, Long ruleId) {
+        tenantWorkflowDefinitionService.deleteRoutingRule(tenantId, workflowTypeId, ruleId);
     }
 
     @Transactional

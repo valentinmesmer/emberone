@@ -364,6 +364,13 @@ export function resolveParentPath(pathname: string): string | null {
     return `/admin/tenants/${adminTenantWorkflowDetail[1]}/tenant-standards`;
   }
 
+  const adminTenantWorkflowRuleDetail = path.match(
+    /^\/admin\/tenants\/(\d+)\/workflows\/(\d+)\/rules\/(\d+)$/,
+  );
+  if (adminTenantWorkflowRuleDetail) {
+    return `/admin/tenants/${adminTenantWorkflowRuleDetail[1]}/workflows/${adminTenantWorkflowRuleDetail[2]}`;
+  }
+
   const adminOrgWorkflowDetail = path.match(
     /^\/admin\/tenants\/(\d+)\/organizations\/(\d+)\/workflows\/(\d+)$/,
   );

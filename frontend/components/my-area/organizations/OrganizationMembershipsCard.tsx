@@ -9,7 +9,7 @@
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -34,23 +34,14 @@ export function OrganizationMembershipsCard() {
   );
   const multipleOrganizations = new Set(organizations.map((item) => item.organizationId)).size > 1;
 
-  const groupSubtitle = (group: GroupMembershipPeriodDto) => (
-    <>
-      <span className="block">
-        {[
-          multipleOrganizations ? organizationNameById.get(group.organizationId) : null,
-          t(`userManagement.groupMembership.types.${group.membershipType}`),
-        ]
-          .filter(Boolean)
-          .join(' · ')}
-      </span>
-      <span className="block">
-        {group.active
-          ? t('ranks.myArea.since', { date: formatDateShort(group.startDate) })
-          : formatPeriod(group.startDate, group.endDate)}
-      </span>
-    </>
-  );
+  const groupSubtitle = (group: GroupMembershipPeriodDto) =>
+    subtitleLines([
+      multipleOrganizations ? organizationNameById.get(group.organizationId) : null,
+      t(`userManagement.groupMembership.types.${group.membershipType}`),
+      group.active
+        ? t('ranks.myArea.since', { date: formatDateShort(group.startDate) })
+        : formatPeriod(group.startDate, group.endDate),
+    ]);
 
   return (
     <Card className="p-3 sm:p-4">

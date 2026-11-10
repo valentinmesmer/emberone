@@ -98,7 +98,7 @@ export function formatDurationBetween(start: string, end: string): string {
  */
 export function formatTimeEntryListSubtitle(start: string, end?: string | null): string {
   if (!end) return formatDateTime(start);
-  return `${formatAppointmentDateTimeRange(start, end)} · ${formatDurationBetween(start, end)}`;
+  return `${formatAppointmentDateTimeRange(start, end)} (${formatDurationBetween(start, end)})`;
 }
 
 /**

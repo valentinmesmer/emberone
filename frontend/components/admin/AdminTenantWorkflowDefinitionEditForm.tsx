@@ -7,7 +7,8 @@
 'use client';
 
 import { useState } from 'react';
-import { WorkflowDefinitionFormFields } from '@/components/admin/WorkflowDefinitionFormFields';
+import { WorkflowDefinitionExclusiveSwitch } from '@/components/admin/WorkflowDefinitionExclusiveSwitch';
+import { WorkflowDefinitionOrgField } from '@/components/admin/WorkflowDefinitionOrgField';
 import {
   definitionToFormState,
   formStateToRequest,
@@ -86,13 +87,19 @@ export function AdminTenantWorkflowDefinitionEditModal({
         />
       }
     >
-      <WorkflowDefinitionFormFields
-        organizations={organizations}
-        staticApproversExclusive={staticApproversExclusive}
-        onStaticApproversExclusiveChange={setStaticApproversExclusive}
-        staticOrgIds={staticOrgIds}
-        onStaticOrgIdsChange={setStaticOrgIds}
-      />
+      <div className="space-y-3">
+        <WorkflowDefinitionOrgField
+          organizations={organizations}
+          staticOrgIds={staticOrgIds}
+          onStaticOrgIdsChange={setStaticOrgIds}
+        />
+        {staticOrgIds.size > 0 ? (
+          <WorkflowDefinitionExclusiveSwitch
+            checked={staticApproversExclusive}
+            onCheckedChange={setStaticApproversExclusive}
+          />
+        ) : null}
+      </div>
     </Modal>
   );
 }

@@ -83,7 +83,7 @@ export function CourseAudienceQuotaModal({
             key={group.id}
             label={[t(courseAudienceKindLabelKey(group.kind)), targetName(group)]
               .filter(Boolean)
-              .join(' · ')}
+              .join(': ')}
             type="number"
             min={0}
             value={quotas[group.id] ?? ''}

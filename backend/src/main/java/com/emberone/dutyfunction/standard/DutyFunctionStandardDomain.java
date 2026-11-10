@@ -80,7 +80,7 @@ public class DutyFunctionStandardDomain implements StandardDomain {
                                             domainKey(),
                                             grantKey(grant),
                                             function.getName(),
-                                            function.getAbbreviation(),
+                                            function.getConfigKey(),
                                             List.of(grant.getOrganizationGroupConfigKey()),
                                             Map.of(
                                                     "organizationGroupConfigKey",

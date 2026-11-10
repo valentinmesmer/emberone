@@ -37,6 +37,14 @@ export function getAdminTenantWorkflowDetailPath(tenantId: number, workflowTypeI
   return `${getAdminTenantDetailPath(tenantId)}/workflows/${workflowTypeId}`;
 }
 
+export function getAdminTenantWorkflowRoutingRuleDetailPath(
+  tenantId: number,
+  workflowTypeId: number,
+  ruleId: number,
+): string {
+  return `${getAdminTenantWorkflowDetailPath(tenantId, workflowTypeId)}/rules/${ruleId}`;
+}
+
 export { getAdminTenantStandardsPath };
 
 function getAdminOrganizationTypesPath(tenantId: number): string {
@@ -49,6 +57,25 @@ export function getAdminOrganizationTypeDetailPath(tenantId: number, typeId: num
 
 export function getAdminTenantCertificationDetailPath(tenantId: number, configKey: string): string {
   return `${getAdminTenantStandardsPath(tenantId)}/certifications/${encodeURIComponent(configKey)}`;
+}
+
+export function getAdminTenantRankDetailPath(tenantId: number, configKey: string): string {
+  return `${getAdminTenantStandardsPath(tenantId)}/ranks/${encodeURIComponent(configKey)}`;
+}
+
+export function getAdminTenantFunctionDetailPath(tenantId: number, configKey: string): string {
+  return `${getAdminTenantStandardsPath(tenantId)}/functions/${encodeURIComponent(configKey)}`;
+}
+
+export function getAdminTenantQualificationDetailPath(tenantId: number, configKey: string): string {
+  return `${getAdminTenantStandardsPath(tenantId)}/qualifications/${encodeURIComponent(configKey)}`;
+}
+
+export function getAdminTenantOnboardingDocumentDetailPath(
+  tenantId: number,
+  configKey: string,
+): string {
+  return `${getAdminTenantStandardsPath(tenantId)}/onboarding-documents/${encodeURIComponent(configKey)}`;
 }
 
 export function getAdminTenantTrainingCourseTypeDetailPath(

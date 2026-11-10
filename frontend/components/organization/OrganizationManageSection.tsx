@@ -14,6 +14,8 @@ interface OrganizationManageSectionProps {
   title: string;
   subtitle?: ReactNode;
   action?: ReactNode;
+  /** Keep `action` beside the title on small screens (icon-only actions). */
+  actionInline?: boolean;
   children: ReactNode;
   /** Inside a Card on the org detail page - no extra section padding. */
   embedded?: boolean;
@@ -27,6 +29,7 @@ export function OrganizationManageSection({
   title,
   subtitle,
   action,
+  actionInline,
   children,
   embedded = false,
 }: OrganizationManageSectionProps) {
@@ -36,6 +39,7 @@ export function OrganizationManageSection({
         title={title}
         subtitle={subtitle}
         action={action}
+        actionInline={actionInline}
         className={embedded ? 'mb-3' : undefined}
       />
       {children}

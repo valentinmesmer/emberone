@@ -18,14 +18,18 @@ import com.emberone.user.repository.UserRepository;
 import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
 import com.emberone.workflow.domain.Workflow;
 import com.emberone.workflow.domain.WorkflowMode;
+import com.emberone.workflow.domain.WorkflowRoutingDimension;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.exception.WorkflowValidationException;
 import com.emberone.workflow.service.LocalizedWorkflowDocumentPromotionSupport;
 import com.emberone.workflow.spi.AbstractMembershipContextWorkflowHandler;
 import com.emberone.workflow.spi.ApproverOrg;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import com.emberone.workflow.spi.WorkflowOpenConcurrencyKeys;
 import com.emberone.workflow.spi.WorkflowOpenContext;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -160,6 +164,15 @@ public class CourseRegistrationCancellationWorkflowHandler
                         workflow.getOpenedByUserId(), workflow.getTenantId(), payload));
     }
 
+    /**
+     * CONTEXT is the organization providing the offering, HOME_ORG the home organization of the
+     * participant.
+     */
+    @Override
+    public List<String> approverSlotRoles() {
+        return List.of(WorkflowApproverSlotRoles.CONTEXT, WorkflowApproverSlotRoles.HOME_ORG);
+    }
+
     @Override
     public List<ApproverOrg> resolveDynamicOrganizations(
             WorkflowOpenContext<CourseRegistrationCancellationWorkflowPayload> ctx) {
@@ -167,7 +180,28 @@ public class CourseRegistrationCancellationWorkflowHandler
         if (payload == null || payload.getHomeOrganizationId() == null) {
             return List.of();
         }
-        return List.of(new ApproverOrg(payload.getHomeOrganizationId()));
+        return List.of(
+                new ApproverOrg(
+                        payload.getHomeOrganizationId(), WorkflowApproverSlotRoles.HOME_ORG));
+    }
+
+    @Override
+    public Optional<WorkflowRoutingDimension> routingDimension() {
+        return Optional.of(WorkflowRoutingDimension.TRAINING_COURSE_TYPE);
+    }
+
+    /** Registration, then offering, then training course type; all server side. */
+    @Override
+    public Set<Long> resolveRoutingSubjectIds(
+            WorkflowOpenContext<CourseRegistrationCancellationWorkflowPayload> ctx) {
+        CourseRegistrationCancellationWorkflowPayload payload = ctx.getPayload();
+        if (payload == null || payload.getRegistrationId() == null) {
+            return Set.of();
+        }
+        return registrationService
+                .findTrainingCourseTypeIdByRegistration(payload.getRegistrationId())
+                .map(Set::of)
+                .orElse(Set.of());
     }
 
     @Override

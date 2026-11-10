@@ -53,8 +53,7 @@ function NodeLink({
           {node.name}
         </div>
         <div className="mt-0.5 text-xs text-[var(--text-secondary)]">
-          <span className="font-mono">{node.organizationCode}</span>
-          <span className="mx-1 opacity-40">·</span>
+          <span className="font-mono">{node.organizationCode}</span>{' '}
           {organizationTypeNames.get(node.organizationTypeId) ?? ''}
         </div>
         {node.deactivatedAt ? (

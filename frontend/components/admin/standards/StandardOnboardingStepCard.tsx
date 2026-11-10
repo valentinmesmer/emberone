@@ -6,12 +6,11 @@
 
 'use client';
 
-import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import {
   type LocalOnboardingStep,
   onboardingStepTypeKey,
 } from '@/components/admin/standards/onboardingStepUtils';
-import { IconButton } from '@/components/ui/icon-button';
 import { ListRow } from '@/components/ui/list';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils/cn';
@@ -20,30 +19,22 @@ interface StandardOnboardingStepCardProps {
   step: LocalOnboardingStep;
   sortIndex: number;
   href: string;
-  configurable?: boolean;
   isReordering?: boolean;
   isDragging?: boolean;
   isDragOver?: boolean;
   reorderable?: boolean;
   onReorderPointerDown?: (e: React.PointerEvent<HTMLButtonElement>) => void;
-  onEdit?: () => void;
-  onDelete: () => void;
-  actionsDisabled?: boolean;
 }
 
 export function StandardOnboardingStepCard({
   step,
   sortIndex,
   href,
-  configurable = false,
   isReordering = false,
   isDragging = false,
   isDragOver = false,
   reorderable = false,
   onReorderPointerDown,
-  onEdit,
-  onDelete,
-  actionsDisabled = false,
 }: StandardOnboardingStepCardProps) {
   const t = useTranslation();
   const stepKey = onboardingStepTypeKey(step.stepType);
@@ -100,28 +91,6 @@ export function StandardOnboardingStepCard({
       }
       title={title}
       subtitle={t(`admin.standards.onboardingSteps.${stepKey}.subtitle`)}
-      actions={
-        <>
-          {configurable && onEdit ? (
-            <IconButton
-              variant="action"
-              icon={<Pencil className="h-4 w-4" aria-hidden />}
-              onClick={onEdit}
-              disabled={actionsDisabled}
-              aria-label={t('admin.standards.onboardingSteps.editConfig')}
-              title={t('admin.standards.onboardingSteps.editConfig')}
-            />
-          ) : null}
-          <IconButton
-            variant="action"
-            icon={<Trash2 className="h-4 w-4" aria-hidden />}
-            onClick={onDelete}
-            disabled={actionsDisabled}
-            aria-label={t('admin.standards.onboardingSteps.removeStep')}
-            title={t('admin.standards.onboardingSteps.removeStep')}
-          />
-        </>
-      }
     />
   );
 }

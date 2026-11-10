@@ -7,8 +7,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { LoadingState } from '@/components/ui/loading';
 import { TodoListView } from '@/components/todo/TodoListView';
+import { LoadingState } from '@/components/ui/loading';
 
 export default function MyTodosPage() {
   return (

@@ -6,14 +6,14 @@
 
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { LoadingState } from '@/components/ui/loading';
 import { ensureUserManager } from '@/lib/auth/oidcConfig';
 import {
   clearRememberedReturnPath,
   consumeRememberedReturnPath,
 } from '@/lib/auth/postLoginRedirect';
-import { LoadingState } from '@/components/ui/loading';
 
 export default function AuthCallbackPage() {
   const router = useRouter();

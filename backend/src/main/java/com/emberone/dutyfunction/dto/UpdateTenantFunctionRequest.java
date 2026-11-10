@@ -11,7 +11,5 @@ import lombok.Data;
 @Data
 public class UpdateTenantFunctionRequest {
     private String name;
-    private String abbreviation;
-    private Integer sortOrder;
     private Boolean active;
 }

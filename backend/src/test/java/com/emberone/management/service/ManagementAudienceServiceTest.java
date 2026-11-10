@@ -155,16 +155,17 @@ class ManagementAudienceServiceTest {
                         .maxDurationMinutes(30)
                         .build();
         when(audienceRepository.findByManagingOrganizationIdOrderByIdAsc(MANAGING_ORG_ID))
-                .thenReturn(List.of(kept, removed), List.of(kept));
+                .thenReturn(List.of(kept, removed))
+                .thenReturn(List.of(kept));
         activeOrganizations(managing, org(20L));
 
         service.replace(
                 TENANT_ID, MANAGING_ORG_ID, List.of(entry(ManagementAudienceKind.ORG, 20L, 120)));
 
-        ArgumentCaptor<Iterable> deleted = ArgumentCaptor.forClass(Iterable.class);
+        ArgumentCaptor<Iterable<ManagementAudience>> deleted = ArgumentCaptor.captor();
         verify(audienceRepository).deleteAll(deleted.capture());
         assertThat(deleted.getValue()).containsExactly(removed);
-        ArgumentCaptor<Iterable> saved = ArgumentCaptor.forClass(Iterable.class);
+        ArgumentCaptor<Iterable<ManagementAudience>> saved = ArgumentCaptor.captor();
         verify(audienceRepository).saveAll(saved.capture());
         assertThat(saved.getValue()).containsExactly(kept);
         assertThat(kept.getMaxDurationMinutes()).isEqualTo(120);

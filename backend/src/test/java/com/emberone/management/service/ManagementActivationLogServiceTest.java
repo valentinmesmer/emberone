@@ -6,6 +6,7 @@
 
 package com.emberone.management.service;
 
+import static com.emberone.testsupport.SpecificationMatchers.anySpecification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,7 +30,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,7 +46,7 @@ class ManagementActivationLogServiceTest {
     @SuppressWarnings("unchecked")
     private void stubEmptyPage() {
         Page<ManagementActivation> empty = new PageImpl<>(List.of());
-        when(activationRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(activationRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(empty);
     }
 
@@ -54,8 +54,7 @@ class ManagementActivationLogServiceTest {
     void organizationUserIsRejected() {
         assertThatThrownBy(() -> service.listForAdmin(QUERY, ManagementActivationListFilter.NONE))
                 .isInstanceOf(ResponseStatusException.class);
-        verify(activationRepository, never())
-                .findAll(any(Specification.class), any(Pageable.class));
+        verify(activationRepository, never()).findAll(anySpecification(), any(Pageable.class));
     }
 
     @Test
@@ -69,8 +68,7 @@ class ManagementActivationLogServiceTest {
         assertThatThrownBy(() -> service.listForAdmin(QUERY, other))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("outside your tenant");
-        verify(activationRepository, never())
-                .findAll(any(Specification.class), any(Pageable.class));
+        verify(activationRepository, never()).findAll(anySpecification(), any(Pageable.class));
     }
 
     @Test

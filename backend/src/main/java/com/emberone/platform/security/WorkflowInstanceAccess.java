@@ -315,7 +315,7 @@ public class WorkflowInstanceAccess {
     private boolean blocksSelfApprove(
             Workflow workflow, WorkflowParticipant participant, Long userId) {
         return userId.equals(workflow.getOpenedByUserId())
-                && !selfApproveService.isAllowed(workflow, participant.getOrganizationId());
+                && !selfApproveService.isAllowed(workflow, participant);
     }
 
     private boolean relatesToApproverSlot(WorkflowParticipant p, Long userId) {

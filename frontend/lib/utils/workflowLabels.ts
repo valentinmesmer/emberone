@@ -46,6 +46,11 @@ export function groupByWorkflowOpenScope<T>(
   return groups;
 }
 
+/** Enum key of a workflow type id (e.g. `NAME_CHANGE`); null for an unknown id. */
+export function workflowTypeEnumKey(workflowTypeId: number): string | null {
+  return Object.entries(WORKFLOW_TYPE_IDS).find(([, id]) => id === workflowTypeId)?.[0] ?? null;
+}
+
 /** i18n key for the human-readable workflow type label (used in org admin and inbox-style UIs). */
 export function workflowTypeTranslationKey(workflowTypeId: number): string {
   const entry = Object.entries(WORKFLOW_TYPE_IDS).find(([, id]) => id === workflowTypeId);

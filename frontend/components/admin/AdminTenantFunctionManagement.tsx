@@ -7,6 +7,7 @@
 'use client';
 
 import { Archive, Pencil, Plus, RotateCcw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminTenantFunctionEditModal } from '@/components/admin/AdminTenantFunctionEditModal';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,7 @@ import { SectionActions, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type TenantFunctionDto, tenantFunctionsApi } from '@/lib/api/tenantFunctions';
+import { getAdminTenantFunctionDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantFunctionManagementProps {
   tenantId: number;
@@ -27,6 +29,7 @@ interface AdminTenantFunctionManagementProps {
 
 export function AdminTenantFunctionManagement({ tenantId }: AdminTenantFunctionManagementProps) {
   const t = useTranslation();
+  const router = useRouter();
   const { showError, showSuccess } = useToast();
   const [loading, setLoading] = useState(true);
   const [definitions, setDefinitions] = useState<TenantFunctionDto[]>([]);
@@ -64,6 +67,10 @@ export function AdminTenantFunctionManagement({ tenantId }: AdminTenantFunctionM
         <ListRow
           key={definition.configKey}
           compact
+          onClick={() =>
+            router.push(getAdminTenantFunctionDetailPath(tenantId, definition.configKey))
+          }
+          detailHref={getAdminTenantFunctionDetailPath(tenantId, definition.configKey)}
           title={definition.name}
           subtitle={definition.abbreviation}
           badges={
@@ -77,7 +84,8 @@ export function AdminTenantFunctionManagement({ tenantId }: AdminTenantFunctionM
               <IconButton
                 icon={<Pencil className="h-4 w-4" />}
                 aria-label={t('common.edit')}
-                onClick={() => {
+                onClick={(event) => {
+                  event.stopPropagation();
                   setEditing(definition);
                   setFormOpen(true);
                 }}
@@ -87,14 +95,20 @@ export function AdminTenantFunctionManagement({ tenantId }: AdminTenantFunctionM
                 <IconButton
                   icon={<RotateCcw className="h-4 w-4" />}
                   aria-label={t('common.unarchive')}
-                  onClick={() => setUnarchiveTarget(definition)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setUnarchiveTarget(definition);
+                  }}
                   disabled={busy}
                 />
               ) : (
                 <IconButton
                   icon={<Archive className="h-4 w-4" />}
                   aria-label={t('common.archive')}
-                  onClick={() => setArchiveTarget(definition)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setArchiveTarget(definition);
+                  }}
                   disabled={busy}
                 />
               )}

@@ -24,6 +24,7 @@ import com.emberone.workflow.service.WorkflowDocumentService;
 import com.emberone.workflow.service.WorkflowTypeMappingService;
 import com.emberone.workflow.spi.AbstractMembershipContextWorkflowHandler;
 import com.emberone.workflow.spi.ApproverOrg;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
 import com.emberone.workflow.spi.WorkflowOpenConcurrencyKeys;
 import com.emberone.workflow.spi.WorkflowOpenContext;
 import com.emberone.workflow.spi.WorkflowOpenExclusivityKeys;
@@ -179,6 +180,14 @@ public class MainOrganizationChangeWorkflowHandler
                 });
     }
 
+    /**
+     * CONTEXT is the current main organization, NEW_MAIN_ORG the organization the user moves to.
+     */
+    @Override
+    public List<String> approverSlotRoles() {
+        return List.of(WorkflowApproverSlotRoles.CONTEXT, WorkflowApproverSlotRoles.NEW_MAIN_ORG);
+    }
+
     @Override
     public List<ApproverOrg> resolveDynamicOrganizations(
             WorkflowOpenContext<MainOrganizationChangeWorkflowPayload> ctx) {
@@ -186,7 +195,10 @@ public class MainOrganizationChangeWorkflowHandler
         if (payload == null || payload.getNewMainOrganizationId() == null) {
             return List.of();
         }
-        return List.of(new ApproverOrg(payload.getNewMainOrganizationId()));
+        return List.of(
+                new ApproverOrg(
+                        payload.getNewMainOrganizationId(),
+                        WorkflowApproverSlotRoles.NEW_MAIN_ORG));
     }
 
     @Override

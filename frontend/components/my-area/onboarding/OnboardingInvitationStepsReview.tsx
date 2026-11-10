@@ -673,7 +673,7 @@ function DrivingLicenseReview({
             <FieldDisplay label={t('common.record.notesLabel')} value={license.notes} />
           </div>
         ) : null}
-        <RecordDocuments items={proofItems} viewingKey={viewingKey} showWhenEmpty />
+        <RecordDocuments items={proofItems} viewingKey={viewingKey} />
       </div>
     </StepShell>
   );
@@ -951,16 +951,14 @@ function EntryDocumentsReview({
 function RecordDocuments({
   items,
   viewingKey,
-  showWhenEmpty = false,
 }: {
   items: OnboardingProofItem[];
   viewingKey: string | null;
-  showWhenEmpty?: boolean;
 }) {
-  if (items.length === 0 && !showWhenEmpty) return null;
+  if (items.length === 0) return null;
   return (
     <div className="border-t border-[var(--border-color)]/30 pt-3">
-      <OnboardingProofList items={items} viewingKey={viewingKey} showWhenEmpty={showWhenEmpty} />
+      <OnboardingProofList items={items} viewingKey={viewingKey} />
     </div>
   );
 }

@@ -6,12 +6,19 @@
 
 package com.emberone.workflow.service;
 
+import static com.emberone.workflow.spi.WorkflowApproverSlotRoles.ADDITIONAL;
+import static com.emberone.workflow.spi.WorkflowApproverSlotRoles.CONTEXT;
+import static com.emberone.workflow.spi.WorkflowApproverSlotRoles.HOME_ORG;
+import static com.emberone.workflow.spi.WorkflowApproverSlotRoles.NEW_MAIN_ORG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 
 import com.emberone.workflow.domain.*;
 import com.emberone.workflow.exception.WorkflowConfigurationException;
+import com.emberone.workflow.spi.ApproverOrg;
 import com.emberone.workflow.spi.ParticipantSpec;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -45,12 +52,7 @@ class WorkflowResolverServiceTest {
                         .build();
         workflow.getParticipants().add(obsolete);
 
-        when(mappingService.requireMapping(8L, 2L))
-                .thenReturn(
-                        WorkflowTypeMapping.builder()
-                                .organizationGroupId(200L)
-                                .autoApprove(false)
-                                .build());
+        when(mappingService.requireSlot(8L, 2L, ADDITIONAL)).thenReturn(slot(200L, false));
 
         WorkflowResolverService.OrgApproverSlotSyncResult result =
                 service.syncOrgApproverSlots(workflow, 2L, 5L, List.of(8L), true, List.of());
@@ -63,25 +65,155 @@ class WorkflowResolverServiceTest {
     }
 
     @Test
-    void resolveApproverOrganizationIds_collapsesIdenticalContextAndDynamicOrganization() {
-        // Course registration: offering organization (context) and the user's main organization
-        // (dynamic) are the same organization, so a single decision is enough.
+    void resolveApproverOrganizationIds_collapsesIdenticalContextAndDynamicOrganizationToContext() {
+        // Course registration: offering organization (context) and the user's home organization
+        // (dynamic) are the same organization, so a single decision with the CONTEXT settings.
         assertThat(
                         WorkflowResolverService.resolveApproverOrganizationIds(
-                                5L, List.of(), false, List.of(5L)))
-                .containsExactly(5L);
+                                5L, List.of(), false, List.of(new ApproverOrg(5L, HOME_ORG))))
+                .containsExactly(entry(5L, CONTEXT));
         assertThat(
                         WorkflowResolverService.resolveApproverOrganizationIds(
-                                5L, List.of(), false, List.of(6L)))
-                .containsExactly(5L, 6L);
+                                5L, List.of(), false, List.of(new ApproverOrg(6L, HOME_ORG))))
+                .containsExactly(entry(5L, CONTEXT), entry(6L, HOME_ORG));
+    }
+
+    @Test
+    void resolveApproverOrganizationIds_ordersContextDynamicThenAdditionalAndFirstRoleWins() {
+        // 7 is a dynamic org and also an extra org: the dynamic role wins over ADDITIONAL.
+        // 5 is the context org and an extra org: CONTEXT wins.
+        assertThat(
+                        WorkflowResolverService.resolveApproverOrganizationIds(
+                                5L,
+                                List.of(5L, 7L, 8L),
+                                false,
+                                List.of(new ApproverOrg(7L, NEW_MAIN_ORG))))
+                .containsExactly(
+                        entry(5L, CONTEXT), entry(7L, NEW_MAIN_ORG), entry(8L, ADDITIONAL));
+    }
+
+    @Test
+    void resolveApproverOrganizationIds_exclusiveStaticOrgsAreAdditionalExceptTheContextOrg() {
+        assertThat(
+                        WorkflowResolverService.resolveApproverOrganizationIds(
+                                5L,
+                                List.of(8L, 5L),
+                                true,
+                                List.of(new ApproverOrg(7L, NEW_MAIN_ORG))))
+                .containsExactly(entry(8L, ADDITIONAL), entry(5L, CONTEXT));
+        // Exclusive without extra orgs falls back to the normal resolution.
+        assertThat(
+                        WorkflowResolverService.resolveApproverOrganizationIds(
+                                5L, List.of(), true, List.of()))
+                .containsExactly(entry(5L, CONTEXT));
+    }
+
+    @Test
+    void resolveParticipants_autoApproveAndGroupComeFromTheRoleOfEachSlot() {
+        Workflow workflow = workflowWithParticipants();
+        when(mappingService.requireSlot(5L, 1L, CONTEXT)).thenReturn(slot(100L, false));
+        when(mappingService.requireSlot(9L, 1L, HOME_ORG)).thenReturn(slot(200L, true));
+        when(mappingService.requireSlot(8L, 1L, ADDITIONAL)).thenReturn(slot(300L, true));
+
+        service.resolveParticipants(
+                workflow,
+                1L,
+                1L,
+                5L,
+                List.of(8L),
+                false,
+                false,
+                List.of(new ApproverOrg(9L, HOME_ORG)),
+                null);
+
+        assertThat(workflow.getParticipants())
+                .extracting(
+                        WorkflowParticipant::getSlotKey,
+                        WorkflowParticipant::getSlotRole,
+                        WorkflowParticipant::getPrincipalId,
+                        WorkflowParticipant::getSlotStatus)
+                .containsExactly(
+                        tuple("AGR:5", CONTEXT, 100L, ParticipantSlotStatus.PENDING),
+                        tuple("AGR:9", HOME_ORG, 200L, ParticipantSlotStatus.APPROVED),
+                        tuple("AGR:8", ADDITIONAL, 300L, ParticipantSlotStatus.APPROVED));
+    }
+
+    @Test
+    void syncOrgApproverSlots_updatesTheRoleOfAnExistingSlotWhenItChanged() {
+        Workflow workflow = workflowWithParticipants();
+        WorkflowParticipant existing = approverSlot(workflow, 7L, CONTEXT);
+        workflow.getParticipants().add(existing);
+        when(mappingService.requireSlot(5L, 2L, CONTEXT)).thenReturn(slot(100L, false));
+
+        WorkflowResolverService.OrgApproverSlotSyncResult result =
+                service.syncOrgApproverSlots(
+                        workflow,
+                        2L,
+                        5L,
+                        List.of(),
+                        false,
+                        List.of(new ApproverOrg(7L, NEW_MAIN_ORG)));
+
+        // 5 is new (added), 7 keeps its slot but now decides as NEW_MAIN_ORG.
+        assertThat(result.changed()).isTrue();
+        assertThat(existing.getSlotRole()).isEqualTo(NEW_MAIN_ORG);
+        assertThat(workflow.getParticipants())
+                .extracting(WorkflowParticipant::getSlotKey)
+                .containsExactlyInAnyOrder("AGR:5", "AGR:7");
+        // The pending slot changed its role, so the caller applies the new role's settings.
+        assertThat(result.reroledPendingParticipants()).containsExactly(existing);
+    }
+
+    @Test
+    void syncOrgApproverSlots_doesNotReportRoleChangesOfDecidedSlots() {
+        Workflow workflow = workflowWithParticipants();
+        WorkflowParticipant decided = approverSlot(workflow, 7L, CONTEXT);
+        decided.setSlotStatus(ParticipantSlotStatus.APPROVED);
+        workflow.getParticipants().add(decided);
+        when(mappingService.requireSlot(5L, 2L, CONTEXT)).thenReturn(slot(100L, false));
+
+        WorkflowResolverService.OrgApproverSlotSyncResult result =
+                service.syncOrgApproverSlots(
+                        workflow,
+                        2L,
+                        5L,
+                        List.of(),
+                        false,
+                        List.of(new ApproverOrg(7L, NEW_MAIN_ORG)));
+
+        assertThat(decided.getSlotRole()).isEqualTo(NEW_MAIN_ORG);
+        assertThat(result.reroledPendingParticipants()).isEmpty();
+    }
+
+    @Test
+    void applySlotRoles_setsTheExpectedRoleWithoutAddingOrRemovingSlots() {
+        Workflow workflow = workflowWithParticipants();
+        WorkflowParticipant context = approverSlot(workflow, 5L, CONTEXT);
+        WorkflowParticipant dynamic = approverSlot(workflow, 7L, CONTEXT);
+        WorkflowParticipant extra = approverSlot(workflow, 8L, CONTEXT);
+        WorkflowParticipant unknown = approverSlot(workflow, 9L, CONTEXT);
+        workflow.getParticipants().addAll(List.of(context, dynamic, extra, unknown));
+
+        int updated =
+                service.applySlotRoles(
+                        workflow,
+                        5L,
+                        List.of(8L),
+                        false,
+                        List.of(new ApproverOrg(7L, NEW_MAIN_ORG)));
+
+        assertThat(updated).isEqualTo(2);
+        assertThat(context.getSlotRole()).isEqualTo(CONTEXT);
+        assertThat(dynamic.getSlotRole()).isEqualTo(NEW_MAIN_ORG);
+        assertThat(extra.getSlotRole()).isEqualTo(ADDITIONAL);
+        assertThat(unknown.getSlotRole()).isEqualTo(CONTEXT);
+        assertThat(workflow.getParticipants()).hasSize(4);
     }
 
     @Test
     void resolveParticipants_createsApproverForContextOrganization() {
         Workflow workflow = workflowWithParticipants();
-        WorkflowTypeMapping mapping =
-                WorkflowTypeMapping.builder().organizationGroupId(100L).autoApprove(false).build();
-        when(mappingService.requireMapping(5L, 1L)).thenReturn(mapping);
+        when(mappingService.requireSlot(5L, 1L, CONTEXT)).thenReturn(slot(100L, false));
 
         service.resolveParticipants(workflow, 99L, 1L, 5L, List.of(), false, false, null, null);
 
@@ -95,12 +227,18 @@ class WorkflowResolverServiceTest {
     @Test
     void resolveParticipants_staticApproversExclusiveUsesOnlyStaticOrganizations() {
         Workflow workflow = workflowWithParticipants();
-        WorkflowTypeMapping mapping =
-                WorkflowTypeMapping.builder().organizationGroupId(200L).autoApprove(true).build();
-        when(mappingService.requireMapping(8L, 2L)).thenReturn(mapping);
+        when(mappingService.requireSlot(8L, 2L, ADDITIONAL)).thenReturn(slot(200L, true));
 
         service.resolveParticipants(
-                workflow, 1L, 2L, 5L, List.of(8L), true, false, List.of(9L), null);
+                workflow,
+                1L,
+                2L,
+                5L,
+                List.of(8L),
+                true,
+                false,
+                List.of(new ApproverOrg(9L, NEW_MAIN_ORG)),
+                null);
 
         assertThat(workflow.getParticipants()).hasSize(1);
         WorkflowParticipant participant = workflow.getParticipants().iterator().next();
@@ -111,8 +249,7 @@ class WorkflowResolverServiceTest {
     @Test
     void resolveParticipants_autoClaimsUserApproverWhenOpenedByDifferentUser() {
         Workflow workflow = workflowWithParticipants();
-        when(mappingService.requireMapping(5L, 1L))
-                .thenReturn(WorkflowTypeMapping.builder().organizationGroupId(100L).build());
+        when(mappingService.requireSlot(5L, 1L, CONTEXT)).thenReturn(slot(100L, false));
 
         ParticipantSpec spec =
                 ParticipantSpec.builder()
@@ -136,24 +273,29 @@ class WorkflowResolverServiceTest {
     @Test
     void resolveParticipants_includesDynamicOrganizationsWhenNotExclusive() {
         Workflow workflow = workflowWithParticipants();
-        when(mappingService.requireMapping(5L, 1L))
-                .thenReturn(WorkflowTypeMapping.builder().organizationGroupId(100L).build());
-        when(mappingService.requireMapping(9L, 1L))
-                .thenReturn(WorkflowTypeMapping.builder().organizationGroupId(200L).build());
+        when(mappingService.requireSlot(5L, 1L, CONTEXT)).thenReturn(slot(100L, false));
+        when(mappingService.requireSlot(9L, 1L, NEW_MAIN_ORG)).thenReturn(slot(200L, false));
 
         service.resolveParticipants(
-                workflow, 1L, 1L, 5L, List.of(), false, false, List.of(9L), null);
+                workflow,
+                1L,
+                1L,
+                5L,
+                List.of(),
+                false,
+                false,
+                List.of(new ApproverOrg(9L, NEW_MAIN_ORG)),
+                null);
 
         assertThat(workflow.getParticipants())
-                .extracting(WorkflowParticipant::getSlotKey)
-                .containsExactlyInAnyOrder("AGR:5", "AGR:9");
+                .extracting(WorkflowParticipant::getSlotKey, WorkflowParticipant::getSlotRole)
+                .containsExactly(tuple("AGR:5", CONTEXT), tuple("AGR:9", NEW_MAIN_ORG));
     }
 
     @Test
     void resolveParticipants_autoClaimsOpenerWhenSelfApproveAllowed() {
         Workflow workflow = workflowWithParticipants();
-        when(mappingService.requireMapping(5L, 1L))
-                .thenReturn(WorkflowTypeMapping.builder().organizationGroupId(100L).build());
+        when(mappingService.requireSlot(5L, 1L, CONTEXT)).thenReturn(slot(100L, false));
 
         ParticipantSpec spec =
                 ParticipantSpec.builder()
@@ -176,8 +318,7 @@ class WorkflowResolverServiceTest {
     @Test
     void resolveParticipants_doesNotAutoClaimOpenerWithoutSelfApprove() {
         Workflow workflow = workflowWithParticipants();
-        when(mappingService.requireMapping(5L, 1L))
-                .thenReturn(WorkflowTypeMapping.builder().organizationGroupId(100L).build());
+        when(mappingService.requireSlot(5L, 1L, CONTEXT)).thenReturn(slot(100L, false));
 
         ParticipantSpec spec =
                 ParticipantSpec.builder()
@@ -200,8 +341,7 @@ class WorkflowResolverServiceTest {
     @Test
     void resolveParticipants_addsViewerParticipantWithoutClaim() {
         Workflow workflow = workflowWithParticipants();
-        when(mappingService.requireMapping(5L, 1L))
-                .thenReturn(WorkflowTypeMapping.builder().organizationGroupId(100L).build());
+        when(mappingService.requireSlot(5L, 1L, CONTEXT)).thenReturn(slot(100L, false));
 
         ParticipantSpec spec =
                 ParticipantSpec.builder()
@@ -226,8 +366,7 @@ class WorkflowResolverServiceTest {
     @Test
     void resolveParticipants_throwsOnDuplicateSlotKey() {
         Workflow workflow = workflowWithParticipants();
-        when(mappingService.requireMapping(5L, 1L))
-                .thenReturn(WorkflowTypeMapping.builder().organizationGroupId(100L).build());
+        when(mappingService.requireSlot(5L, 1L, CONTEXT)).thenReturn(slot(100L, false));
 
         ParticipantSpec duplicate =
                 ParticipantSpec.builder()
@@ -250,6 +389,28 @@ class WorkflowResolverServiceTest {
                                 List.of(duplicate, duplicate)))
                 .isInstanceOf(WorkflowConfigurationException.class)
                 .hasMessageContaining("Duplicate workflow slot key");
+    }
+
+    private static WorkflowTypeMappingSlot slot(Long groupId, boolean autoApprove) {
+        return WorkflowTypeMappingSlot.builder()
+                .organizationGroupId(groupId)
+                .autoApprove(autoApprove)
+                .build();
+    }
+
+    private static WorkflowParticipant approverSlot(Workflow workflow, Long orgId, String role) {
+        return WorkflowParticipant.builder()
+                .tenantId(1L)
+                .workflow(workflow)
+                .role(ParticipantRole.APPROVER)
+                .requirement(ParticipantRequirement.MANDATORY)
+                .principalType(PrincipalType.ORGANIZATION_GROUP)
+                .principalId(100L)
+                .organizationId(orgId)
+                .slotKey("AGR:" + orgId)
+                .slotRole(role)
+                .slotStatus(ParticipantSlotStatus.PENDING)
+                .build();
     }
 
     private Workflow workflowWithParticipants() {

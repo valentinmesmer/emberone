@@ -7,8 +7,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { LoadingState } from '@/components/ui/loading';
 import { UserTrainingCourseListView } from '@/components/my-area/trainingCourses/UserTrainingCourseListView';
+import { LoadingState } from '@/components/ui/loading';
 
 export default function TrainingCoursesPage() {
   return (

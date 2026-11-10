@@ -110,6 +110,11 @@ public class TenantQualificationDefinitionService {
                                 .toList());
     }
 
+    @Transactional(readOnly = true)
+    public TenantQualificationDefinitionDto get(long tenantId, String configKey) {
+        return withTenantContext(tenantId, () -> toDto(requireDefinition(configKey)));
+    }
+
     @Transactional
     public TenantQualificationDefinitionDto create(
             long tenantId, CreateTenantQualificationDefinitionRequest request) {

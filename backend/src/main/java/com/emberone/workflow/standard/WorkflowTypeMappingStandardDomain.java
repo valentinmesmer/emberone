@@ -12,15 +12,19 @@ import com.emberone.organizationgroup.domain.OrganizationGroup;
 import com.emberone.organizationgroup.repository.OrganizationGroupRepository;
 import com.emberone.organizationgroup.standard.OrgGroupTemplateRepository;
 import com.emberone.platform.exception.ResourceNotFoundException;
+import com.emberone.platform.exception.ValidationException;
 import com.emberone.standard.domain.Standard;
 import com.emberone.standard.spi.StandardContentItem;
 import com.emberone.standard.spi.StandardDomain;
 import com.emberone.workflow.domain.WorkflowDefinition;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.domain.WorkflowTypeMapping;
+import com.emberone.workflow.domain.WorkflowTypeMappingSlot;
 import com.emberone.workflow.event.WorkflowConfigurationChangedEvent;
 import com.emberone.workflow.repository.WorkflowDefinitionRepository;
 import com.emberone.workflow.repository.WorkflowTypeMappingRepository;
+import com.emberone.workflow.spi.WorkflowApproverSlotRoles;
+import com.emberone.workflow.spi.WorkflowHandlerRegistry;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +35,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * {@link StandardDomain} for workflow type mappings (which org group approves a workflow type).
- * Templates: {@code std_workflow_type_mapping_templates}; instances: {@code wf_type_mappings}. Runs
- * after the organization-groups domain (it resolves the approver group per org).
+ * {@link StandardDomain} for workflow type mappings (which org group approves a workflow type, per
+ * approver slot role). Templates: {@code std_workflow_type_mapping_templates} (+ {@code _slots});
+ * instances: {@code wf_type_mappings} (+ {@code wf_type_mapping_slots}). Runs after the
+ * organization-groups domain (it resolves the approver group per org).
+ *
+ * <p>Every template and mapping has one slot row per role of its workflow type ({@link
+ * WorkflowApproverSlotRoles#rolesOf}). A role that is new for a type (handler gained a role) is
+ * added by {@link #ensureMissingFromBaseline} and {@link #materializeForOrg} with the values of the
+ * {@code CONTEXT} row.
  */
 @Slf4j
 @Component
@@ -46,11 +56,24 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
     private final WorkflowDefinitionRepository definitionRepository;
     private final OrganizationGroupRepository organizationGroupRepository;
     private final OrgGroupTemplateRepository orgGroupTemplateRepository;
+    private final WorkflowHandlerRegistry handlerRegistry;
     private final ApplicationEventPublisher eventPublisher;
+
+    /** Settings of one slot role as edited in the standard. */
+    public record SlotSettings(
+            String slotRole,
+            String orgGroupConfigKey,
+            boolean autoApprove,
+            boolean selfApproveAllowed) {}
 
     @Override
     public String domainKey() {
         return "workflow-type-mappings";
+    }
+
+    /** The roles of a workflow type in display order (handler roles, then {@code ADDITIONAL}). */
+    public List<String> rolesOf(Long workflowTypeId) {
+        return WorkflowApproverSlotRoles.rolesOf(handlerRegistry.require(workflowTypeId));
     }
 
     @Override
@@ -58,12 +81,26 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
     public void copyTemplates(Standard source, Standard target) {
         for (WorkflowTypeMappingTemplate template :
                 templateRepository.findByStandardId(source.getId())) {
-            templateRepository.save(
+            WorkflowTypeMappingTemplate copy =
                     template.toBuilder()
                             .id(null)
                             .tenantId(target.getTenantId())
                             .standardId(target.getId())
-                            .build());
+                            .slots(new ArrayList<>())
+                            .build();
+            for (WorkflowTypeMappingTemplateSlot slot : template.getSlots()) {
+                copy.getSlots()
+                        .add(
+                                WorkflowTypeMappingTemplateSlot.builder()
+                                        .tenantId(target.getTenantId())
+                                        .template(copy)
+                                        .slotRole(slot.getSlotRole())
+                                        .orgGroupConfigKey(slot.getOrgGroupConfigKey())
+                                        .autoApprove(slot.isAutoApprove())
+                                        .selfApproveAllowed(slot.isSelfApproveAllowed())
+                                        .build());
+            }
+            templateRepository.save(copy);
         }
     }
 
@@ -72,9 +109,11 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
     public void materializeForOrg(Long organizationId, Standard standard) {
         for (WorkflowTypeMappingTemplate template :
                 templateRepository.findByStandardId(standard.getId())) {
-            if (mappingRepository
-                    .findByOrganizationIdAndConfigKey(organizationId, template.getConfigKey())
-                    .isPresent()) {
+            Optional<WorkflowTypeMapping> existing =
+                    mappingRepository.findByOrganizationIdAndConfigKey(
+                            organizationId, template.getConfigKey());
+            if (existing.isPresent()) {
+                addMissingSlots(organizationId, existing.get(), template);
                 continue;
             }
             toInstance(organizationId, template).ifPresent(mappingRepository::save);
@@ -134,18 +173,36 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
                                 .thenComparingLong(WorkflowTypeMappingTemplate::getWorkflowTypeId))
                 .map(template -> {
                     WorkflowType workflowType = WorkflowType.fromId(template.getWorkflowTypeId());
+                    Optional<WorkflowTypeMappingTemplateSlot> contextSlot =
+                            template.findSlot(WorkflowApproverSlotRoles.CONTEXT);
+                    String contextGroupKey =
+                            contextSlot
+                                    .map(WorkflowTypeMappingTemplateSlot::getOrgGroupConfigKey)
+                                    .orElse(null);
+                    // The list shows the CONTEXT role; all roles are edited via the detail view.
                     Map<String, String> attributes = new java.util.HashMap<>();
                     attributes.put("openScope", workflowType.openScope().name());
-                    attributes.put("approverOrgGroupConfigKey", template.getOrgGroupConfigKey());
-                    attributes.put("autoApprove", String.valueOf(template.isAutoApprove()));
+                    attributes.put("approverOrgGroupConfigKey", contextGroupKey);
+                    attributes.put(
+                            "autoApprove",
+                            String.valueOf(
+                                    contextSlot
+                                            .map(WorkflowTypeMappingTemplateSlot::isAutoApprove)
+                                            .orElse(false)));
                     attributes.put("enabled", String.valueOf(template.isEnabled()));
                     attributes.put(
-                            "selfApproveAllowed", String.valueOf(template.isSelfApproveAllowed()));
+                            "selfApproveAllowed",
+                            String.valueOf(
+                                    contextSlot
+                                            .map(
+                                                    WorkflowTypeMappingTemplateSlot
+                                                            ::isSelfApproveAllowed)
+                                            .orElse(false)));
                     return new StandardContentItem(
                             domainKey(),
                             template.getConfigKey(),
                             workflowType.name(),
-                            template.getOrgGroupConfigKey(),
+                            contextGroupKey,
                             List.of(),
                             attributes,
                             true);
@@ -154,17 +211,18 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
     }
 
     /**
-     * Update approver routing and workflow flags on a mapping template and propagate to
-     * materialized rows.
+     * Update the enabled flag and the settings of every slot role of a mapping template and
+     * propagate to materialized rows. {@code slots} must contain each role of the workflow type
+     * exactly once.
+     *
+     * @throws ValidationException if a role is unknown, missing or given twice
      */
     @Transactional
     public void updateMappingTemplate(
             Standard standard,
             String configKey,
-            String orgGroupConfigKey,
-            boolean autoApprove,
             boolean enabled,
-            boolean selfApproveAllowed,
+            List<SlotSettings> slots,
             List<Organization> orgs) {
         WorkflowTypeMappingTemplate template =
                 templateRepository
@@ -175,10 +233,16 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
                                                 + configKey
                                                 + "' not found in standard "
                                                 + standard.getId()));
-        template.setOrgGroupConfigKey(orgGroupConfigKey);
-        template.setAutoApprove(autoApprove);
+        requireAllRolesOnce(template.getWorkflowTypeId(), slots);
         template.setEnabled(enabled);
-        template.setSelfApproveAllowed(selfApproveAllowed);
+        for (SlotSettings settings : slots) {
+            WorkflowTypeMappingTemplateSlot slot =
+                    template.findSlot(settings.slotRole())
+                            .orElseGet(() -> addTemplateSlot(template, settings.slotRole()));
+            slot.setOrgGroupConfigKey(settings.orgGroupConfigKey());
+            slot.setAutoApprove(settings.autoApprove());
+            slot.setSelfApproveAllowed(settings.selfApproveAllowed());
+        }
         templateRepository.save(template);
         Set<Long> organizationIds = new java.util.LinkedHashSet<>();
         for (Organization org : orgs) {
@@ -193,6 +257,42 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
             publishConfigurationChangedForOrg(
                     standard, organizationIds, Set.of(template.getWorkflowTypeId()));
         }
+    }
+
+    private void requireAllRolesOnce(Long workflowTypeId, List<SlotSettings> slots) {
+        List<String> expected = rolesOf(workflowTypeId);
+        Set<String> seen = new HashSet<>();
+        for (SlotSettings settings : slots) {
+            if (!expected.contains(settings.slotRole())) {
+                throw new ValidationException(
+                        "Unknown approver slot role '"
+                                + settings.slotRole()
+                                + "' for workflow type id "
+                                + workflowTypeId);
+            }
+            if (!seen.add(settings.slotRole())) {
+                throw new ValidationException(
+                        "Approver slot role '" + settings.slotRole() + "' given more than once");
+            }
+        }
+        for (String role : expected) {
+            if (!seen.contains(role)) {
+                throw new ValidationException("Approver slot role '" + role + "' is required");
+            }
+        }
+    }
+
+    private WorkflowTypeMappingTemplateSlot addTemplateSlot(
+            WorkflowTypeMappingTemplate template, String slotRole) {
+        WorkflowTypeMappingTemplateSlot slot =
+                WorkflowTypeMappingTemplateSlot.builder()
+                        .tenantId(template.getTenantId())
+                        .template(template)
+                        .slotRole(slotRole)
+                        .orgGroupConfigKey("")
+                        .build();
+        template.getSlots().add(slot);
+        return slot;
     }
 
     private void publishConfigurationChangedForOrg(
@@ -226,19 +326,21 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
     }
 
     /**
-     * Whether any workflow type mapping in the standard uses the given org group as its approver.
+     * Whether any slot of any workflow type mapping in the standard uses the given org group as its
+     * approver.
      */
     @Transactional(readOnly = true)
     public boolean isOrgGroupUsedAsApprover(Standard standard, String orgGroupConfigKey) {
-        return templateRepository.existsByStandardIdAndOrgGroupConfigKey(
+        return templateRepository.existsByStandardIdAndSlotOrgGroupConfigKey(
                 standard.getId(), orgGroupConfigKey);
     }
 
     /**
-     * Inserts missing workflow type mapping templates from the system baseline. New templates use
-     * the baseline {@code enabled} flag.
+     * Inserts missing workflow type mapping templates from the system baseline and adds missing
+     * slot roles to existing templates. New templates use the baseline {@code enabled} flag and one
+     * slot per role; a role that is new on an existing template copies the {@code CONTEXT} row.
      *
-     * @return number of newly inserted templates
+     * @return number of newly inserted templates and slot rows
      */
     @Transactional
     public int ensureMissingFromBaseline(
@@ -254,9 +356,11 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
             if (!WorkflowType.isKnownId(item.workflowTypeId())) {
                 continue;
             }
-            if (templateRepository
-                    .findByStandardIdAndConfigKey(standard.getId(), item.configKey())
-                    .isPresent()) {
+            Optional<WorkflowTypeMappingTemplate> existing =
+                    templateRepository.findByStandardIdAndConfigKey(
+                            standard.getId(), item.configKey());
+            if (existing.isPresent()) {
+                added += addMissingTemplateSlots(standard, existing.get());
                 continue;
             }
             String orgGroupConfigKey =
@@ -268,23 +372,72 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
                         standard.getId());
                 continue;
             }
-            templateRepository.save(
+            WorkflowTypeMappingTemplate template =
                     WorkflowTypeMappingTemplate.builder()
                             .tenantId(standard.getTenantId())
                             .standardId(standard.getId())
                             .configKey(item.configKey())
                             .workflowTypeId(item.workflowTypeId())
-                            .orgGroupConfigKey(orgGroupConfigKey)
-                            .autoApprove(false)
                             .enabled(item.enabled())
-                            .selfApproveAllowed(false)
-                            .build());
-            added++;
+                            .build();
+            for (String role : rolesOf(item.workflowTypeId())) {
+                template.getSlots()
+                        .add(
+                                WorkflowTypeMappingTemplateSlot.builder()
+                                        .tenantId(standard.getTenantId())
+                                        .template(template)
+                                        .slotRole(role)
+                                        .orgGroupConfigKey(orgGroupConfigKey)
+                                        .autoApprove(false)
+                                        .selfApproveAllowed(false)
+                                        .build());
+            }
+            templateRepository.save(template);
+            added += 1 + template.getSlots().size();
             log.info(
                     "Added workflow type mapping '{}' to standard {} (id={})",
                     item.configKey(),
                     standard.getName(),
                     standard.getId());
+        }
+        return added;
+    }
+
+    /** Adds a row for each role of the type the template has none for, copying {@code CONTEXT}. */
+    private int addMissingTemplateSlots(Standard standard, WorkflowTypeMappingTemplate template) {
+        Optional<WorkflowTypeMappingTemplateSlot> contextSlot =
+                template.findSlot(WorkflowApproverSlotRoles.CONTEXT);
+        if (contextSlot.isEmpty()) {
+            log.warn(
+                    "Workflow type mapping {} in standard {} has no CONTEXT slot",
+                    template.getConfigKey(),
+                    standard.getId());
+            return 0;
+        }
+        int added = 0;
+        for (String role : rolesOf(template.getWorkflowTypeId())) {
+            if (template.findSlot(role).isPresent()) {
+                continue;
+            }
+            template.getSlots()
+                    .add(
+                            WorkflowTypeMappingTemplateSlot.builder()
+                                    .tenantId(template.getTenantId())
+                                    .template(template)
+                                    .slotRole(role)
+                                    .orgGroupConfigKey(contextSlot.get().getOrgGroupConfigKey())
+                                    .autoApprove(contextSlot.get().isAutoApprove())
+                                    .selfApproveAllowed(contextSlot.get().isSelfApproveAllowed())
+                                    .build());
+            added++;
+            log.info(
+                    "Added slot role '{}' to workflow type mapping '{}' in standard {}",
+                    role,
+                    template.getConfigKey(),
+                    standard.getId());
+        }
+        if (added > 0) {
+            templateRepository.save(template);
         }
         return added;
     }
@@ -297,7 +450,8 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
         }
         Optional<String> fromExistingMapping =
                 templateRepository.findByStandardId(standard.getId()).stream()
-                        .map(WorkflowTypeMappingTemplate::getOrgGroupConfigKey)
+                        .flatMap(template -> template.getSlots().stream())
+                        .map(WorkflowTypeMappingTemplateSlot::getOrgGroupConfigKey)
                         .filter(key -> key != null && !key.isBlank())
                         .filter(key ->
                                 orgGroupTemplateRepository.existsByStandardIdAndConfigKey(
@@ -312,38 +466,93 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
         return null;
     }
 
+    /** Creates the mapping with a slot per template slot; empty if an approver group is missing. */
     private Optional<WorkflowTypeMapping> toInstance(
             Long organizationId, WorkflowTypeMappingTemplate template) {
-        Optional<OrganizationGroup> approverGroup =
-                organizationGroupRepository.findByOrganizationIdAndConfigKey(
-                        organizationId, template.getOrgGroupConfigKey());
-        if (approverGroup.isEmpty()) {
-            log.warn(
-                    "Cannot materialize workflow type mapping {} for org {}: approver org group '{}' missing",
-                    template.getConfigKey(),
-                    organizationId,
-                    template.getOrgGroupConfigKey());
-            return Optional.empty();
-        }
-        OrganizationGroup org = approverGroup.get();
-        return Optional.of(
+        WorkflowTypeMapping mapping =
                 WorkflowTypeMapping.builder()
-                        .tenantId(org.getTenantId())
+                        .tenantId(template.getTenantId())
                         .organizationId(organizationId)
                         .workflowTypeId(template.getWorkflowTypeId())
-                        .organizationGroupId(org.getId())
-                        .autoApprove(template.isAutoApprove())
                         .configKey(template.getConfigKey())
                         .standardOriginId(template.getId())
-                        .build());
+                        .build();
+        for (WorkflowTypeMappingTemplateSlot templateSlot : template.getSlots()) {
+            Optional<Long> groupId = resolveApproverGroupId(organizationId, templateSlot);
+            if (groupId.isEmpty()) {
+                log.warn(
+                        "Cannot materialize workflow type mapping {} for org {}: approver org group '{}' missing",
+                        template.getConfigKey(),
+                        organizationId,
+                        templateSlot.getOrgGroupConfigKey());
+                return Optional.empty();
+            }
+            mapping.getSlots().add(newMappingSlot(mapping, templateSlot, groupId.get()));
+        }
+        return Optional.of(mapping);
+    }
+
+    private static WorkflowTypeMappingSlot newMappingSlot(
+            WorkflowTypeMapping mapping,
+            WorkflowTypeMappingTemplateSlot templateSlot,
+            Long organizationGroupId) {
+        return WorkflowTypeMappingSlot.builder()
+                .tenantId(mapping.getTenantId())
+                .mapping(mapping)
+                .slotRole(templateSlot.getSlotRole())
+                .organizationGroupId(organizationGroupId)
+                .autoApprove(templateSlot.isAutoApprove())
+                .selfApproveAllowed(templateSlot.isSelfApproveAllowed())
+                .build();
+    }
+
+    /** Adds the slots the mapping lacks (new roles after a baseline sync). */
+    private void addMissingSlots(
+            Long organizationId,
+            WorkflowTypeMapping mapping,
+            WorkflowTypeMappingTemplate template) {
+        boolean changed = false;
+        for (WorkflowTypeMappingTemplateSlot templateSlot : template.getSlots()) {
+            if (mapping.findSlot(templateSlot.getSlotRole()).isPresent()) {
+                continue;
+            }
+            Optional<Long> groupId = resolveApproverGroupId(organizationId, templateSlot);
+            if (groupId.isEmpty()) {
+                log.warn(
+                        "Cannot add slot role {} of workflow type mapping {} for org {}: approver org group '{}' missing",
+                        templateSlot.getSlotRole(),
+                        template.getConfigKey(),
+                        organizationId,
+                        templateSlot.getOrgGroupConfigKey());
+                continue;
+            }
+            mapping.getSlots().add(newMappingSlot(mapping, templateSlot, groupId.get()));
+            changed = true;
+        }
+        if (changed) {
+            mappingRepository.save(mapping);
+        }
     }
 
     private void applyTemplateToInstance(
             Long organizationId,
             WorkflowTypeMapping mapping,
             WorkflowTypeMappingTemplate template) {
-        resolveApproverGroupId(organizationId, template).ifPresent(mapping::setOrganizationGroupId);
-        mapping.setAutoApprove(template.isAutoApprove());
+        Set<String> templateRoles = new HashSet<>();
+        for (WorkflowTypeMappingTemplateSlot templateSlot : template.getSlots()) {
+            templateRoles.add(templateSlot.getSlotRole());
+            Optional<Long> groupId = resolveApproverGroupId(organizationId, templateSlot);
+            Optional<WorkflowTypeMappingSlot> existing =
+                    mapping.findSlot(templateSlot.getSlotRole());
+            if (existing.isPresent()) {
+                groupId.ifPresent(existing.get()::setOrganizationGroupId);
+                existing.get().setAutoApprove(templateSlot.isAutoApprove());
+                existing.get().setSelfApproveAllowed(templateSlot.isSelfApproveAllowed());
+            } else if (groupId.isPresent()) {
+                mapping.getSlots().add(newMappingSlot(mapping, templateSlot, groupId.get()));
+            }
+        }
+        mapping.getSlots().removeIf(slot -> !templateRoles.contains(slot.getSlotRole()));
         mapping.setStandardOriginId(template.getId());
         mappingRepository.save(mapping);
     }
@@ -356,14 +565,14 @@ public class WorkflowTypeMappingStandardDomain implements StandardDomain {
 
     void applyDefinitionFlags(WorkflowDefinition definition, WorkflowTypeMappingTemplate template) {
         definition.setEnabled(template.isEnabled());
-        definition.setSelfApproveAllowed(template.isSelfApproveAllowed());
         definitionRepository.save(definition);
     }
 
     private Optional<Long> resolveApproverGroupId(
-            Long organizationId, WorkflowTypeMappingTemplate template) {
+            Long organizationId, WorkflowTypeMappingTemplateSlot templateSlot) {
         return organizationGroupRepository
-                .findByOrganizationIdAndConfigKey(organizationId, template.getOrgGroupConfigKey())
+                .findByOrganizationIdAndConfigKey(
+                        organizationId, templateSlot.getOrgGroupConfigKey())
                 .map(OrganizationGroup::getId);
     }
 }

@@ -313,17 +313,45 @@ class StandardServiceTest {
                 .requireWorkflowApproverOrgGroup(custom, "ALL_MEMBERS");
 
         assertThatThrownBy(() ->
-                        standardService.updateWorkflow(3L, "1", "ALL_MEMBERS", false, true, false))
+                        standardService.updateWorkflow(
+                                3L,
+                                "1",
+                                true,
+                                List.of(
+                                        new WorkflowTypeMappingStandardDomain.SlotSettings(
+                                                "CONTEXT", "ALL_MEMBERS", false, false),
+                                        new WorkflowTypeMappingStandardDomain.SlotSettings(
+                                                "ADDITIONAL", "LEADERSHIP", false, false))))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("cannot be used as a workflow approver");
         verify(workflowTypeMappingStandardDomain, never())
-                .updateMappingTemplate(
-                        eq(custom),
-                        anyString(),
-                        anyString(),
-                        anyBoolean(),
-                        anyBoolean(),
-                        anyBoolean(),
-                        any());
+                .updateMappingTemplate(eq(custom), anyString(), anyBoolean(), any(), any());
+    }
+
+    @Test
+    void updateWorkflowValidatesEveryRoleGroupAndDelegatesWithTheOrganizations() {
+        TenantContextHolder.setTenantId(10L);
+        Standard custom =
+                Standard.builder()
+                        .id(3L)
+                        .tenantId(10L)
+                        .source(StandardSource.CUSTOM)
+                        .name("Custom")
+                        .build();
+        when(standardRepository.findById(3L)).thenReturn(Optional.of(custom));
+        List<WorkflowTypeMappingStandardDomain.SlotSettings> slots =
+                List.of(
+                        new WorkflowTypeMappingStandardDomain.SlotSettings(
+                                "CONTEXT", "LEADERSHIP", false, true),
+                        new WorkflowTypeMappingStandardDomain.SlotSettings(
+                                "ADDITIONAL", "HR", true, false));
+
+        standardService.updateWorkflow(3L, "1", false, slots);
+
+        verify(organizationGroupStandardDomain)
+                .requireWorkflowApproverOrgGroup(custom, "LEADERSHIP");
+        verify(organizationGroupStandardDomain).requireWorkflowApproverOrgGroup(custom, "HR");
+        verify(workflowTypeMappingStandardDomain)
+                .updateMappingTemplate(eq(custom), eq("1"), eq(false), eq(slots), any());
     }
 }

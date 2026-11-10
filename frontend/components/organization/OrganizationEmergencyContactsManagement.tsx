@@ -7,7 +7,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -60,17 +60,12 @@ export function OrganizationEmergencyContactsManagement({
                 key={contact.id}
                 title={resolveUserName(userById, contact, t)}
                 href={getOrganizationEmergencyContactDetailPath(organizationId, contact.id)}
-                subtitle={
-                  <>
-                    <span className="font-medium text-[var(--text-primary)]">{contactName}</span>
-                    <span aria-hidden> · </span>
-                    <span>{t(getEmergencyContactRelationshipLabelKey(contact.relationship))}</span>
-                    <span aria-hidden> · </span>
-                    <span>
-                      {t('myArea.emergencyContact.priority', { priority: contact.priority })}
-                    </span>
-                  </>
-                }
+                subtitle={subtitleLines([
+                  <span key="name" className="font-medium text-[var(--text-primary)]">
+                    {contactName}
+                  </span>,
+                  `${t(getEmergencyContactRelationshipLabelKey(contact.relationship))}, ${t('myArea.emergencyContact.priority', { priority: contact.priority })}`,
+                ])}
               />
             );
           })}

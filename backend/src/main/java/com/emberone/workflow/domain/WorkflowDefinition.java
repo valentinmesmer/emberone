@@ -7,8 +7,6 @@
 package com.emberone.workflow.domain;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.*;
 
 @Entity
@@ -34,22 +32,6 @@ public class WorkflowDefinition {
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    /**
-     * When true and static approver orgs are configured, only those orgs are approvers (context org
-     * and dynamic orgs from the handler are omitted).
-     */
-    @Column(name = "static_approvers_exclusive", nullable = false)
-    @Builder.Default
-    private boolean staticApproversExclusive = false;
-
-    /**
-     * When true, the opener may claim/decide approver slots on their own workflow if they hold the
-     * rights.
-     */
-    @Column(name = "self_approve_allowed", nullable = false)
-    @Builder.Default
-    private boolean selfApproveAllowed = false;
-
     /** The organization this definition is materialized for. Each org has its own row. */
     @Column(name = "organization_id", nullable = false)
     private Long organizationId;
@@ -67,8 +49,4 @@ public class WorkflowDefinition {
      */
     @Column(name = "standard_origin_id")
     private Long standardOriginId;
-
-    @OneToMany(mappedBy = "definition", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<WorkflowDefinitionStaticOrg> staticOrganizations = new ArrayList<>();
 }

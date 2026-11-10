@@ -11,9 +11,11 @@ import lombok.Data;
 
 @Data
 public class CreateTenantRankRequest {
-    @NotBlank private String configKey;
     @NotBlank private String name;
+
+    /** Doubles as the config key; immutable after creation. */
     @NotBlank private String abbreviation;
+
     private int sortOrder;
     private boolean active = true;
 }

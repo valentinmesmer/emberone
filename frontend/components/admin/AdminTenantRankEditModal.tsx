@@ -33,7 +33,6 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
   const [busy, setBusy] = useState(false);
-  const [configKey, setConfigKey] = useState('');
   const [name, setName] = useState('');
   const [abbreviation, setAbbreviation] = useState('');
   const [sortOrder, setSortOrder] = useState('0');
@@ -41,7 +40,6 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
 
   useEffect(() => {
     if (!isOpen) return;
-    setConfigKey(editing?.configKey ?? '');
     setName(editing?.name ?? '');
     setAbbreviation(editing?.abbreviation ?? '');
     setSortOrder(String(editing?.sortOrder ?? 0));
@@ -49,9 +47,6 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
   }, [isOpen, editing]);
 
   const blockers = formBlockers([
-    ...(editing
-      ? []
-      : ([[t('admin.tenantStandards.ranks.configKey'), configKey.trim() !== '']] as const)),
     [t('common.name'), name.trim() !== ''],
     [t('admin.tenantStandards.ranks.abbreviation'), abbreviation.trim() !== ''],
   ]);
@@ -63,14 +58,12 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
       if (editing) {
         const payload: UpdateTenantRankRequest = {
           name: name.trim(),
-          abbreviation: abbreviation.trim(),
           sortOrder: Number.parseInt(sortOrder, 10) || 0,
           active,
         };
         await tenantRanksApi.updateRank(tenantId, editing.configKey, payload);
       } else {
         const payload: CreateTenantRankRequest = {
-          configKey: configKey.trim(),
           name: name.trim(),
           abbreviation: abbreviation.trim(),
           sortOrder: Number.parseInt(sortOrder, 10) || 0,
@@ -107,15 +100,6 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
       }
     >
       <div className="space-y-3">
-        {!editing ? (
-          <Input
-            label={t('admin.tenantStandards.ranks.configKey')}
-            value={configKey}
-            onChange={(e) => setConfigKey(e.target.value)}
-            disabled={busy}
-            required
-          />
-        ) : null}
         <Input
           label={t('common.name')}
           value={name}
@@ -127,7 +111,7 @@ export function AdminTenantRankEditModal({ tenantId, editing, isOpen, onClose, o
           label={t('admin.tenantStandards.ranks.abbreviation')}
           value={abbreviation}
           onChange={(e) => setAbbreviation(e.target.value)}
-          disabled={busy}
+          disabled={busy || editing != null}
           required
         />
         <Input

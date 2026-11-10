@@ -272,7 +272,7 @@ function HelpChatPanelContent() {
                         return (
                           <div key={key} className="flex flex-col gap-1.5">
                             <p className="text-xs font-semibold text-[var(--text-secondary)]">
-                              {actionLabel(action, target)} · {t('ai.helpChat.chooseOrganization')}
+                              {actionLabel(action, target)}: {t('ai.helpChat.chooseOrganization')}
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {target.options.map((option) => (

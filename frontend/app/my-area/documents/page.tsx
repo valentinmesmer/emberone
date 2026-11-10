@@ -7,8 +7,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { LoadingState } from '@/components/ui/loading';
 import { UserDocumentListView } from '@/components/my-area/documents/UserDocumentListView';
+import { LoadingState } from '@/components/ui/loading';
 
 export default function DocumentsPage() {
   return (

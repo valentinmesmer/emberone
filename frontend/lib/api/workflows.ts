@@ -24,6 +24,7 @@ import type {
   OrganizationJoinRequestWorkflowPayload,
   OrganizationLeaveRequestWorkflowPayload,
   RankRequestWorkflowPayload,
+  SaveWorkflowRoutingRuleRequest,
   TenantWorkflowDefinitionDto,
   TrainingCourseRecordWorkflowPayload,
   UpdateWorkflowDefinitionRequest,
@@ -36,6 +37,7 @@ import type {
   WorkflowOpenConcurrencyKeysDto,
   WorkflowOpenStateDto,
   WorkflowPageDto,
+  WorkflowRoutingRuleDto,
   WorkflowTypeCatalogDto,
   WorkflowTypeId,
 } from '@/types/workflow';
@@ -407,6 +409,49 @@ export const workflowsApi = {
     return apiClient.post<TenantWorkflowDefinitionDto>(
       `/api/v1/auth/admin/tenants/${tenantId}/workflow-definitions/${workflowTypeId}/restore`,
       {},
+    );
+  },
+
+  async getTenantWorkflowRoutingRule(
+    tenantId: number,
+    workflowTypeId: number,
+    ruleId: number,
+  ): Promise<WorkflowRoutingRuleDto> {
+    return apiClient.get<WorkflowRoutingRuleDto>(
+      `/api/v1/auth/admin/tenants/${tenantId}/workflow-definitions/${workflowTypeId}/routing-rules/${ruleId}`,
+    );
+  },
+
+  async createTenantWorkflowRoutingRule(
+    tenantId: number,
+    workflowTypeId: number,
+    body: SaveWorkflowRoutingRuleRequest,
+  ): Promise<WorkflowRoutingRuleDto> {
+    return apiClient.post<WorkflowRoutingRuleDto>(
+      `/api/v1/auth/admin/tenants/${tenantId}/workflow-definitions/${workflowTypeId}/routing-rules`,
+      body,
+    );
+  },
+
+  async updateTenantWorkflowRoutingRule(
+    tenantId: number,
+    workflowTypeId: number,
+    ruleId: number,
+    body: SaveWorkflowRoutingRuleRequest,
+  ): Promise<WorkflowRoutingRuleDto> {
+    return apiClient.put<WorkflowRoutingRuleDto>(
+      `/api/v1/auth/admin/tenants/${tenantId}/workflow-definitions/${workflowTypeId}/routing-rules/${ruleId}`,
+      body,
+    );
+  },
+
+  async deleteTenantWorkflowRoutingRule(
+    tenantId: number,
+    workflowTypeId: number,
+    ruleId: number,
+  ): Promise<void> {
+    await apiClient.delete<void>(
+      `/api/v1/auth/admin/tenants/${tenantId}/workflow-definitions/${workflowTypeId}/routing-rules/${ruleId}`,
     );
   },
 };

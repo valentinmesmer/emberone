@@ -6,19 +6,19 @@
 
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle2, XCircle } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useAuth } from '@/lib/auth/AuthContext';
-import { userApi } from '@/lib/api/user';
-import { ApiRequestError } from '@/lib/api/client';
-import { userKeys } from '@/lib/store/queries/users';
-import { LoadingState } from '@/components/ui/loading';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { NoticeCard, ErrorStateCard } from '@/components/ui/message-cards';
+import { LoadingState } from '@/components/ui/loading';
+import { ErrorStateCard, NoticeCard } from '@/components/ui/message-cards';
+import { useTranslation } from '@/hooks/useTranslation';
+import { ApiRequestError } from '@/lib/api/client';
+import { userApi } from '@/lib/api/user';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { userKeys } from '@/lib/store/queries/users';
 
 type VerifyStatus = 'loading' | 'success' | 'error';
 

@@ -7,7 +7,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { ListContainer, ListRow } from '@/components/ui/list';
+import { ListContainer, ListRow, subtitleLines } from '@/components/ui/list';
 import { PaginatedListView, paginatedListEmptyCard } from '@/components/ui/paginated-list';
 import { useTranslation } from '@/hooks/useTranslation';
 import { userCourseRegistrationListDefinition } from '@/lib/list/courseOfferingList';
@@ -66,14 +66,12 @@ export function UserCourseRegistrationsSection({
               registration.id,
             )}
             title={registration.trainingCourseTypeName}
-            subtitle={[
+            subtitle={subtitleLines([
               registration.organizationName,
               registration.firstSessionStart
                 ? formatDateShort(registration.firstSessionStart)
                 : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
+            ])}
             badges={
               <Badge tone={courseRegistrationStatusBadgeTone(registration.status)} pill>
                 {t(courseRegistrationStatusLabelKey(registration.status))}

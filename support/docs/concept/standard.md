@@ -100,8 +100,8 @@ Gecacht via `EffectiveStandardOrganizationCache` / `EffectiveStandardTypeCache`.
 |----------|--------|-------------|-----------------|
 | 10 | `OrganizationGroupStandardDomain` | `organization-groups` | → `organization_groups` |
 | 20 | `PermissionGroupStandardDomain` | `permission-groups` (+ synthetisch `group-mappings` in Content) | → `perm_groups`, `perm_group_mappings` |
-| 30 | `WorkflowTypeMappingStandardDomain` | `workflow-type-mappings` | → `wf_type_mappings` (+ Sync-Flags auf `wf_definitions`) |
-| 40 | `WorkflowDefinitionStandardDomain` | `workflow-definitions` | → `wf_definitions` (mandantenweite statische Genehmiger via `TenantWorkflowDefinitionService`) |
+| 30 | `WorkflowTypeMappingStandardDomain` | `workflow-type-mappings` | → `wf_type_mappings` + `wf_type_mapping_slots` (eine Zeile je Freigabe-Rolle; nur `enabled` wird auf `wf_definitions` gespiegelt) |
+| 40 | `WorkflowDefinitionStandardDomain` | `workflow-definitions` | → `wf_definitions` (nur `enabled`; die zusätzlichen Genehmiger-Orgs stehen ausschließlich in der Mandanten-Definition, siehe [Workflow-Engine](workflow-engine.md#3-mandantenweite-defaults---tenantworkflowdefinition); das Template trägt keine eigenen Static-Orgs) |
 | 50 | `CertificationStandardDomain` | `certifications` | **Keine** per-Org-Zeilen - Filter beim Katalog-Read |
 | 51 | `TrainingCourseStandardDomain` | `training-courses` | Gleich |
 | 52 | `QualificationStandardDomain` | `qualifications` | Gleich; publiziert `QualificationCatalogChangedEvent` |
@@ -124,7 +124,7 @@ Ablauf:
 
 1. Mandanten-Kataloge + Org-Typen + Mandanten-Workflow-Defs seeden/syncen (über `FederalStateSettings` des Tenants, heute `BayernFederalStateSettings`)
 2. SYSTEM-`Standard` upserten + Templates syncen (`OrgSetupBaselineTemplateService`)
-3. `ensureWorkflowApprovalsAcrossStandards` - fehlende Workflow-Templates auf *allen* Standards via `ensureMissingFromBaseline` (übernimmt `item.enabled()` aus der Baseline; Bayern: `enabled=true`), dann betroffene Orgs rematerialisieren
+3. `ensureWorkflowApprovalsAcrossStandards` - fehlende Workflow-Templates auf *allen* Standards via `ensureMissingFromBaseline` (übernimmt `item.enabled()` aus der Baseline; Bayern: `enabled=true`), dann betroffene Orgs rematerialisieren. Dieselbe Methode ergänzt auf bestehenden Templates **fehlende Rollen** (siehe [Freigabe-Rollen im Standard](#freigabe-rollen-im-standard)); `materializeForOrg` zieht sie in die Org-Mappings nach
 
 Zwei Code-Baselines formen `FederalStateBaselines`:
 
@@ -157,6 +157,14 @@ Zwei Code-Baselines formen `FederalStateBaselines`:
 
 Listener: `StandardCacheEvictionListener` (`@AfterCommitEventListener`).
 
+## Freigabe-Rollen im Standard
+
+Ein Workflow-Template hat `enabled` einmal und pro Freigabe-Rolle des Typs (`CONTEXT`, `ADDITIONAL` und die Rollen des Handlers, siehe [Workflow-Engine](workflow-engine.md#freigabe-rollen)) eine Slot-Zeile mit Org-Gruppe (`orgGroupConfigKey`), `autoApprove` und `selfApproveAllowed` (`std_workflow_type_mapping_template_slots`, Unique `(tenant, template, slot_role)`, FORCE RLS). `materializeForOrg`/`reassignForOrg`/`updateMappingTemplate` arbeiten pro Rolle auf `wf_type_mapping_slots`; die Org-Instanz wird nur angelegt, wenn jede Gruppe in der Org existiert.
+
+- **Baseline-Quelle:** `WorkflowTypeMappingBaseline` hat einen Wertesatz (Gruppe, auto-/self-approve, `enabled`). `OrgSetupBaselineTemplateService` legt jede Rolle des Typs mit diesen Werten an (SYSTEM-Standard bei jedem Sync, eigene Standards nur neu).
+- **Neue Rolle auf bestehendem Standard:** `ensureMissingFromBaseline` fügt die Zeile mit den Werten der `CONTEXT`-Zeile des Templates hinzu, `materializeForOrg` zieht sie in die Orgs nach. Ohne die Zeile scheitert die Laufzeit (`WorkflowTypeMappingService.requireSlot`, kein Fallback), deshalb nach einem Release mit neuer Rolle den Sync pro Mandant ausführen oder die Zeilen per Migration anlegen. Der Sync läuft beim Anlegen eines Mandanten und über `POST …/tenants/{id}/baseline-sync`.
+- **Löschen einer Org-Gruppe** wird abgelehnt, solange irgendeine Rolle eines Templates sie als Genehmiger nutzt (`isOrgGroupUsedAsApprover` prüft die Slots).
+
 ## Admin-API
 
 `AdminStandardController` → `/api/v1/auth/admin/tenants/{tenantId}/standards`  
@@ -164,6 +172,7 @@ Fassade: `AdminStandardService` → `StandardService`
 
 - List / clone / update meta / delete / content / modules
 - Content-Editoren: org-groups, permission-groups, group-mappings, workflows, Katalog-Selektionen (`…/rank-selections`, `…/function-selections`, `…/function-grants`)
+- Workflows: `GET …/standards/{id}/workflows/{configKey}` liefert `{configKey, workflowTypeId, enabled, slots:[{slotRole, approverOrgGroupConfigKey, autoApprove, selfApproveAllowed}]}` (Slots in Anzeigereihenfolge). `PUT` nimmt `{enabled, slots[]}`; **alle** Rollen des Typs sind Pflicht, jede genau einmal, unbekannte Rollen und fehlende Gruppen liefern 400. Jede Gruppe muss Workflows genehmigen dürfen (nicht „Alle Mitglieder“). Die Antwort des `PUT` ist der Standard-Inhalt (`StandardContentDto`); `describeContent` fasst pro Typ `enabled` und die Gruppe der Rolle `CONTEXT` zusammen. Die Rollenliste pro Typ steht auch im Katalog `GET …/workflow-types` (`approverSlotRoles`).
 - Onboarding-Steps: `GET/PUT …/standards/{id}/onboarding-steps` (nicht über `StandardDomain`-SPI; eigene Tabelle `std_onboarding_steps`)
 - Assignments: list, put pro Org-Typ, Impact-Preview
 - Overrides: list, get/set Org-Standard, Impact-Preview

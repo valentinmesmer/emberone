@@ -33,6 +33,7 @@ import com.emberone.user.repository.UserRepository;
 import com.emberone.userorganizationmembership.domain.UserOrganizationMembership;
 import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
 import com.emberone.workflow.domain.Workflow;
+import com.emberone.workflow.domain.WorkflowRoutingDimension;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.CertificationRecordWorkflowPayload;
 import com.emberone.workflow.dto.WorkflowDocumentPromotionMetadata;
@@ -360,5 +361,24 @@ class CertificationRecordWorkflowHandlerTest {
 
     private void stubEvidenceTypes(Long definitionId, Set<CertEvidenceType> evidenceTypes) {
         when(evidenceTypeService.getEvidenceTypes(definitionId)).thenReturn(evidenceTypes);
+    }
+
+    @Test
+    void routesByCertificationDefinitionFromThePayload() {
+        assertThat(handler.routingDimension())
+                .contains(WorkflowRoutingDimension.CERTIFICATION_DEFINITION);
+        assertThat(
+                        handler.resolveRoutingSubjectIds(
+                                new WorkflowOpenContext<>(
+                                        USER_ID, TENANT_ID, payload(DEFINITION_ID))))
+                .containsExactly(DEFINITION_ID);
+        assertThat(
+                        handler.resolveRoutingSubjectIds(
+                                new WorkflowOpenContext<>(USER_ID, TENANT_ID, payload(null))))
+                .isEmpty();
+        assertThat(
+                        handler.resolveRoutingSubjectIds(
+                                new WorkflowOpenContext<>(USER_ID, TENANT_ID, null)))
+                .isEmpty();
     }
 }

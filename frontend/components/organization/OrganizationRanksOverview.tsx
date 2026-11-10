@@ -103,10 +103,11 @@ function OverviewGroupSection({
           <div className="truncate text-sm font-medium text-[var(--text-primary)]">
             {groupTitle}
           </div>
+          {groupSubtitle ? (
+            <div className="truncate text-xs text-[var(--text-secondary)]">{groupSubtitle}</div>
+          ) : null}
           <div className="truncate text-xs text-[var(--text-secondary)]">
-            {groupSubtitle
-              ? `${groupSubtitle} · ${memberCountLabel(memberCount, t)}`
-              : memberCountLabel(memberCount, t)}
+            {memberCountLabel(memberCount, t)}
           </div>
         </div>
         <Badge tone="neutral" pill>

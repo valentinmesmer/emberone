@@ -6,6 +6,7 @@
 
 package com.emberone.onboarding.service;
 
+import static com.emberone.testsupport.SpecificationMatchers.anySpecification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,7 +44,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
 class OnboardingInvitationServiceTest {
@@ -72,7 +72,7 @@ class OnboardingInvitationServiceTest {
                 invitation(1L, 21L, OnboardingInvitationStatus.SUBMITTED);
         earlierName.setInvitedAt(invitedAt);
         earlierName.setUser(user(21L, "Ada", "Lovelace", 3L, "ada@example.com"));
-        when(onboardingInvitationRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(onboardingInvitationRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(earlierName, laterInvite)));
 
         OnboardingInvitationPageDto result =
@@ -93,7 +93,7 @@ class OnboardingInvitationServiceTest {
     void listForOrganizationSkipsInvitationsWithoutUser() {
         when(organizationRepository.findById(10L))
                 .thenReturn(Optional.of(Organization.builder().id(10L).tenantId(7L).build()));
-        when(onboardingInvitationRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(onboardingInvitationRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(
                         new PageImpl<>(
                                 List.of(invitation(1L, 99L, OnboardingInvitationStatus.OPEN))));

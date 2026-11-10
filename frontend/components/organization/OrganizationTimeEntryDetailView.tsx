@@ -23,6 +23,8 @@ export interface OrganizationTimeEntryDetailViewProps {
   organizationId: number;
   organizationName: string;
   entryId: number;
+  /** When set, the entry must belong to this user (user-scoped route). */
+  userId?: number;
 }
 
 function resolveUserName(
@@ -41,6 +43,7 @@ export function OrganizationTimeEntryDetailView({
   organizationId,
   organizationName,
   entryId,
+  userId,
 }: OrganizationTimeEntryDetailViewProps) {
   const t = useTranslation();
   const { data: entry, isLoading: loadingEntry } = useOrganizationTimeEntry(
@@ -54,13 +57,14 @@ export function OrganizationTimeEntryDetailView({
   const loading = loadingEntry || loadingUsers;
 
   const belongsToOrg = entry?.organizationId === organizationId;
+  const belongsToUser = userId == null || entry?.userId === userId;
   const isOpen = Boolean(entry && !entry.endTime);
 
   if (loading) {
     return <LoadingState variant="embedded" size="sm" />;
   }
 
-  if (!entry || !belongsToOrg) {
+  if (!entry || !belongsToOrg || !belongsToUser) {
     return <NotFoundState message={t('myArea.timeEntries.error.notFound')} />;
   }
 
