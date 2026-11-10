@@ -7,8 +7,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { AuthUnavailable } from '@/components/auth/AuthUnavailable';
 import { LoadingState } from '@/components/ui/loading';
-import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 interface ProtectedRouteProps {
@@ -18,7 +18,6 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, isLoggingOut, login, isOidcConfigured } = useAuth();
   const hasInitiatedLoginRef = useRef(false);
-  const t = useTranslation();
 
   useEffect(() => {
     if (
@@ -41,7 +40,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isOidcConfigured) {
-    return <LoadingState message={t('auth.unavailable')} subMessage="" showSpinner={false} />;
+    return <AuthUnavailable />;
   }
 
   if (!isAuthenticated) {
