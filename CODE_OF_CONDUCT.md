@@ -60,7 +60,7 @@ Vertretung bei einer Online- oder Offline-Veranstaltung.
 ## Durchsetzung
 
 Fälle von missbräuchlichem, belästigendem oder anderweitig inakzeptablem Verhalten
-können an die Maintainer gemeldet werden unter **emberone@valentinmesmer.de**.
+können an die Maintainer gemeldet werden unter **info@emberone.de**.
 
 Alle Beschwerden werden umgehend, fair und vertraulich geprüft und untersucht.
 Du erhältst innerhalb weniger Werktage eine Rückmeldung.

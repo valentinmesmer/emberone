@@ -8,7 +8,7 @@ Unterstützt wird nur der jeweils neueste stabile Release (`main`). Sicherheitsf
 
 EmberOne verarbeitet mandantenfähige Organisations- und Personendaten hinter Authentifizierung. Bitte **keine** öffentlichen Issues für Sicherheitslücken eröffnen.
 
-Bevorzugt privat über [GitHub Private Vulnerability Reporting](https://github.com/valentinmesmer/emberone/security/advisories/new), alternativ per Mail an **emberone@valentinmesmer.de**.
+Bevorzugt privat über [GitHub Private Vulnerability Reporting](https://github.com/valentinmesmer/emberone/security/advisories/new), alternativ per Mail an **info@emberone.de**.
 
 Bitte angeben:
 

@@ -47,8 +47,8 @@ dependencies {
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
 
-    implementation 'software.amazon.awssdk:s3:2.57.11'
-    implementation 'io.github.openfeign:feign-okhttp:13.17'
+    implementation 'software.amazon.awssdk:s3:2.57.12'
+    implementation 'io.github.openfeign:feign-okhttp:13.18'
     implementation 'io.github.openfeign:feign-jackson3:13.17'
     implementation 'io.github.openfeign:feign-core:13.17'
 

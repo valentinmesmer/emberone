@@ -52,7 +52,7 @@ Siehe [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDU
 > - **Erlaubt und dauerhaft kostenlos:** Selbst hosten, nutzen, anpassen und weitergeben, insbesondere durch Feuerwehren, Kommunen und öffentliche Träger.
 > - **Verboten:** EmberOne (auch angepasst) als gehosteten oder verwalteten Dienst (SaaS) für Dritte anzubieten.
 > - **Zusatzerlaubnis:** Öffentliche Feuerwehren, Gemeinden, Landkreise und andere öffentlich-rechtliche Träger, Feuerwehrverbände und Feuerwehr- bzw. Fördervereine sowie öffentlich-rechtliche oder vollständig kommunale IT-Dienstleister (z. B. kommunale Rechenzentren) dürfen EmberOne gemeinnützig, höchstens zum Selbstkostenpreis, für Feuerwehren hosten. Sie dürfen dafür auch einen Dienstleister beauftragen, der ausschließlich in ihrem Auftrag betreibt. Die Erlaubnis wird für bereits veröffentlichte Versionen nicht widerrufen. Den genauen Wortlaut regelt der Abschnitt „Additional Permission“ in der [`LICENSE`](LICENSE).
-> - **Andere Konstellationen:** auf Anfrage an [emberone@valentinmesmer.de](mailto:emberone@valentinmesmer.de).
+> - **Andere Konstellationen:** auf Anfrage an [info@emberone.de](mailto:info@emberone.de).
 > - **Beiträge:** Die Entwicklung ist dem Maintainer vorbehalten; externe Beiträge sind künftig nur über eine CLA vorgesehen, siehe [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 Die Lizenz gilt für den Code, nicht für Name oder Logos; siehe [`TRADEMARK.md`](TRADEMARK.md). Drittkomponenten (Schriften, Kartendaten): [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
