@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-package com.emberone.permission.cache;
+package com.emberone.userpermission.cache;
 
 import com.emberone.platform.cache.CacheNames;
 import org.springframework.cache.annotation.CacheEvict;

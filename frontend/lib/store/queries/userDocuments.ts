@@ -13,6 +13,7 @@ import {
   userDocumentApi,
 } from '@/lib/api/userDocument';
 import type { ListQuery } from '@/lib/list/types';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import { getOrganizationWallClockNow } from '@/lib/utils/date';
 import type { UnreadDocumentCountDto, UserDocumentDto } from '@/types/userDocument';
@@ -36,7 +37,7 @@ export function useUserDocumentList({ listQuery, enabled = true }: UseUserDocume
     listQuery: listQuery as UserDocumentListRequest,
     queryFn: (query) => userDocumentApi.list(query),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -47,7 +48,7 @@ export function useUserDocuments(enabled = true) {
     queryKey: [...userDocumentKeys.listRoot(), 'all'] as const,
     queryFn: () => fetchAllPageContent((page) => userDocumentApi.list({ page })),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -57,7 +58,7 @@ export function useUserDocumentTags(enabled = true) {
     queryKey: userDocumentKeys.tags(),
     queryFn: () => userDocumentApi.listTags(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -86,7 +87,7 @@ export function useUnreadDocumentCount(options?: { enabled?: boolean }) {
     queryKey: userDocumentKeys.unreadCount(),
     queryFn: () => userDocumentApi.getUnreadCount(),
     enabled: hasEmberOneUserId && (options?.enabled ?? true),
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
     refetchInterval: 120 * 1000,
   });
 }

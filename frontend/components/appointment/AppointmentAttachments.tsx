@@ -6,10 +6,13 @@
 
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { EntityAttachmentList } from '@/components/attachment';
 import { appointmentAttachmentApi } from '@/lib/api/appointmentAttachment';
-import { appointmentAttachmentKeys, appointmentKeys } from '@/lib/store';
+import {
+  useAppointmentAttachments,
+  useDeleteAppointmentAttachment,
+  useUploadAppointmentAttachment,
+} from '@/lib/store';
 import { downloadBlob } from '@/lib/utils/downloadBlob';
 import type { EntityAttachmentDto } from '@/types/attachment';
 
@@ -26,24 +29,14 @@ export function AppointmentAttachments({
   canManage = false,
   compact = false,
 }: AppointmentAttachmentsProps) {
-  const queryClient = useQueryClient();
-  const attachmentsQuery = useQuery<EntityAttachmentDto[]>({
-    queryKey: appointmentAttachmentKeys.list(organizationId, appointmentId),
-    queryFn: () => appointmentAttachmentApi.list(organizationId, appointmentId),
-  });
+  const attachmentsQuery = useAppointmentAttachments(organizationId, appointmentId);
+  const uploadAttachment = useUploadAppointmentAttachment(organizationId, appointmentId);
+  const deleteAttachment = useDeleteAppointmentAttachment(organizationId, appointmentId);
   const attachments = attachmentsQuery.data ?? [];
   const loading = attachmentsQuery.isLoading || attachmentsQuery.isFetching;
 
-  const invalidate = async () => {
-    await queryClient.invalidateQueries({
-      queryKey: appointmentAttachmentKeys.list(organizationId, appointmentId),
-    });
-    await queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-  };
-
   const handleUpload = async (file: File) => {
-    await appointmentAttachmentApi.upload(organizationId, appointmentId, file);
-    await invalidate();
+    await uploadAttachment.mutateAsync(file);
   };
 
   const handleDownload = async (attachment: EntityAttachmentDto) => {
@@ -56,8 +49,7 @@ export function AppointmentAttachments({
   };
 
   const handleDelete = async (attachmentId: number) => {
-    await appointmentAttachmentApi.delete(organizationId, appointmentId, attachmentId);
-    await invalidate();
+    await deleteAttachment.mutateAsync(attachmentId);
   };
 
   return (

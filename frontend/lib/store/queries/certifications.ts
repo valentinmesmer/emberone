@@ -20,6 +20,7 @@ import { certificationOverviewListDefinition } from '@/lib/list/certificationOve
 import type { ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
 import { invalidateQualificationStatusForOrganization } from '@/lib/store/queries/qualifications';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 
 export const certificationKeys = {
@@ -46,7 +47,7 @@ export function useMyCertificationStatus() {
     queryKey: certificationKeys.myStatus(),
     queryFn: () => certificationsApi.getMyStatus(),
     enabled: hasEmberOneUserId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -56,7 +57,7 @@ export function useMyCertificationRecords() {
     queryKey: certificationKeys.myRecords(),
     queryFn: () => certificationsApi.getMyRecords(),
     enabled: hasEmberOneUserId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -66,7 +67,7 @@ export function useMyRequestableCertificationDefinitions(enabled = true) {
     queryKey: certificationKeys.myRequestableDefinitions(),
     queryFn: () => certificationsApi.getMyRequestableDefinitions(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -75,7 +76,7 @@ export function useUserCertificationStatus(organizationId: number, userId: numbe
     queryKey: certificationKeys.userStatus(organizationId, userId),
     queryFn: () => certificationsApi.getUserStatus(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -93,7 +94,7 @@ export function useOrganizationCertificationStatusOverview(
     listQuery: listQuery as CertificationOverviewRequest,
     queryFn: (query) => certificationsApi.getStatusOverview(organizationId, query),
     enabled: enabled && organizationId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -105,7 +106,7 @@ export function useOrganizationCertificationStatusOverviewCounts(
     queryKey: certificationKeys.statusOverviewCounts(organizationId),
     queryFn: () => certificationsApi.getStatusOverviewCounts(organizationId),
     enabled: enabled && organizationId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -118,7 +119,7 @@ export function useUserCertificationAssignments(
     queryKey: certificationKeys.assignments(organizationId, userId),
     queryFn: () => certificationsApi.listAssignments(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -131,7 +132,7 @@ export function useUserCertificationRecords(
     queryKey: certificationKeys.userRecords(organizationId, userId),
     queryFn: () => certificationsApi.getUserRecords(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -140,7 +141,7 @@ export function useOrgCertificationCatalog(organizationId: number, userId: numbe
     queryKey: certificationKeys.catalog(organizationId, userId),
     queryFn: () => certificationsApi.getCatalog(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 

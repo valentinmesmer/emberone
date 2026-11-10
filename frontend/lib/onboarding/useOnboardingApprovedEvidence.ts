@@ -8,6 +8,7 @@ import { useQueries } from '@tanstack/react-query';
 import { certificationsApi, type UserCertificationRecordDto } from '@/lib/api/certifications';
 import { type DrivingLicenseDto, drivingLicensesApi } from '@/lib/api/drivingLicenses';
 import { type TrainingCourseUserRecordDto, trainingCoursesApi } from '@/lib/api/trainingCourses';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import type {
   OnboardingCertificationDraft,
   OnboardingDrivingLicenseDraft,
@@ -28,6 +29,16 @@ function isOnboardingPromotedRecord(
 ): boolean {
   return record.appLinkType === 'ONBOARDING_INVITATION' && record.appLinkId === invitationId;
 }
+
+export const onboardingApprovedEvidenceKeys = {
+  all: ['onboarding-approved-evidence'] as const,
+  evidence: (
+    invitationId: number,
+    kind: 'training' | 'certifications' | 'driving-license',
+    scope: number | 'self',
+    subjectUserId: number,
+  ) => [...onboardingApprovedEvidenceKeys.all, invitationId, kind, scope, subjectUserId] as const,
+};
 
 export function matchPromotedTrainingCourseRecord(
   draft: OnboardingTrainingCourseDraft,
@@ -105,13 +116,12 @@ export function useOnboardingApprovedEvidence(params: {
   const [trainingQuery, certificationQuery, drivingLicenseQuery] = useQueries({
     queries: [
       {
-        queryKey: [
-          'onboarding-approved-evidence',
+        queryKey: onboardingApprovedEvidenceKeys.evidence(
           params.invitationId,
           'training',
           orgScoped ? organizationId : 'self',
           subjectUserId,
-        ],
+        ),
         queryFn: async () => {
           const { fetchAllPageContent } = await import('@/lib/api/paged');
           return fetchAllPageContent((page) =>
@@ -121,37 +131,35 @@ export function useOnboardingApprovedEvidence(params: {
           );
         },
         enabled: baseEnabled,
-        staleTime: 60 * 1000,
+        staleTime: STALE_TIME.LIST,
       },
       {
-        queryKey: [
-          'onboarding-approved-evidence',
+        queryKey: onboardingApprovedEvidenceKeys.evidence(
           params.invitationId,
           'certifications',
           orgScoped ? organizationId : 'self',
           subjectUserId,
-        ],
+        ),
         queryFn: () =>
           orgScoped
             ? certificationsApi.getUserRecords(organizationId, subjectUserId)
             : certificationsApi.getMyRecords(),
         enabled: baseEnabled,
-        staleTime: 60 * 1000,
+        staleTime: STALE_TIME.LIST,
       },
       {
-        queryKey: [
-          'onboarding-approved-evidence',
+        queryKey: onboardingApprovedEvidenceKeys.evidence(
           params.invitationId,
           'driving-license',
           orgScoped ? organizationId : 'self',
           subjectUserId,
-        ],
+        ),
         queryFn: () =>
           orgScoped
             ? drivingLicensesApi.getUserLicense(organizationId, subjectUserId)
             : drivingLicensesApi.getMyLicense(),
         enabled: baseEnabled,
-        staleTime: 60 * 1000,
+        staleTime: STALE_TIME.LIST,
       },
     ],
   });

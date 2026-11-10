@@ -14,7 +14,7 @@ Client ──▶ Proxy ──▶ Backend-Instanz 1..N ──┬─▶ Postgres (
 
 Daraus folgen Regeln für neuen Code:
 
-- Kein JVM-lokaler Zustand, der Korrektheit beeinflusst (keine lokalen Caches, `synchronized`-Sperren oder Maps mit fachlichem Inhalt). Ausnahme ist verbindungsgebundener Zustand wie die WebSocket-Sessions (`RealtimeSessionRegistry`).
+- Kein JVM-lokaler Zustand, der Korrektheit beeinflusst (keine lokalen Caches, `synchronized`-Sperren oder Maps mit fachlichem Inhalt). Ausnahme ist verbindungsgebundener Zustand wie die WebSocket-Sessions (`RealtimeSessionRegistry`). Zähler wie das KI-Rate-Limit liegen in Redis.
 - Jeder `@Scheduled`-Job trägt `@SchedulerLock`.
 - Kein Daten-Seed oder Backfill beim Start und keiner im Request-Pfad. Die Mandanten-Baseline wird beim Anlegen des Mandanten geseedet; Buckets legt der Start einmalig an.
 - Zustellung (Mail, S3-Löschung, IdP-Deprovisionierung) läuft über Outbox-Tabellen.
@@ -27,7 +27,8 @@ Daraus folgen Regeln für neuen Code:
 | Realtime | `RealtimePublisher` schreibt in den Redis-Channel `emberone:realtime`; jede Instanz liefert über ihren lokalen STOMP-Broker an ihre Clients aus | [realtime.md](realtime.md) |
 | Geplante Jobs | ShedLock (JDBC-Tabelle `shedlock`), `@SchedulerLock` pro Job, `defaultLockAtMostFor = PT30M` | [scheduled-jobs.md](scheduled-jobs.md) |
 | Outboxen | Mail (`ntf_deliveries`), S3-Löschung (`obj_pending_deletions`), IdP-Deprovisionierung (`idm_users`): Zeilen werden mit `FOR UPDATE SKIP LOCKED` gesichert abgeholt, I/O läuft außerhalb der Transaktion | [notification-system.md](notification-system.md), [identity-provider-authentik.md](identity-provider-authentik.md) |
-| Cache | Redis ist der einzige Cache (`CacheConfig`, TTL je Cache). Evictions laufen nach Commit; ein Redis-Fehler wird als Cache-Miss behandelt (`ResilientCacheErrorHandler`) | [caching.md](caching.md) |
+| Cache | Redis ist der einzige Cache (`CacheConfig`, TTL je Cache in `emberone.cache.ttl`). Evictions laufen nach Commit; ein Redis-Fehler wird als Cache-Miss behandelt (`ResilientCacheErrorHandler`) | [caching.md](caching.md) |
+| KI-Rate-Limit | `AiRateLimiter` zählt je User in Redis (Lua-Skript, Fenster von einer Minute), gilt damit über alle Instanzen; bei Redis-Ausfall fail-open | [caching.md](caching.md), [ai-assistance.md](ai-assistance.md) |
 | Mandanten-Baseline | `TenantBaselineSyncService` läuft beim Anlegen des Mandanten, serialisiert über einen Postgres-Advisory-Lock pro Mandant | [standard.md](standard.md) |
 | Deaktivierte User | Prüfung pro Request über den Redis-Cache `userActive`, Eviction bei `UserDeactivatedEvent` | [caching.md](caching.md) |
 | Dateien | Downloads streamen aus S3 (`ResponseInputStream`) und werden nach Ende der Transaktion ausgeliefert; Buckets werden einmal beim Start angelegt (Fehler werden geloggt, der Start läuft weiter) | [attachment-and-document-promotion.md](attachment-and-document-promotion.md) |

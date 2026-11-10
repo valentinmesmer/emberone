@@ -13,7 +13,7 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { appointmentAttachmentApi } from '@/lib/api/appointmentAttachment';
-import { appointmentAttachmentKeys, appointmentKeys } from '@/lib/store';
+import { invalidateAppointmentAttachments } from '@/lib/store';
 import { buildRecurrenceRequest } from '@/lib/utils/recurrence';
 import { AudienceScope, type CreateAppointmentRequest } from '@/types/appointment';
 import type { OrganizationGroupDto } from '@/types/organizationGroup';
@@ -68,10 +68,7 @@ export function CreateAppointmentModal({
     for (const file of files) {
       await appointmentAttachmentApi.upload(organizationId, appointmentId, file);
     }
-    await queryClient.invalidateQueries({
-      queryKey: appointmentAttachmentKeys.list(organizationId, appointmentId),
-    });
-    await queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+    await invalidateAppointmentAttachments(queryClient, organizationId, appointmentId);
   };
 
   const handleSubmit = async () => {

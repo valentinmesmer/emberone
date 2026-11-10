@@ -6,7 +6,7 @@ Design-Notizen für Read-Model und Cache der Org-Permission-Map. Package root: `
 
 | Konzept | Rolle |
 |---------|-------|
-| **CachedUserPermissionLoader** | `@Cacheable(USER_PERMISSIONS)`: aktive Group- ∩ Org-Memberships → Mappings → `PermissionType`s |
+| **UserPermissionCache** | `@Cacheable(USER_PERMISSIONS)`: aktive Group- ∩ Org-Memberships → Mappings → `PermissionType`s |
 | **UserPermissionDto** | `Map<organizationId, List<PermissionType>>` + `tenantLocale` |
 | **RequestScopedUserPermissions** | Request-Cache vor `OrganizationAccessService` (liegt in `platform.security`) |
 
@@ -19,15 +19,15 @@ UserPermissionsChangedEvent   OrganizationGroupPermissionsChangedEvent
         │                            │
         └────────────┬───────────────┘
                      ▼
-        PermissionCacheEvictionListener
+        UserPermissionCacheEvictionListener
                      │
                      ▼
-CachedUserPermissionLoader → Self API → Frontend usePermissions()
+UserPermissionCache → Self API → Frontend usePermissions()
 ```
 
 | Änderung | Event | Eviction |
 |----------|-------|----------|
-| Org-/Gruppen-Mitgliedschaft | `UserPermissionsChangedEvent` | `PermissionCacheEvictionListener` → dieser User |
+| Org-/Gruppen-Mitgliedschaft | `UserPermissionsChangedEvent` | `UserPermissionCacheEvictionListener` → dieser User |
 | Org-Gruppe ↔ Permission-Group-Mapping | `OrganizationGroupPermissionsChangedEvent` | aktive Mitglieder der Org-Gruppe |
 | Permission-Group-Inhalt | `PermissionGroupPermissionsChangedEvent` | aktive Mitglieder gemappter Org-Gruppen |
 
@@ -43,7 +43,6 @@ CachedUserPermissionLoader → Self API → Frontend usePermissions()
 | `PermissionType`-Enum | `permission` |
 | PermissionGroups / Mappings | `permissiongroup` |
 | Granting / Schreib-APIs | Group-Mappings, Admin-Standards |
-| Cache-Eviction-Listener | `permission/cache/PermissionCacheEvictionListener` |
 | AuthZ-Entscheidungen | Access-Services hinter `SecurityService` |
 
 ## Invarianten & Fallstricke
@@ -56,8 +55,8 @@ CachedUserPermissionLoader → Self API → Frontend usePermissions()
 
 | Thema | Ort |
 |-------|-----|
-| Loader | `userpermission/cache/CachedUserPermissionLoader.java` |
+| Loader | `userpermission/cache/UserPermissionCache.java` |
 | Service | `userpermission/service/UserPermissionService.java` |
 | Self | `userpermission/controller/SelfPermissionController.java` |
 | DTO | `userpermission/dto/UserPermissionDto.java` |
-| Eviction | `permission/cache/PermissionCacheEvictionListener.java` |
+| Eviction | `userpermission/cache/UserPermissionCacheEvictionListener.java` |

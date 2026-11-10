@@ -14,6 +14,7 @@ import {
   eventAttendanceListDefinition,
 } from '@/lib/list/eventAttendanceList';
 import type { ListQuery } from '@/lib/list/types';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import { eventTypeToUrlSegment } from '@/lib/utils/event';
 import type { EventType } from '@/types/event';
@@ -90,7 +91,7 @@ export function useEventAttendances(
     queryFn: (query) =>
       eventApi.listEventAttendances(organizationId ?? 0, category, eventId ?? 0, query),
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll: options?.fetchAll ?? true,
   });
 }
@@ -118,7 +119,7 @@ export function useMyEventAttendanceForEventIds(
     queryKey: eventAttendanceKeys.meBatch(organizationId ?? 0, category, eventIds),
     queryFn: () => eventApi.getMyEventAttendances(organizationId ?? 0, category, [...eventIds]),
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 
   return useMemo(() => {

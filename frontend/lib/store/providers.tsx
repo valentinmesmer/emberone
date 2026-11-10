@@ -11,9 +11,13 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useEffect } from 'react';
+import { revokeResolvedImageOnRemoval } from './queries/profileMedia';
 import { queryClient } from './query-client';
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => queryClient.getQueryCache().subscribe(revokeResolvedImageOnRemoval), []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {children}

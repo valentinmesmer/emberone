@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class TenantLocaleCacheEvictionListener {
+public class TenantCacheEvictionListener {
 
     private final TenantLocaleCacheEvictor tenantLocaleCacheEvictor;
     private final TenantFederalStateCacheEvictor tenantFederalStateCacheEvictor;

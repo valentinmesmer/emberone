@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,9 +46,4 @@ public class StandardOrganizationIdCache {
         }
         return new OrganizationIdsForStandardCacheValue(new ArrayList<>(orderedIds.keySet()));
     }
-
-    @CacheEvict(
-            cacheNames = CacheNames.ORGANIZATIONS_FOR_STANDARD,
-            key = "#tenantId + ':' + #standardId")
-    public void evict(Long tenantId, Long standardId) {}
 }

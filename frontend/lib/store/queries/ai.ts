@@ -7,6 +7,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { aiApi } from '@/lib/api/ai';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { useAppMutation } from '@/lib/store/useAppMutation';
 import type { AiExtractionTarget, AiProofType, HelpChatMessageDto } from '@/types/ai';
 
@@ -22,7 +23,7 @@ export function useAiCapabilities() {
     queryKey: aiKeys.capabilities(),
     queryFn: () => aiApi.getCapabilities(),
     enabled: hasEmberOneUserId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
     // A failing capabilities call must never break the app: AI simply stays hidden.
     retry: false,
   });

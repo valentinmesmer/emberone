@@ -17,6 +17,7 @@ import {
 import { trainingCourseRecordListDefinition } from '@/lib/list/trainingCourseRecordList';
 import { useListState, useUrlSyncedListState } from '@/lib/list/useListState';
 import { invalidateQualificationStatusForOrganization } from '@/lib/store/queries/qualifications';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 
 export const trainingCourseKeys = {
@@ -51,7 +52,7 @@ export function useMyTrainingCourseRecords(enabled = true) {
     queryKey: [...trainingCourseKeys.myRecords(), 'all'] as const,
     queryFn: () => fetchAllPageContent((page) => trainingCoursesApi.getMyRecords({ page })),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -65,7 +66,7 @@ export function useMyTrainingCourseRecordList({
     listQuery,
     queryFn: (query) => trainingCoursesApi.getMyRecords(query),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -83,7 +84,7 @@ export function useUserTrainingCourseRecordList({
     listQuery,
     queryFn: (query) => trainingCoursesApi.getUserRecords(organizationId, userId, query),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -93,7 +94,7 @@ export function useMyAvailableTrainingCourseTypes(enabled = true) {
     queryKey: trainingCourseKeys.myAvailableTypes(),
     queryFn: () => trainingCoursesApi.getMyAvailableTypes(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -109,7 +110,7 @@ export function useUserTrainingCourseRecords(
         trainingCoursesApi.getUserRecords(organizationId, userId, { page }),
       ),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -122,7 +123,7 @@ export function useUserTrainingCoursePendingSubmissions(
     queryKey: trainingCourseKeys.pendingSubmissions(organizationId, userId),
     queryFn: () => trainingCoursesApi.getPendingSubmissions(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -135,7 +136,7 @@ export function useOrgTrainingCourseCatalog(
     queryKey: trainingCourseKeys.catalog(organizationId, userId),
     queryFn: () => trainingCoursesApi.getAvailableTypes(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 

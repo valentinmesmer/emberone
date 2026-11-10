@@ -26,6 +26,7 @@ import { trainingCourseKeys } from '@/lib/store/queries/trainingCourses';
 import { userDocumentKeys } from '@/lib/store/queries/userDocuments';
 import { userMembershipOverviewKeys } from '@/lib/store/queries/userMembershipOverview';
 import { userKeys } from '@/lib/store/queries/users';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import { workflowPromotionKey } from '@/lib/utils/workflowDocumentPromotion';
 import {
@@ -93,7 +94,7 @@ export function useMyWorkflowOpenedPage(options?: {
     queryFn: (query) => workflowsApi.listMyOpenedWorkflows(toWorkflowListRequest(query)),
     fetchAll: options?.fetchAll,
     enabled: options?.enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -109,7 +110,7 @@ export function useMyWorkflowParticipationsPage(options?: {
     queryFn: (query) => workflowsApi.listMyWorkflowParticipations(toWorkflowListRequest(query)),
     fetchAll: options?.fetchAll,
     enabled: options?.enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -120,7 +121,7 @@ export function useMyWorkflowPendingCount(options?: { enabled?: boolean }) {
     queryKey: workflowKeys.pendingCount(),
     queryFn: () => workflowsApi.getMyWorkflowPendingCount(),
     enabled: hasEmberOneUserId && (options?.enabled ?? true),
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
     refetchInterval,
     select: (data) => data.count,
   });
@@ -130,7 +131,7 @@ export function useMyBeginnableWorkflowTypes() {
   return useQuery({
     queryKey: workflowKeys.beginnableTypes(),
     queryFn: () => workflowsApi.getMyBeginnableWorkflowTypes(),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -139,7 +140,7 @@ export function useWorkflowOpenState(workflowTypeId: WorkflowTypeId, enabled = t
     queryKey: workflowKeys.openState(workflowTypeId),
     queryFn: () => workflowsApi.getWorkflowOpenState(workflowTypeId),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -151,7 +152,7 @@ export function useWorkflowOpenConcurrencyKeys(workflowTypeId: WorkflowTypeId, e
       return items[0]?.keys ?? [];
     },
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -165,7 +166,7 @@ export function useBlockedBeginnableWorkflowTypeIds(types: WorkflowTypeCatalogDt
     queries: singletonTypes.map((type) => ({
       queryKey: workflowKeys.openState(type.workflowTypeId),
       queryFn: () => workflowsApi.getWorkflowOpenState(type.workflowTypeId as WorkflowTypeId),
-      staleTime: 30 * 1000,
+      staleTime: STALE_TIME.LIVE,
     })),
   });
   return useMemo(() => {
@@ -184,7 +185,7 @@ export function useWorkflow(workflowId: number | null | undefined) {
     queryKey: workflowKeys.detail(workflowId ?? -1),
     queryFn: () => workflowsApi.getWorkflow(workflowId ?? 0),
     enabled: workflowId != null && workflowId > 0,
-    staleTime: 15 * 1000,
+    staleTime: STALE_TIME.REALTIME,
   });
 }
 
@@ -193,7 +194,7 @@ export function useWorkflowAttachments(workflowId: number | null | undefined) {
     queryKey: workflowKeys.attachments(workflowId ?? -1),
     queryFn: () => workflowsApi.listWorkflowAttachments(workflowId ?? 0),
     enabled: workflowId != null && workflowId > 0,
-    staleTime: 15 * 1000,
+    staleTime: STALE_TIME.REALTIME,
   });
 }
 
@@ -205,7 +206,7 @@ export function useWorkflowDocumentPromotionPreview(
     queryKey: workflowKeys.documentPromotionPreview(workflowId ?? -1),
     queryFn: () => workflowsApi.getDocumentPromotionPreview(workflowId ?? 0),
     enabled: enabled && workflowId != null && workflowId > 0,
-    staleTime: 10 * 1000,
+    staleTime: STALE_TIME.REALTIME,
   });
 }
 
@@ -265,7 +266,7 @@ export function useWorkflowComments(workflowId: number | null | undefined) {
     queryKey: workflowKeys.comments(workflowId ?? -1),
     queryFn: () => workflowsApi.listWorkflowComments(workflowId ?? 0),
     enabled: workflowId != null && workflowId > 0,
-    staleTime: 10 * 1000,
+    staleTime: STALE_TIME.REALTIME,
   });
 }
 
@@ -292,9 +293,14 @@ export function useUploadWorkflowCommentAttachment() {
   });
 }
 
+/**
+ * Everything that lists or counts workflows or decides what may be started. Detail, comment and
+ * attachment queries of single workflows are not touched; mutations invalidate those by id.
+ */
 function invalidateWorkflowLists(queryClient: ReturnType<typeof useQueryClient>) {
   void queryClient.invalidateQueries({ queryKey: workflowKeys.listRoot() });
   void queryClient.invalidateQueries({ queryKey: workflowKeys.pendingCount() });
+  void queryClient.invalidateQueries({ queryKey: workflowKeys.beginnableTypes() });
   void queryClient.invalidateQueries({
     predicate: (query) =>
       Array.isArray(query.queryKey) &&
@@ -466,7 +472,6 @@ export function useSubmitNameChangeWorkflow() {
     },
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
       }
@@ -498,7 +503,6 @@ export function useSubmitCertificationRecordWorkflow() {
     },
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       void queryClient.invalidateQueries({ queryKey: certificationKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
@@ -531,7 +535,6 @@ export function useSubmitTrainingCourseRecordWorkflow() {
     },
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       void queryClient.invalidateQueries({ queryKey: trainingCourseKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
@@ -567,7 +570,6 @@ export function useSubmitRankRequestWorkflow() {
     },
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       void queryClient.invalidateQueries({ queryKey: rankKeys.myRank() });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
@@ -600,7 +602,6 @@ export function useSubmitDrivingLicenseRecordWorkflow() {
     },
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       void queryClient.invalidateQueries({ queryKey: drivingLicenseKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
@@ -634,7 +635,6 @@ export function useSubmitUserDocumentSubmissionWorkflow() {
     },
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       void queryClient.invalidateQueries({ queryKey: userDocumentKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
@@ -674,7 +674,6 @@ export function useSubmitAddressChangeWorkflow() {
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
       void queryClient.invalidateQueries({ queryKey: userKeys.self() });
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
       }
@@ -713,7 +712,6 @@ export function useSubmitOrganizationJoinRequestWorkflow() {
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
       void queryClient.invalidateQueries({ queryKey: organizationKeys.joinable() });
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
       }
@@ -753,7 +751,6 @@ export function useSubmitMainOrganizationChangeWorkflow() {
       invalidateWorkflowLists(queryClient);
       void queryClient.invalidateQueries({ queryKey: organizationKeys.mainChangeTargets() });
       void queryClient.invalidateQueries({ queryKey: organizationKeys.myOrganizations() });
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
       }
@@ -793,7 +790,6 @@ export function useSubmitOrganizationLeaveRequestWorkflow() {
       invalidateWorkflowLists(queryClient);
       void queryClient.invalidateQueries({ queryKey: organizationKeys.leaveTargets() });
       void queryClient.invalidateQueries({ queryKey: organizationKeys.myOrganizations() });
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
       }
@@ -833,7 +829,6 @@ export function useSubmitOrganizationGroupLeaveRequestWorkflow() {
       invalidateWorkflowLists(queryClient);
       void queryClient.invalidateQueries({ queryKey: organizationKeys.groupLeaveTargets() });
       void queryClient.invalidateQueries({ queryKey: organizationKeys.myOrganizations() });
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
       }
@@ -873,7 +868,6 @@ export function useSubmitOrganizationGroupJoinRequestWorkflow() {
       invalidateWorkflowLists(queryClient);
       void queryClient.invalidateQueries({ queryKey: organizationKeys.groupJoinTargets() });
       void queryClient.invalidateQueries({ queryKey: organizationKeys.myOrganizations() });
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);
       }
@@ -888,7 +882,6 @@ export function useSubmitOnboardingSubmissionWorkflow() {
       workflowsApi.openOnboardingSubmissionWorkflow(invitationId),
     onSuccess: (data) => {
       invalidateWorkflowLists(queryClient);
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
       void queryClient.invalidateQueries({ queryKey: onboardingInvitationKeys.all });
       if (isWorkflowClosed(data)) {
         invalidateAfterWorkflowClose(queryClient);

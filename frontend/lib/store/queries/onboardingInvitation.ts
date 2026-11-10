@@ -10,6 +10,7 @@ import { ApiRequestError } from '@/lib/api/client';
 import { onboardingInvitationApi } from '@/lib/api/onboardingInvitation';
 import type { OnboardingStepType } from '@/lib/api/standards';
 import type { ListQuery } from '@/lib/list/types';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type {
   OnboardingInvitationAccess,
@@ -80,7 +81,7 @@ export function useOnboardingInvitationList(
     listQuery,
     queryFn: (query) => onboardingInvitationApi.listForOrganization(organizationId ?? 0, query),
     enabled: !!organizationId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -89,7 +90,7 @@ export function useSelfOnboardingInvitations(options?: { enabled?: boolean }) {
     queryKey: onboardingInvitationKeys.self(),
     queryFn: () => onboardingInvitationApi.listForSelf(),
     enabled: options?.enabled ?? true,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -102,7 +103,7 @@ export function useSelfPendingOnboardingInvitations(options?: { enabled?: boolea
       return invitations.filter((invitation) => invitation.status === 'OPEN');
     },
     enabled: options?.enabled ?? true,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -111,7 +112,7 @@ export function useSelfOnboardingInvitationDetail(invitationId: number | null | 
     queryKey: onboardingInvitationKeys.selfDetail(invitationId ?? 0),
     queryFn: () => onboardingInvitationApi.getSelfDetail(invitationId ?? 0),
     enabled: !!invitationId,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -124,7 +125,7 @@ export function useOrganizationUserOnboardingDetail(
     queryFn: () =>
       onboardingInvitationApi.getOrganizationUserOnboardingDetail(organizationId ?? 0, userId ?? 0),
     enabled: !!organizationId && !!userId,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
     retry: (failureCount, error) => {
       if (error instanceof ApiRequestError && error.status === 404) return false;
       return failureCount < 2;
@@ -140,7 +141,7 @@ export function useOrganizationOnboardingAvailable(
     queryKey: onboardingInvitationKeys.organizationOnboardingAvailable(organizationId ?? 0),
     queryFn: () => onboardingInvitationApi.getOrganizationOnboardingAvailable(organizationId ?? 0),
     enabled: enabled && !!organizationId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -153,7 +154,7 @@ export function useOrganizationOnboardingInvitationDetail(
     queryFn: () =>
       onboardingInvitationApi.getOrganizationDetail(organizationId ?? 0, invitationId ?? 0),
     enabled: !!organizationId && !!invitationId,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -339,7 +340,7 @@ export function useAdminOnboardingInvitationDetail(
         invitationId ?? 0,
       ),
     enabled: !!tenantId && !!organizationId && !!invitationId,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -358,7 +359,7 @@ export function useAdminUserOnboardingInvitation(
     queryFn: () =>
       adminApi.getAdminUserOnboardingInvitation(tenantId ?? 0, organizationId ?? 0, userId ?? 0),
     enabled: enabled && !!tenantId && !!organizationId && !!userId,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
     retry: (failureCount, error) => {
       if (error instanceof ApiRequestError && error.status === 404) return false;
       return failureCount < 2;
@@ -381,7 +382,7 @@ export function useAdminOnboardingRecordingAvailable(
     queryFn: () =>
       adminApi.getOnboardingRecordingAvailable(tenantId ?? 0, organizationId ?? 0, userId ?? 0),
     enabled: enabled && !!tenantId && !!organizationId && !!userId,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 

@@ -12,6 +12,7 @@ import {
   type TenantDto,
 } from '@/lib/api/admin';
 import type { ListQuery } from '@/lib/list/types';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 
 export const adminListKeys = {
@@ -42,7 +43,7 @@ export function useAdminUsers({
     listQuery: listQuery as AdminListRequest,
     queryFn: (query) => adminApi.listAdminUsersPage(query),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -52,7 +53,7 @@ export function useAdminUser(userId: number, enabled = true) {
     queryKey: adminListKeys.user(userId),
     queryFn: () => adminApi.getAdminUser(userId),
     enabled: enabled && userId > 0,
-    staleTime: 0,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -68,6 +69,6 @@ export function useAdminTenants({
     listQuery: listQuery as AdminListRequest,
     queryFn: (query) => adminApi.listTenantsPage(query),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }

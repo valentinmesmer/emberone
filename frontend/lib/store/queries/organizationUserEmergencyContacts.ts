@@ -6,6 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { emergencyContactApi } from '@/lib/api/emergencyContact';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import type {
   CreateEmergencyContactRequest,
   UpdateEmergencyContactRequest,
@@ -25,7 +26,7 @@ export function useOrganizationUserEmergencyContacts(
     queryKey: organizationUserEmergencyContactKeys.list(organizationId ?? 0, userId ?? 0),
     queryFn: () => emergencyContactApi.getForOrganizationUser(organizationId ?? 0, userId ?? 0),
     enabled: !!organizationId && !!userId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 

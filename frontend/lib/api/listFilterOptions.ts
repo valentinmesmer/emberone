@@ -143,62 +143,6 @@ export type ListFilterOptionsQueryKeySource =
   | OrganizationCourseOfferingListFilterOptionsContext
   | OrganizationEventListFilterOptionsContext;
 
-export function listFilterOptionsQueryKey(
-  source: ListFilterOptionsQueryKeySource,
-): readonly unknown[] {
-  if (typeof source === 'string') {
-    return ['list-filter-options', source];
-  }
-  if (source.scope === 'organizationUserDocuments') {
-    return [
-      'list-filter-options',
-      'organizationUserDocuments',
-      source.organizationId,
-      source.userId,
-    ];
-  }
-  if (source.scope === 'organizationUserTimeEntries') {
-    return [
-      'list-filter-options',
-      'organizationUserTimeEntries',
-      source.organizationId,
-      source.userId,
-    ];
-  }
-  if (source.scope === 'organizationUserAbsences') {
-    return [
-      'list-filter-options',
-      'organizationUserAbsences',
-      source.organizationId,
-      source.userId,
-    ];
-  }
-  if (source.scope === 'organizationUserWorkflows') {
-    return [
-      'list-filter-options',
-      'organizationUserWorkflows',
-      source.organizationId,
-      source.userId,
-    ];
-  }
-  if (source.scope === 'organizationAppointments') {
-    return ['list-filter-options', 'organizationAppointments', source.organizationId];
-  }
-  if (source.scope === 'organizationAbsences') {
-    return ['list-filter-options', 'organizationAbsences', source.organizationId];
-  }
-  if (source.scope === 'organizationWorkflows') {
-    return ['list-filter-options', 'organizationWorkflows', source.organizationId];
-  }
-  if (source.scope === 'organizationCertifications') {
-    return ['list-filter-options', 'organizationCertifications', source.organizationId];
-  }
-  if (source.scope === 'organizationEvents') {
-    return ['list-filter-options', 'organizationEvents', source.organizationId, source.category];
-  }
-  return ['list-filter-options', 'organization', source.organizationId];
-}
-
 export async function fetchListFilterOptionsForSource(
   source: FixedListFilterOptionsSourceId,
 ): Promise<ListFilterOptionsResponse> {

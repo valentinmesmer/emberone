@@ -7,6 +7,7 @@
 import { workflowsApi } from '@/lib/api/workflows';
 import type { ListQuery } from '@/lib/list/types';
 import { workflowListOpenQuery } from '@/lib/list/workflowList';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 
 export const organizationOpenWorkflowKeys = {
@@ -33,6 +34,6 @@ export function useOrganizationOpenWorkflows(
     queryFn: (query) => workflowsApi.listOpenForOrganization(orgId, query),
     enabled: organizationId != null && (options?.enabled ?? true),
     fetchAll: options?.fetchAll ?? false,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }

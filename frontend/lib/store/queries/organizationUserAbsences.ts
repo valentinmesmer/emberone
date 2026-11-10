@@ -9,6 +9,8 @@ import { type AbsenceListRequest, absenceApi } from '@/lib/api/absence';
 import { absenceOrgUserListDefinition } from '@/lib/list/absenceList';
 import type { ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
+import { absenceKeys } from '@/lib/store/queries/absences';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type { CreateUserAbsenceRequest, UpdateUserAbsenceRequest } from '@/types/absence';
 
@@ -44,7 +46,7 @@ export function useOrganizationUserAbsences({
     listQuery: listQuery as AbsenceListRequest,
     queryFn: (query) => absenceApi.listForOrganizationUser(orgId, uid, query),
     enabled: !!organizationId && !!userId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll,
   });
 }
@@ -58,7 +60,7 @@ export function useCreateOrganizationUserAbsence(organizationId: number, userId:
       void queryClient.invalidateQueries({
         queryKey: organizationUserAbsenceKeys.list(organizationId, userId),
       });
-      void queryClient.invalidateQueries({ queryKey: ['user-absences'] });
+      void queryClient.invalidateQueries({ queryKey: absenceKeys.all });
     },
   });
 }
@@ -72,7 +74,7 @@ export function useUpdateOrganizationUserAbsence(organizationId: number, userId:
       void queryClient.invalidateQueries({
         queryKey: organizationUserAbsenceKeys.list(organizationId, userId),
       });
-      void queryClient.invalidateQueries({ queryKey: ['user-absences'] });
+      void queryClient.invalidateQueries({ queryKey: absenceKeys.all });
     },
   });
 }
@@ -86,7 +88,7 @@ export function useDeleteOrganizationUserAbsence(organizationId: number, userId:
       void queryClient.invalidateQueries({
         queryKey: organizationUserAbsenceKeys.list(organizationId, userId),
       });
-      void queryClient.invalidateQueries({ queryKey: ['user-absences'] });
+      void queryClient.invalidateQueries({ queryKey: absenceKeys.all });
     },
   });
 }

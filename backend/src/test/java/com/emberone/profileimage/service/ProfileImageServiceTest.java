@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.emberone.platform.security.TenantContextHolder;
@@ -151,11 +152,11 @@ class ProfileImageServiceTest {
         when(storageService.downloadProfileImageWithContentType(key))
                 .thenReturn(
                         new ObjectStorageService.ProfileImageObject(
-                                new ByteArrayInputStream("image".getBytes()),
-                                MediaType.IMAGE_PNG,
-                                "\"etag\""));
+                                new ByteArrayInputStream("image".getBytes()), MediaType.IMAGE_PNG));
 
-        assertThat(service.downloadProfileImage(1L).contentType()).isEqualTo(MediaType.IMAGE_PNG);
+        ProfileImageService.ProfileImageDownload download = service.downloadProfileImage(1L);
+        assertThat(download.contentType()).isEqualTo(MediaType.IMAGE_PNG);
+        assertThat(download.etag()).isEqualTo(service.profileImageEtag(1L));
         service.deleteProfileImage(1L);
         verify(deletionOutboxService).enqueueObjectDeletion(7L, "profiles", key);
         assertThat(image.getProfileImageUrl()).isNull();
@@ -166,5 +167,40 @@ class ProfileImageServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.downloadProfileImage(1L))
                 .isInstanceOf(ProfileImageNotFoundException.class);
+    }
+
+    @Test
+    void etagChangesWithTheStoredObjectAndNeedsNoStorageAccess() {
+        UserProfileImage image =
+                UserProfileImage.builder()
+                        .userId(1L)
+                        .tenantId(7L)
+                        .profileImageUrl("tenants/7/users/1/profile-image/a.png")
+                        .build();
+        when(tokenService.getTenantId()).thenReturn(7L);
+        when(repository.findById(1L)).thenReturn(Optional.of(image));
+
+        String first = service.profileImageEtag(1L);
+        assertThat(service.profileImageEtag(1L)).isEqualTo(first);
+        image.setProfileImageUrl("tenants/7/users/1/profile-image/b.png");
+
+        assertThat(service.profileImageEtag(1L)).isNotEqualTo(first);
+        verifyNoInteractions(storageService);
+    }
+
+    @Test
+    void etagRejectsForeignObject() {
+        when(tokenService.getTenantId()).thenReturn(7L);
+        when(repository.findById(1L))
+                .thenReturn(
+                        Optional.of(
+                                UserProfileImage.builder()
+                                        .userId(1L)
+                                        .tenantId(7L)
+                                        .profileImageUrl("tenants/7/users/2/profile-image/x.png")
+                                        .build()));
+
+        assertThatThrownBy(() -> service.profileImageEtag(1L))
+                .isInstanceOf(SecurityException.class);
     }
 }

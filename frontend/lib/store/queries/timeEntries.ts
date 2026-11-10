@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { type TimeEntryListRequest, timeEntryApi } from '@/lib/api/timeEntry';
 import type { ListQuery } from '@/lib/list/types';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type {
   CreateUserTimeEntryRequest,
@@ -42,7 +43,7 @@ export function useUserTimeEntries({
     listQuery: listQuery as TimeEntryListRequest,
     queryFn: (query) => timeEntryApi.listSelf(query),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll,
   });
 }
@@ -64,7 +65,7 @@ export function useUserTimeEntry(
     queryKey: timeEntryKeys.selfDetail(entryId ?? 0),
     queryFn: () => timeEntryApi.getSelf(entryId ?? 0),
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -78,7 +79,7 @@ export function useOrganizationTimeEntry(
     queryKey: timeEntryKeys.organizationDetail(organizationId ?? 0, entryId ?? 0),
     queryFn: () => timeEntryApi.getForOrganization(organizationId ?? 0, entryId ?? 0),
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -94,7 +95,7 @@ export function useOrganizationTimeEntries({
     listQuery: listQuery as TimeEntryListRequest,
     queryFn: (query) => timeEntryApi.listForOrganization(orgId, query),
     enabled: !!organizationId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll,
   });
 }

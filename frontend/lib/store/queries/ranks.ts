@@ -10,6 +10,7 @@ import { ranksApi, type SetUserRankRequest } from '@/lib/api/ranks';
 import { organizationRankMemberListDefinition } from '@/lib/list/organizationRankMemberList';
 import type { ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 
 export const rankKeys = {
@@ -37,7 +38,7 @@ export function useMyRank(enabled = true) {
     queryKey: rankKeys.myRank(),
     queryFn: () => ranksApi.getMyRank(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -47,7 +48,7 @@ export function useMyAvailableRanks(enabled = true) {
     queryKey: rankKeys.myAvailableRanks(),
     queryFn: () => ranksApi.getMyAvailableRanks(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -57,7 +58,7 @@ export function useMyDutyFunctions(enabled = true) {
     queryKey: rankKeys.myFunctions(),
     queryFn: () => ranksApi.getMyFunctions(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -84,7 +85,7 @@ export function useOrganizationRankMembers({
     listQuery,
     queryFn: (query) => ranksApi.listOrganizationMembers(organizationId, query),
     enabled: enabled && organizationId > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
     fetchAll,
   });
 }
@@ -98,7 +99,7 @@ export function useOrganizationFunctionsOverview(
     queryKey: rankKeys.orgFunctionsOverview(organizationId, search),
     queryFn: () => ranksApi.getOrganizationFunctionsOverview(organizationId, search),
     enabled: enabled && organizationId > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -107,7 +108,7 @@ export function useOrganizationAvailableRanks(organizationId: number, enabled = 
     queryKey: rankKeys.orgAvailableRanks(organizationId),
     queryFn: () => ranksApi.getOrganizationAvailableRanks(organizationId),
     enabled: enabled && organizationId > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -116,7 +117,7 @@ export function useUserRank(organizationId: number, userId: number, enabled = tr
     queryKey: rankKeys.userRank(organizationId, userId),
     queryFn: () => ranksApi.getUserRank(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -125,7 +126,7 @@ export function useUserDutyFunctions(organizationId: number, userId: number, ena
     queryKey: rankKeys.userFunctions(organizationId, userId),
     queryFn: () => ranksApi.getUserFunctions(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 

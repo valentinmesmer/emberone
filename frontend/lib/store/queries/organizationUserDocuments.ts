@@ -10,6 +10,7 @@ import { type UserDocumentListRequest, userDocumentApi } from '@/lib/api/userDoc
 import type { ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
 import { userDocumentOrgListDefinition } from '@/lib/list/userDocumentList';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { useAppMutation } from '@/lib/store/useAppMutation';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type {
@@ -50,7 +51,7 @@ export function useOrganizationUserDocumentList({
     listQuery: listQuery as UserDocumentListRequest,
     queryFn: (query) => userDocumentApi.listForOrganizationUser(orgId, uid, query),
     enabled: !!organizationId && !!userId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -69,7 +70,7 @@ export function useOrganizationUserDocuments(
         userDocumentApi.listForOrganizationUser(organizationId ?? 0, userId ?? 0, { page }),
       ),
     enabled: !!organizationId && !!userId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -84,7 +85,7 @@ export function useOrganizationUserDocumentTags(
     queryKey: organizationUserDocumentKeys.tags(orgId, uid),
     queryFn: () => userDocumentApi.listTagsForOrganizationUser(orgId, uid),
     enabled: !!organizationId && !!userId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 

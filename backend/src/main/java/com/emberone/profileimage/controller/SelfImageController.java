@@ -13,6 +13,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -32,10 +33,9 @@ public class SelfImageController {
     }
 
     @GetMapping("/download")
-    public ResponseEntity<InputStreamResource> downloadProfileImage() {
-        ProfileImageService.ProfileImageDownload download =
-                profileImageService.downloadProfileImage(tokenService.requireUserId());
-        return ProfileImageDownloadResponses.ok(download);
+    public ResponseEntity<InputStreamResource> downloadProfileImage(WebRequest request) {
+        return ProfileImageDownloadResponses.respond(
+                profileImageService, tokenService.requireUserId(), request);
     }
 
     @DeleteMapping("/delete")

@@ -19,6 +19,7 @@ export { operationEventListUnfilteredQuery, serviceEventListUnfilteredQuery };
 
 import { type EventListRequest, eventApi } from '@/lib/api/event';
 import { createInitialListQueryState, toListQuery, useUrlSyncedListState } from '@/lib/list';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 
 export const eventKeys = {
@@ -60,7 +61,7 @@ export function useServiceEvents(
     listQuery,
     queryFn: (query) => eventApi.listServiceEvents(organizationId ?? 0, query),
     enabled: !!organizationId && canFetch,
-    staleTime: 2 * 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll: options?.fetchAll,
   });
 }
@@ -76,7 +77,7 @@ export function useOperationEvents(
     listQuery,
     queryFn: (query) => eventApi.listOperationEvents(organizationId ?? 0, query),
     enabled: !!organizationId && canFetch,
-    staleTime: 2 * 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll: options?.fetchAll,
   });
 }
@@ -95,7 +96,7 @@ export function useServiceEvent(
     queryKey: eventKeys.serviceDetail(organizationId ?? 0, eventId ?? 0),
     queryFn: () => eventApi.getServiceEvent(organizationId ?? 0, eventId ?? 0),
     enabled,
-    staleTime: 2 * 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -109,7 +110,7 @@ export function useOperationEvent(
     queryKey: eventKeys.operationDetail(organizationId ?? 0, eventId ?? 0),
     queryFn: () => eventApi.getOperationEvent(organizationId ?? 0, eventId ?? 0),
     enabled,
-    staleTime: 2 * 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 

@@ -9,6 +9,7 @@ import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { type TodoListRequest, todosApi } from '@/lib/api/todos';
 import type { ListQuery } from '@/lib/list/types';
 import { useRealtimePollingFallback } from '@/lib/realtime/useRealtimePollingFallback';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type { TodoDto } from '@/types/todo';
 
@@ -31,7 +32,7 @@ export function useTodo(todoId: number, options?: { enabled?: boolean }) {
     queryKey: todoKeys.detail(todoId),
     queryFn: () => todosApi.get(todoId),
     enabled: hasEmberOneUserId && (options?.enabled ?? true),
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -42,7 +43,7 @@ export function useTodos({ listQuery, enabled = true, fetchAll = false }: UseTod
     listQuery: listQuery as TodoListRequest,
     queryFn: (query) => todosApi.list(query),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
     fetchAll,
   });
 }
@@ -57,7 +58,7 @@ export function useOpenTodoCount(options?: { enabled?: boolean }) {
       return result.count;
     },
     enabled: hasEmberOneUserId && (options?.enabled ?? true),
-    staleTime: 15 * 1000,
+    staleTime: STALE_TIME.REALTIME,
     refetchInterval,
   });
 }

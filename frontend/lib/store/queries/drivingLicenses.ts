@@ -13,6 +13,7 @@ import {
 } from '@/lib/api/drivingLicenses';
 import { organizationUserDocumentKeys } from '@/lib/store/queries/organizationUserDocuments';
 import { invalidateQualificationStatusForOrganization } from '@/lib/store/queries/qualifications';
+import { STALE_TIME } from '@/lib/store/staleTime';
 
 export const drivingLicenseKeys = {
   all: ['drivingLicenses'] as const,
@@ -32,7 +33,7 @@ export function useMyDrivingLicense(enabled = true) {
     queryKey: drivingLicenseKeys.myLicense(),
     queryFn: () => drivingLicensesApi.getMyLicense(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -42,7 +43,7 @@ export function useMyAvailableDrivingLicenseDefinitions(enabled = true) {
     queryKey: drivingLicenseKeys.myAvailableDefinitions(),
     queryFn: () => drivingLicensesApi.getMyAvailableDefinitions(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -51,7 +52,7 @@ export function useUserDrivingLicense(organizationId: number, userId: number, en
     queryKey: drivingLicenseKeys.userLicense(organizationId, userId),
     queryFn: () => drivingLicensesApi.getUserLicense(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -64,7 +65,7 @@ export function useUserDrivingLicensePendingWorkflow(
     queryKey: drivingLicenseKeys.pendingWorkflow(organizationId, userId),
     queryFn: () => drivingLicensesApi.getPendingWorkflow(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -77,7 +78,7 @@ export function useOrgDrivingLicenseCatalog(
     queryKey: drivingLicenseKeys.catalog(organizationId, userId),
     queryFn: () => drivingLicensesApi.getAvailableDefinitions(organizationId, userId),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 

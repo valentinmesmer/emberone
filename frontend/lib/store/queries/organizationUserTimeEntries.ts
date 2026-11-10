@@ -9,6 +9,8 @@ import { type TimeEntryListRequest, timeEntryApi } from '@/lib/api/timeEntry';
 import { timeEntryOrgUserListDefinition } from '@/lib/list/timeEntryList';
 import type { ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
+import { timeEntryKeys } from '@/lib/store/queries/timeEntries';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type {
   CreateUserTimeEntryRequest,
@@ -48,7 +50,7 @@ export function useOrganizationUserTimeEntries({
     listQuery: listQuery as TimeEntryListRequest,
     queryFn: (query) => timeEntryApi.listForOrganizationUser(orgId, uid, query),
     enabled: !!organizationId && !!userId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll,
   });
 }
@@ -60,7 +62,7 @@ export function useCreateOrganizationUserTimeEntry(organizationId: number, userI
       timeEntryApi.createForOrganizationUser(organizationId, userId, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: organizationUserTimeEntryKeys.all });
-      void queryClient.invalidateQueries({ queryKey: ['user-time-entries'] });
+      void queryClient.invalidateQueries({ queryKey: timeEntryKeys.all });
     },
   });
 }
@@ -72,7 +74,7 @@ export function useUpdateOrganizationUserTimeEntry(organizationId: number, userI
       timeEntryApi.updateForOrganizationUser(organizationId, userId, entryId, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: organizationUserTimeEntryKeys.all });
-      void queryClient.invalidateQueries({ queryKey: ['user-time-entries'] });
+      void queryClient.invalidateQueries({ queryKey: timeEntryKeys.all });
     },
   });
 }
@@ -84,7 +86,7 @@ export function useDeleteOrganizationUserTimeEntry(organizationId: number, userI
       timeEntryApi.deleteForOrganizationUser(organizationId, userId, entryId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: organizationUserTimeEntryKeys.all });
-      void queryClient.invalidateQueries({ queryKey: ['user-time-entries'] });
+      void queryClient.invalidateQueries({ queryKey: timeEntryKeys.all });
     },
   });
 }

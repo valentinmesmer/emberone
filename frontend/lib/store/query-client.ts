@@ -10,6 +10,7 @@
 import { MutationCache, QueryClient } from '@tanstack/react-query';
 import type { AppMutationMeta } from '@/lib/store/appMutationMeta';
 import { handleMutationCacheError } from '@/lib/store/mutationErrorToast';
+import { STALE_TIME } from '@/lib/store/staleTime';
 
 export const queryClient = new QueryClient({
   mutationCache: new MutationCache({
@@ -19,8 +20,7 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      // Cache data for 5 minutes by default
-      staleTime: 5 * 60 * 1000,
+      staleTime: STALE_TIME.STANDARD,
       // Keep unused data in cache for 10 minutes
       gcTime: 10 * 60 * 1000,
       // Retry failed requests once

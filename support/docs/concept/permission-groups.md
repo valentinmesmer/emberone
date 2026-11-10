@@ -40,7 +40,7 @@ Baseline: `LEADERSHIP` → `ADMIN`, `ALL_MEMBERS` → `STANDARD`. `ADMIN` erhäl
 
 ## Wichtige Invarianten
 
-1. Effektive Permissions = aktive Org-Mitgliedschaft ∩ aktive Gruppenmitgliedschaft ∩ Mappings → Types (`CachedUserPermissionLoader`).
+1. Effektive Permissions = aktive Org-Mitgliedschaft ∩ aktive Gruppenmitgliedschaft ∩ Mappings → Types (`UserPermissionCache`).
 2. `GroupMembershipType` (Leader/Member) wird **nicht** gelesen - Mitgliedschaft reicht.
 3. Kein separates Permissions-Table - Groups granten Types direkt (`PermissionGroupPermissionType`).
 4. JSON-Vertrag: numerische `id` (`@JsonValue`) - Backend/Frontend-Enums müssen matchen.
@@ -57,4 +57,4 @@ Baseline: `LEADERSHIP` → `ADMIN`, `ALL_MEMBERS` → `STANDARD`. `ADMIN` erhäl
 | Mappings | `permissiongroupmapping/` |
 | Org-Group-Delete → Mappings | `OrganizationGroupDeletingMappingCleanupListener` |
 | Standard-SPI | `permissiongroup/standard/PermissionGroupStandardDomain.java` |
-| Auflösung | `userpermission/cache/CachedUserPermissionLoader.java` |
+| Auflösung | `userpermission/cache/UserPermissionCache.java` |

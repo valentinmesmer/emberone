@@ -10,6 +10,7 @@ import { type AbsenceListRequest, absenceApi } from '@/lib/api/absence';
 import { absenceListDefinition, orgAbsenceListDefinition } from '@/lib/list/absenceList';
 import type { ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type { CreateUserAbsenceRequest, UpdateUserAbsenceRequest } from '@/types/absence';
 
@@ -47,7 +48,7 @@ export function useUserAbsence(
     queryKey: absenceKeys.selfDetail(absenceId ?? 0),
     queryFn: () => absenceApi.getSelf(absenceId ?? 0),
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -61,7 +62,7 @@ export function useOrganizationAbsence(
     queryKey: absenceKeys.organizationDetail(organizationId ?? 0, absenceId ?? 0),
     queryFn: () => absenceApi.getForOrganization(organizationId ?? 0, absenceId ?? 0),
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -76,7 +77,7 @@ export function useUserAbsences({
     listQuery: listQuery as AbsenceListRequest,
     queryFn: (query) => absenceApi.list(query),
     enabled: enabled && hasEmberOneUserId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll,
   });
 }
@@ -101,7 +102,7 @@ export function useOrganizationActiveAbsences({
     listQuery: listQuery as AbsenceListRequest,
     queryFn: (query) => absenceApi.listActiveForOrganization(orgId, query),
     enabled: !!organizationId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll,
   });
 }

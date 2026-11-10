@@ -21,6 +21,7 @@ import {
 import type { ListDefinition, ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
 import { useRealtimePollingFallback } from '@/lib/realtime/useRealtimePollingFallback';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import { formatLocalDateTimeFromDate } from '@/lib/utils/date';
 import type {
@@ -44,13 +45,6 @@ export const appointmentKeys = {
   myResponses: (appointmentIds: number[]) =>
     [...appointmentKeys.all, 'my-responses', appointmentIds] as const,
   unreadCounts: () => [...appointmentKeys.all, 'unread-counts'] as const,
-};
-
-/** Attachments are loaded outside the main appointment hooks - keep keys here for invalidation. */
-export const appointmentAttachmentKeys = {
-  all: ['appointment-attachments'] as const,
-  list: (organizationId: number, appointmentId: number) =>
-    [...appointmentAttachmentKeys.all, organizationId, appointmentId] as const,
 };
 
 function isAppointmentListQueryKey(queryKey: readonly unknown[]): boolean {
@@ -191,7 +185,7 @@ export function useAppointmentUnreadCount(
     queryKey: appointmentKeys.unreadCounts(),
     queryFn: () => appointmentApi.getUnreadCounts(),
     enabled: hasEmberOneUserId && organizationId != null && (options?.enabled ?? true),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     refetchInterval,
     select: (data) => ({
       count: organizationId != null ? Number(data[String(organizationId)] ?? 0) : 0,
@@ -206,7 +200,7 @@ export function useAppointmentUnreadCountsByOrganization(organizationIds: number
     queryKey: appointmentKeys.unreadCounts(),
     queryFn: () => appointmentApi.getUnreadCounts(),
     enabled: hasEmberOneUserId && organizationIds.length > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     refetchInterval,
   });
 

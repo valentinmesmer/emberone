@@ -10,24 +10,36 @@ import com.emberone.profileimage.service.ProfileImageService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.WebRequest;
 
 final class ProfileImageDownloadResponses {
 
+    private static final CacheControl CACHE_CONTROL = CacheControl.noCache().cachePrivate();
+
     private ProfileImageDownloadResponses() {}
 
-    static ResponseEntity<InputStreamResource> ok(
-            ProfileImageService.ProfileImageDownload download) {
-        ResponseEntity.BodyBuilder builder =
-                ResponseEntity.ok()
-                        .cacheControl(CacheControl.noCache().cachePrivate())
-                        .header(
-                                HttpHeaders.CONTENT_DISPOSITION,
-                                "inline; filename=\"profile-image\"")
-                        .contentType(download.contentType());
-        if (download.etag() != null) {
-            builder.eTag(download.etag());
+    /**
+     * Answers {@code 304} from the stored entity tag without reading the image from object storage;
+     * otherwise streams the image. The cache stays {@code private, no-cache}: the browser
+     * revalidates on every use, which is cheap now and picks up replaced images immediately.
+     */
+    static ResponseEntity<InputStreamResource> respond(
+            ProfileImageService service, Long userId, WebRequest request) {
+        String etag = service.profileImageEtag(userId);
+        if (request.checkNotModified(etag)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .cacheControl(CACHE_CONTROL)
+                    .eTag(etag)
+                    .build();
         }
-        return builder.body(download.resource());
+        ProfileImageService.ProfileImageDownload download = service.downloadProfileImage(userId);
+        return ResponseEntity.ok()
+                .cacheControl(CACHE_CONTROL)
+                .eTag(download.etag())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"profile-image\"")
+                .contentType(download.contentType())
+                .body(download.resource());
     }
 }

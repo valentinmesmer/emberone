@@ -9,6 +9,7 @@ package com.emberone.platform.ai;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,6 +31,7 @@ class AiGatewayTest {
 
     @Mock OpenAiCompatibleClient client;
     @Mock TokenService tokenService;
+    @Mock AiRateLimiter rateLimiter;
 
     AiProperties properties = new AiProperties();
     SimpleMeterRegistry meters = new SimpleMeterRegistry();
@@ -41,7 +43,7 @@ class AiGatewayTest {
         gateway =
                 new AiGateway(
                         new AiAvailabilityGuard(properties),
-                        new AiRateLimiter(properties),
+                        rateLimiter,
                         client,
                         tokenService,
                         JsonMapper.builder().build(),
@@ -110,14 +112,12 @@ class AiGatewayTest {
     }
 
     @Test
-    void rateLimitIsEnforcedPerUser() {
-        properties.setRateLimitPerMinute(1);
+    void rateLimitRejectionStopsTheCallBeforeTheClient() {
         when(tokenService.requireUserId()).thenReturn(1L);
-        when(client.complete(any())).thenReturn(new AiCompletionResult("{}", 0));
-
-        gateway.complete(request());
+        doThrow(new AiRateLimitException("limit")).when(rateLimiter).acquire(1L);
 
         assertThatThrownBy(() -> gateway.complete(request()))
                 .isInstanceOf(AiRateLimitException.class);
+        verify(client, never()).complete(any());
     }
 }

@@ -16,6 +16,7 @@ import type { ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
 import { resolveOrganizationSource } from '@/lib/management/workspaceOrganizations';
 import { usePermissions } from '@/lib/permission/PermissionContext';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import { PermissionTypeEnum } from '@/types/permission';
 import { useMyManagementActivations } from './management';
@@ -35,6 +36,8 @@ export const organizationKeys = {
     [...organizationKeys.all, organizationId, 'groups', 'assignable'] as const,
   audienceGroups: (organizationId: number) =>
     [...organizationKeys.all, organizationId, 'groups', 'audience'] as const,
+  groupsRoot: (organizationId: number) =>
+    [...organizationKeys.all, organizationId, 'groups'] as const,
   groups: (organizationId: number, listQuery: ListQuery) =>
     [...organizationKeys.all, organizationId, 'groups', listQuery] as const,
   groupById: (groupId: number) => [...organizationKeys.all, 'groups', groupId] as const,
@@ -53,7 +56,7 @@ export function useMyOrganizations() {
     queryKey: organizationKeys.myOrganizations(),
     queryFn: () => organizationApi.getMyOrganizations(),
     enabled: hasEmberOneUserId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -71,7 +74,7 @@ export function useJoinableOrganizations(enabled = true) {
     queryKey: organizationKeys.joinable(),
     queryFn: () => organizationApi.getJoinableOrganizations(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -81,7 +84,7 @@ export function useMainOrganizationChangeTargets(enabled = true) {
     queryKey: organizationKeys.mainChangeTargets(),
     queryFn: () => organizationApi.getMainOrganizationChangeTargets(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -91,7 +94,7 @@ export function useOrganizationLeaveTargets(enabled = true) {
     queryKey: organizationKeys.leaveTargets(),
     queryFn: () => organizationApi.getOrganizationLeaveTargets(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -101,7 +104,7 @@ export function useOrganizationGroupLeaveTargets(enabled = true) {
     queryKey: organizationKeys.groupLeaveTargets(),
     queryFn: () => organizationApi.getOrganizationGroupLeaveTargets(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -111,7 +114,7 @@ export function useOrganizationGroupJoinTargets(enabled = true) {
     queryKey: organizationKeys.groupJoinTargets(),
     queryFn: () => organizationApi.getOrganizationGroupJoinTargets(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -137,7 +140,7 @@ export function useOrganizationById(id: number | null | undefined) {
         ? managementApi.getTargetOrganization(id ?? 0)
         : organizationApi.getOrganizationById(id ?? 0),
     enabled: !!id && source !== null,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -148,7 +151,7 @@ export function useMyOrganizationGroups(organizationId: number | null | undefine
     queryKey: organizationKeys.myGroups(organizationId ?? 0),
     queryFn: () => organizationApi.getMyOrganizationGroups(organizationId ?? 0),
     enabled: hasEmberOneUserId && !!organizationId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -162,7 +165,7 @@ export function useAssignableOrganizationGroups(organizationId: number | null | 
     queryKey: organizationKeys.assignableGroups(organizationId ?? 0),
     queryFn: () => organizationApi.getAssignableOrganizationGroups(organizationId ?? 0),
     enabled: !!organizationId && !permLoading && canWrite,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -176,7 +179,7 @@ export function useAppointmentAudienceGroups(organizationId: number | null | und
     queryKey: organizationKeys.audienceGroups(organizationId ?? 0),
     queryFn: () => organizationApi.getAppointmentAudienceGroups(organizationId ?? 0),
     enabled: !!organizationId && !permLoading && canWrite,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -194,7 +197,7 @@ export function useOrganizationGroupList(
     listQuery,
     queryFn: (query) => organizationApi.listOrganizationGroups(organizationId ?? 0, query),
     enabled: !!organizationId && !permLoading && canRead,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -211,7 +214,7 @@ export function useOrganizationGroupById(
     queryKey: organizationKeys.groupById(groupId ?? 0),
     queryFn: () => organizationApi.getOrganizationGroupById(groupId ?? 0),
     enabled: !!groupId && !!organizationId && !permLoading && canRead,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -232,7 +235,7 @@ export function useOrganizationGroupMembers(
     queryFn: (query) => organizationApi.listOrganizationGroupMembers(groupId ?? 0, query),
     enabled: !!groupId && !!organizationId && !permLoading && canRead,
     fetchAll: options?.fetchAll ?? false,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 

@@ -45,6 +45,8 @@ class SelfImageControllerSecurityTest {
     @Test
     void selfProfileImageDownloadAllowedForTenantUser() throws Exception {
         when(securityService.isSelfServiceUser()).thenReturn(true);
+        when(profileImageService.profileImageEtag(SecurityTestFixtures.USER_ID))
+                .thenReturn("\"etag\"");
         when(profileImageService.downloadProfileImage(SecurityTestFixtures.USER_ID))
                 .thenReturn(
                         new ProfileImageService.ProfileImageDownload(

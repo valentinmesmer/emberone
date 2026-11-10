@@ -6,6 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { userMembershipOverviewApi } from '@/lib/api/userMembershipOverview';
+import { STALE_TIME } from '@/lib/store/staleTime';
 
 export const userMembershipOverviewKeys = {
   all: ['user-membership-overview'] as const,
@@ -24,7 +25,7 @@ export function useUserMembershipOverview(
     queryFn: () =>
       userMembershipOverviewApi.getMembershipOverview(organizationId ?? 0, userId ?? 0),
     enabled: !!organizationId && !!userId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -38,6 +39,6 @@ export function useMemberMainOrganizationChangeTargets(
     queryFn: () =>
       userMembershipOverviewApi.getMainOrganizationChangeTargets(organizationId ?? 0, userId ?? 0),
     enabled: enabled && !!organizationId && !!userId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }

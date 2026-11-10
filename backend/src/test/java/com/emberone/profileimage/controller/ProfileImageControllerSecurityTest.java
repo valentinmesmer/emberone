@@ -63,6 +63,8 @@ class ProfileImageControllerSecurityTest {
                 .when(userService)
                 .assertUserBelongsToOrganization(
                         SecurityTestFixtures.USER_ID, SecurityTestFixtures.ORG_ID);
+        when(profileImageService.profileImageEtag(SecurityTestFixtures.USER_ID))
+                .thenReturn("\"etag\"");
         when(profileImageService.downloadProfileImage(SecurityTestFixtures.USER_ID))
                 .thenReturn(
                         new ProfileImageService.ProfileImageDownload(

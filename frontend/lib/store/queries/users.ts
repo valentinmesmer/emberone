@@ -17,6 +17,7 @@ import {
   toOrganizationMemberListQuery,
 } from '@/lib/list/organizationMemberList';
 import type { ListQuery } from '@/lib/list/types';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type { CreateUserRequest, UpdatePersonalDataRequest } from '@/types/user';
 import { onboardingInvitationKeys } from './onboardingInvitation';
@@ -48,7 +49,7 @@ export function useSelf() {
     queryKey: userKeys.self(),
     queryFn: () => userApi.getSelf(),
     enabled: hasEmberOneUserId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -61,7 +62,7 @@ export function useOrganizationTree() {
     queryKey: userKeys.organizationTree(),
     queryFn: () => userApi.getOrganizationTree(),
     enabled: hasEmberOneUserId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -74,7 +75,7 @@ export function useMembershipHistory() {
     queryKey: userKeys.membershipHistory(),
     queryFn: () => userApi.getMembershipHistory(),
     enabled: hasEmberOneUserId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -84,7 +85,7 @@ export function useSelfServiceHoursTotal(year: number) {
     queryKey: userKeys.serviceHoursTotal(year),
     queryFn: () => userApi.getSelfServiceHoursTotal(year),
     enabled: hasEmberOneUserId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -94,7 +95,7 @@ export function useSelfOperationAlarmAttendanceStats() {
     queryKey: userKeys.operationAlarmAttendanceStats(),
     queryFn: () => userApi.getSelfOperationAlarmAttendanceStats(),
     enabled: hasEmberOneUserId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -114,7 +115,7 @@ export function useUsersForOrganization(organizationId: number | null | undefine
       ),
     enabled: !!organizationId,
     fetchAll: true,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -131,7 +132,7 @@ export function useOrganizationMemberList(
         toOrganizationMemberApiListQuery(query),
       ),
     enabled: !!organizationId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -159,16 +160,16 @@ export function useOrganizationMembersForPicker(
       ),
     enabled: !!organizationId,
     fetchAll: true,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
 // Mutations
 
 function invalidateSelfQueries(queryClient: ReturnType<typeof useQueryClient>) {
-  queryClient.invalidateQueries({ queryKey: userKeys.self() });
-  queryClient.invalidateQueries({ queryKey: userKeys.organizationTree() });
-  queryClient.invalidateQueries({ queryKey: userKeys.membershipHistory() });
+  void queryClient.invalidateQueries({ queryKey: userKeys.self() });
+  void queryClient.invalidateQueries({ queryKey: userKeys.organizationTree() });
+  void queryClient.invalidateQueries({ queryKey: userKeys.membershipHistory() });
 }
 
 /**
@@ -267,7 +268,7 @@ export function useUpdatePersonalData() {
       queryClient.invalidateQueries({
         queryKey: userKeys.byOrganizationIncludingChildren(variables.organizationId),
       });
-      queryClient.invalidateQueries({ queryKey: userKeys.self() });
+      void queryClient.invalidateQueries({ queryKey: userKeys.self() });
     },
   });
 }

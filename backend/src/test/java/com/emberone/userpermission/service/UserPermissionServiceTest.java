@@ -13,17 +13,12 @@ import static org.mockito.Mockito.when;
 
 import com.emberone.admin.tenant.domain.SupportedLocale;
 import com.emberone.permission.domain.PermissionType;
-import com.emberone.platform.exception.ResourceNotFoundException;
 import com.emberone.platform.i18n.TenantLocaleService;
 import com.emberone.platform.security.TenantContextHolder;
-import com.emberone.user.domain.User;
-import com.emberone.user.exception.UserNotFoundException;
-import com.emberone.user.repository.UserRepository;
-import com.emberone.userpermission.cache.CachedUserPermissionLoader;
+import com.emberone.userpermission.cache.UserPermissionCache;
 import com.emberone.userpermission.dto.UserPermissionDto;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,8 +33,7 @@ class UserPermissionServiceTest {
     private static final Long TENANT_ID = 7L;
     private static final Long ORG_ID = 10L;
 
-    @Mock private CachedUserPermissionLoader cachedUserPermissionLoader;
-    @Mock private UserRepository userRepository;
+    @Mock private UserPermissionCache cachedUserPermissionLoader;
     @Mock private TenantLocaleService tenantLocaleService;
 
     @InjectMocks private UserPermissionService service;
@@ -62,8 +56,6 @@ class UserPermissionServiceTest {
                                                 11L,
                                                 List.of(PermissionType.USER_WRITE)))
                                 .build());
-        when(userRepository.findById(USER_ID))
-                .thenReturn(Optional.of(User.builder().tenantId(TENANT_ID).build()));
         when(tenantLocaleService.resolveTenantLocale(TENANT_ID)).thenReturn(SupportedLocale.DE);
 
         var result = service.getUserPermissions(USER_ID);
@@ -75,20 +67,18 @@ class UserPermissionServiceTest {
     }
 
     @Test
-    void getUserPermissions_throwsWhenUserMissing() {
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+    void getUserPermissions_unknownOrForeignUserResolvesToEmptyMap() {
+        TenantContextHolder.setTenantId(TENANT_ID);
+        when(cachedUserPermissionLoader.load(TENANT_ID, USER_ID))
+                .thenReturn(UserPermissionDto.builder().permissions(Map.of()).build());
+        when(tenantLocaleService.resolveTenantLocale(TENANT_ID)).thenReturn(SupportedLocale.DE);
 
-        assertThatThrownBy(() -> service.getUserPermissions(USER_ID))
-                .isInstanceOf(UserNotFoundException.class);
+        assertThat(service.getUserPermissions(USER_ID).getPermissions()).isEmpty();
     }
 
     @Test
-    void getUserPermissions_rejectsCrossTenantUser() {
-        TenantContextHolder.setTenantId(TENANT_ID);
-        when(userRepository.findById(USER_ID))
-                .thenReturn(Optional.of(User.builder().tenantId(99L).build()));
-
+    void getUserPermissions_requiresActiveTenant() {
         assertThatThrownBy(() -> service.getUserPermissions(USER_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 }

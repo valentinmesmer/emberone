@@ -16,6 +16,7 @@ import { type NotificationListRequest, notificationsApi } from '@/lib/api/notifi
 import { isUnreadOnlyNotificationListQuery } from '@/lib/list/notificationList';
 import type { ListQuery } from '@/lib/list/types';
 import { useRealtimePollingFallback } from '@/lib/realtime/useRealtimePollingFallback';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import {
   isNotificationType,
@@ -183,7 +184,7 @@ export function useNotification(notificationId: number | null | undefined) {
     queryKey: notificationKeys.detail(notificationId ?? 0),
     queryFn: () => notificationsApi.get(notificationId ?? 0),
     enabled: hasEmberOneUserId && notificationId != null && notificationId > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -194,7 +195,7 @@ export function useNotificationList({ listQuery, enabled = true }: UseNotificati
     listQuery: listQuery as NotificationListRequest,
     queryFn: (query) => notificationsApi.list(query),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -206,7 +207,7 @@ export function useNotificationListPage({ listQuery, enabled = true }: UseNotifi
     queryKey: [...notificationKeys.listRoot(), listQuery, 'page'] as const,
     queryFn: () => notificationsApi.list({ ...request, page: 0 }),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -217,7 +218,7 @@ export function useUnreadNotificationCount(options?: { enabled?: boolean }) {
     queryKey: notificationKeys.unreadCount(),
     queryFn: () => notificationsApi.getUnreadCount(),
     enabled: hasEmberOneUserId && (options?.enabled ?? true),
-    staleTime: 15 * 1000,
+    staleTime: STALE_TIME.REALTIME,
     refetchInterval,
   });
 }

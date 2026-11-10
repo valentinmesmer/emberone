@@ -11,6 +11,7 @@ import {
   type ManagementActivationLogItemDto,
 } from '@/lib/api/admin';
 import type { ListQuery } from '@/lib/list/types';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 
 export const adminManagementActivationKeys = {
@@ -32,7 +33,7 @@ export function useAdminManagementActivations({
     listQuery: listQuery as AdminListRequest,
     queryFn: (query) => adminApi.listManagementActivationsPage(query),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -42,6 +43,6 @@ export function useAdminManagementActivation(activationId: number) {
     queryKey: adminManagementActivationKeys.detail(activationId),
     queryFn: () => adminApi.getManagementActivation(activationId),
     enabled: activationId > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }

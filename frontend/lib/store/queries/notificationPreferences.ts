@@ -7,6 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { notificationPreferencesApi } from '@/lib/api/notificationPreferences';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import type { NotificationType } from '@/types/notification';
 import type { UpdateNotificationPreferenceRequest } from '@/types/notificationPreference';
 
@@ -21,7 +22,7 @@ export function useNotificationPreferences() {
     queryKey: notificationPreferenceKeys.list(),
     queryFn: () => notificationPreferencesApi.getAll(),
     enabled: hasEmberOneUserId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 

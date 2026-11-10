@@ -8,7 +8,6 @@ package com.emberone.platform.security;
 
 import com.emberone.permission.domain.PermissionType;
 import com.emberone.rank.service.UserRankService;
-import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
 import com.emberone.workflow.domain.WorkflowDefinition;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.exception.WorkflowConfigurationException;
@@ -16,7 +15,6 @@ import com.emberone.workflow.service.WorkflowDefinitionService;
 import com.emberone.workflow.spi.WorkflowHandler;
 import com.emberone.workflow.spi.WorkflowHandlerRegistry;
 import com.emberone.workflow.spi.WorkflowOpenContext;
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +28,7 @@ public class WorkflowOpenAccess {
     private final OrganizationAccessService organizationAccessService;
     private final WorkflowHandlerRegistry workflowHandlerRegistry;
     private final WorkflowDefinitionService workflowDefinitionService;
-    private final UserOrganizationMembershipRepository userOrganizationMembershipRepository;
+    private final RequestScopedOpenerMemberships openerMemberships;
     private final UserRankService userRankService;
 
     @Transactional(readOnly = true)
@@ -45,14 +43,12 @@ public class WorkflowOpenAccess {
             return false;
         }
         WorkflowHandler<?> handler = workflowHandlerRegistry.require(workflowTypeId);
-        if (!userOrganizationMembershipRepository.existsActiveByUser_Id(userId, Instant.now())
+        if (!openerMemberships.hasActiveMembership(userId)
                 && !handler.mayOpenWithoutActiveOrganizationMembership()) {
             return false;
         }
         if (handler.requiresOpenerOrganizationMembership()
-                && userOrganizationMembershipRepository
-                        .findActiveByUser_IdAndMainTrue(userId, Instant.now())
-                        .isEmpty()) {
+                && !openerMemberships.hasActiveMainMembership(userId)) {
             return false;
         }
         Long contextOrgId;

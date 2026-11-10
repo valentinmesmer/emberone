@@ -25,6 +25,7 @@ import {
 import type { ListQuery, ListQueryState } from '@/lib/list/types';
 import { useListState, useUrlSyncedListState } from '@/lib/list/useListState';
 import { workflowKeys } from '@/lib/store/queries/workflows';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type {
   CourseAudienceEntryRequest,
@@ -128,7 +129,7 @@ export function useOrganizationCourseRegistrations(options: {
     listQuery: options.listQuery as CourseRegistrationListRequest,
     queryFn: (query) => courseOfferingsApi.listOrganizationRegistrations(orgId, query),
     enabled: !!options.organizationId && (options.enabled ?? true),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -143,7 +144,7 @@ export function useOrganizationCourseOfferings(options: {
     listQuery: options.listQuery as OrgCourseOfferingListRequest,
     queryFn: (query) => courseOfferingsApi.listForOrganization(orgId, query),
     enabled: !!options.organizationId && (options.enabled ?? true),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -162,7 +163,7 @@ export function useOrganizationCourseOfferingTemplates(options: {
     listQuery: options.listQuery,
     queryFn: (query) => courseOfferingsApi.listTemplates(orgId, query),
     enabled: !!options.organizationId && (options.enabled ?? true),
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -172,7 +173,7 @@ export function useOfferableCourseTypes(organizationId: number | null | undefine
     queryKey: [...courseOfferingKeys.all, 'offerable-types', orgId],
     queryFn: () => courseOfferingsApi.listOfferableTypes(orgId),
     enabled: !!organizationId && enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -186,7 +187,7 @@ export function useCourseAudienceOptions(
     queryKey: [...courseOfferingKeys.all, 'audience-options', orgId],
     queryFn: () => courseOfferingsApi.listAudienceOptions(orgId),
     enabled: !!organizationId && enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -210,7 +211,7 @@ export function useSelfCourseOfferings(options: {
     listQuery: listQuery as SelfCourseOfferingListRequest,
     queryFn: (query) => courseOfferingsApi.listSelfOfferings(query),
     enabled: (options.enabled ?? true) && hasEmberOneUserId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -226,7 +227,7 @@ export function useSelfCourseOffering(offeringId: number | null, options?: { ena
       return courseOfferingsApi.getSelfOffering(offeringId);
     },
     enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -243,7 +244,7 @@ export function useOrganizationUserCourseRegistrations(options: {
     listQuery: listQuery as CourseRegistrationListRequest,
     queryFn: (query) => courseOfferingsApi.listUserRegistrations(organizationId, userId, query),
     enabled: enabled && organizationId > 0 && userId > 0,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
     fetchAll,
   });
 }
@@ -259,7 +260,7 @@ export function useOrganizationCourseOffering(
     queryKey: courseOfferingKeys.orgDetail(orgId, id),
     queryFn: () => courseOfferingsApi.getForOrganization(orgId, id),
     enabled: enabled && orgId > 0 && id > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -272,7 +273,7 @@ export function useOfferingRegistrationSummary(
     queryKey: courseOfferingKeys.registrationSummary(organizationId, offeringId),
     queryFn: () => courseOfferingsApi.registrationSummary(organizationId, offeringId),
     enabled: enabled && organizationId > 0 && offeringId > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -288,7 +289,7 @@ export function useOfferingRegistrations(options: {
     listQuery: listQuery as CourseRegistrationListRequest,
     queryFn: (query) => courseOfferingsApi.listRegistrations(organizationId, offeringId, query),
     enabled: enabled && organizationId > 0 && offeringId > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -302,7 +303,7 @@ export function useOfferingRegistration(
     queryKey: courseOfferingKeys.offeringRegistration(organizationId, offeringId, registrationId),
     queryFn: () => courseOfferingsApi.getRegistration(organizationId, offeringId, registrationId),
     enabled: enabled && organizationId > 0 && offeringId > 0 && registrationId > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -315,7 +316,7 @@ export function useCourseOfferingCompletion(
     queryKey: courseOfferingKeys.completion(organizationId, offeringId),
     queryFn: () => courseOfferingsApi.getCompletion(organizationId, offeringId),
     enabled: enabled && organizationId > 0 && offeringId > 0,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
   });
 }
 

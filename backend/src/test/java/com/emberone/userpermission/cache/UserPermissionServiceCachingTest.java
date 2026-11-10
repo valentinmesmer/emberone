@@ -8,8 +8,6 @@ package com.emberone.userpermission.cache;
 
 import static org.mockito.Mockito.*;
 
-import com.emberone.permission.cache.PermissionCacheEvictionListener;
-import com.emberone.permission.cache.UserPermissionCacheEvictor;
 import com.emberone.permission.event.UserPermissionsChangedEvent;
 import com.emberone.permissiongroupmapping.repository.PermissionGroupMappingRepository;
 import com.emberone.userorganizationgroupmembership.repository.UserOrganizationGroupMembershipRepository;
@@ -33,11 +31,11 @@ class UserPermissionServiceCachingTest {
     private static final Long TENANT_ID = 7L;
     private static final Long USER_ID = 42L;
 
-    @Autowired CachedUserPermissionLoader cachedUserPermissionLoader;
+    @Autowired UserPermissionCache cachedUserPermissionLoader;
 
     @Autowired UserOrganizationGroupMembershipRepository membershipRepository;
 
-    @Autowired PermissionCacheEvictionListener permissionCacheEvictionListener;
+    @Autowired UserPermissionCacheEvictionListener permissionCacheEvictionListener;
 
     @Test
     void loadUsesCacheUntilEvicted() {
@@ -57,9 +55,9 @@ class UserPermissionServiceCachingTest {
     @Configuration
     @EnableCaching
     @Import({
-        CachedUserPermissionLoader.class,
+        UserPermissionCache.class,
         UserPermissionCacheEvictor.class,
-        PermissionCacheEvictionListener.class
+        UserPermissionCacheEvictionListener.class
     })
     static class TestConfig {
 

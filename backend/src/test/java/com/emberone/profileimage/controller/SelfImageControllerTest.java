@@ -22,6 +22,9 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,12 +67,17 @@ class SelfImageControllerTest {
         when(tokenService.requireUserId()).thenReturn(4L);
         InputStreamResource resource =
                 new InputStreamResource(new ByteArrayInputStream(new byte[0]));
+        when(profileImageService.profileImageEtag(4L)).thenReturn("\"etag\"");
         when(profileImageService.downloadProfileImage(4L))
                 .thenReturn(
                         new ProfileImageService.ProfileImageDownload(
                                 resource, MediaType.IMAGE_JPEG, "\"etag\""));
 
-        ResponseEntity<InputStreamResource> response = controller.downloadProfileImage();
+        ResponseEntity<InputStreamResource> response =
+                controller.downloadProfileImage(
+                        new ServletWebRequest(
+                                new MockHttpServletRequest("GET", "/"),
+                                new MockHttpServletResponse()));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(resource);

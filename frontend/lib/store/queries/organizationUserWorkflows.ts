@@ -11,6 +11,7 @@ import {
   workflowUserOrgDefaultQuery,
   workflowUserOrgListDefinition,
 } from '@/lib/list/workflowList';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 
 export const organizationUserWorkflowKeys = {
@@ -43,6 +44,6 @@ export function useOrganizationUserWorkflows(
     queryFn: (query) => workflowsApi.listForOrganizationUser(orgId, uid, query),
     enabled: !!organizationId && !!userId && (options?.enabled ?? true),
     fetchAll: options?.fetchAll ?? false,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }

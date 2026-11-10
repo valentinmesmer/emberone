@@ -133,7 +133,7 @@ public class ObjectStorageService {
                                     .build());
             GetObjectResponse metadata = response.response();
             MediaType mediaType = resolveProfileImageMediaType(metadata.contentType(), objectName);
-            return new ProfileImageObject(response, mediaType, metadata.eTag());
+            return new ProfileImageObject(response, mediaType);
         } catch (Exception e) {
             log.error("Failed to download profile image from object storage: {}", objectName, e);
             throw new RuntimeException("Failed to download file", e);
@@ -235,5 +235,5 @@ public class ObjectStorageService {
         return lastDotIndex == -1 ? "" : filename.substring(lastDotIndex);
     }
 
-    public record ProfileImageObject(InputStream inputStream, MediaType contentType, String etag) {}
+    public record ProfileImageObject(InputStream inputStream, MediaType contentType) {}
 }

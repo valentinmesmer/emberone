@@ -19,7 +19,7 @@ public class OrganizationTenantCache {
 
     private final OrganizationRepository organizationRepository;
 
-    @Cacheable(cacheNames = CacheNames.ORG_IN_TENANT, key = "#organizationId + ':' + #tenantId")
+    @Cacheable(cacheNames = CacheNames.ORG_IN_TENANT, key = "#tenantId + ':' + #organizationId")
     public OrganizationInTenantCacheValue loadCached(Long organizationId, Long tenantId) {
         boolean exists = organizationRepository.existsByIdAndTenantId(organizationId, tenantId);
         return new OrganizationInTenantCacheValue(exists);

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OrganizationMembershipCacheEvictionListener {
+public class ActiveOrganizationMembershipCacheEvictionListener {
 
     private final ActiveOrganizationMembershipCacheEvictor activeOrganizationMembershipCacheEvictor;
 

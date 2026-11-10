@@ -7,6 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { emergencyContactApi } from '@/lib/api/emergencyContact';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import type {
   CreateEmergencyContactRequest,
   UpdateEmergencyContactRequest,
@@ -25,7 +26,7 @@ export function useEmergencyContacts() {
     queryKey: emergencyContactKeys.list(),
     queryFn: () => emergencyContactApi.getAll(),
     enabled: hasEmberOneUserId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 
@@ -34,7 +35,7 @@ export function useOrganizationEmergencyContacts(organizationId: number | null |
     queryKey: emergencyContactKeys.organization(organizationId ?? 0),
     queryFn: () => emergencyContactApi.getForOrganization(organizationId ?? 0),
     enabled: !!organizationId,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 

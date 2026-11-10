@@ -4,20 +4,9 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-import { PERMISSIONS_STORAGE_KEY } from '@/lib/permission/permissionsStorageKey';
+import { queryClient } from '@/lib/store/query-client';
 
 const OIDC_LOCAL_STORAGE_PREFIX = 'oidc.';
-
-function clearPermissionsLocalStorage(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  try {
-    localStorage.removeItem(PERMISSIONS_STORAGE_KEY);
-  } catch {
-    // Private mode / quota - ignore
-  }
-}
 
 function clearOidcLocalStorage(): void {
   if (typeof window === 'undefined') {
@@ -52,16 +41,16 @@ export async function clearServiceWorkerCaches(): Promise<void> {
 }
 
 /**
- * Runs before `signoutRedirect()` so cached shell/assets and permissions do not
- * survive logout. OIDC user keys stay until sign-out (id_token_hint) or error cleanup.
+ * Runs before `signoutRedirect()` so cached server state (including permissions) and shell/assets do not
+ * survive logout. Clearing the query cache also frees profile image blobs. OIDC user keys stay until sign-out (id_token_hint) or error cleanup.
  */
 export async function clearClientCachesBeforeLogout(): Promise<void> {
-  clearPermissionsLocalStorage();
+  queryClient.clear();
   await clearServiceWorkerCaches();
 }
 
 /** When sign-out fails or as a fallback after `removeUser()`. */
 export function clearAuthLocalStorageAfterLogoutFailure(): void {
-  clearPermissionsLocalStorage();
+  queryClient.clear();
   clearOidcLocalStorage();
 }

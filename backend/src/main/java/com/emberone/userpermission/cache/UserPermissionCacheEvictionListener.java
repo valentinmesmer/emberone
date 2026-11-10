@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-package com.emberone.permission.cache;
+package com.emberone.userpermission.cache;
 
 import com.emberone.permission.event.OrganizationGroupPermissionsChangedEvent;
 import com.emberone.permission.event.PermissionGroupPermissionsChangedEvent;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PermissionCacheEvictionListener {
+public class UserPermissionCacheEvictionListener {
 
     private final UserPermissionCacheEvictor userPermissionCacheEvictor;
     private final UserOrganizationGroupMembershipRepository membershipRepository;

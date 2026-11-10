@@ -28,7 +28,8 @@ public class EffectiveStandardOrganizationCache {
     @Transactional(readOnly = true)
     @Cacheable(
             cacheNames = CacheNames.EFFECTIVE_STANDARD_BY_ORG,
-            key = "#tenantId + ':' + #organizationId")
+            key = "#tenantId + ':' + #organizationId",
+            unless = "#result == null")
     public EffectiveStandardIdCacheValue loadCached(Long tenantId, Long organizationId) {
         Organization organization =
                 organizationRepository

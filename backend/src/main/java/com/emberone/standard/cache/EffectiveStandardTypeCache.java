@@ -11,7 +11,6 @@ import com.emberone.platform.cache.value.EffectiveStandardIdCacheValue;
 import com.emberone.standard.repository.StandardAssignmentRepository;
 import com.emberone.standard.repository.StandardRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,9 +46,4 @@ public class EffectiveStandardTypeCache {
                 })
                 .orElse(null);
     }
-
-    @CacheEvict(
-            cacheNames = CacheNames.EFFECTIVE_STANDARD_BY_ORG_TYPE,
-            key = "#tenantId + ':' + #organizationTypeId")
-    public void evict(Long tenantId, Long organizationTypeId) {}
 }

@@ -32,8 +32,8 @@ Authentik OIDC ──► accessToken (Bearer)
   canAccessAdministration
          │
          ▼
-  usePermissions() ←── GET /api/v1/self/permissions
-         │              (+ STOMP → eventDispatcher → notifyPermissionsChanged)
+  usePermissions() ←── React Query `useSelfPermissions` → GET /api/v1/self/permissions
+         │              (+ STOMP → eventDispatcher → Query-Invalidierung)
          ▼
   hasPermission(orgId, PermissionTypeEnum)  // nur Membership-Map, kein Admin-Bypass
 ```
@@ -49,7 +49,7 @@ Authentik OIDC ──► accessToken (Bearer)
 | Claim-Konstanten / Rollen-Helfer | `lib/auth/claims.ts` |
 | JWT-Helfer | `lib/auth/jwtPayload.ts` |
 | OIDC | `lib/auth/oidcConfig.ts` |
-| Logout-Cache | `lib/auth/logoutClientCleanup.ts` (Berechtigungen + SW vor Redirect; OIDC bei Fehler) |
+| Logout-Cache | `lib/auth/logoutClientCleanup.ts` (Query-Cache + SW vor Redirect; OIDC bei Fehler) |
 | Routen-Gate | `components/auth/ProtectedRoute.tsx`, `AuthLayout.tsx` |
 
 ### Claim-Namen (exakte Strings)
@@ -96,10 +96,10 @@ OIDC via `oidc-client-ts` (Code-Flow, `localStorage`, Silent Renew). Kein REST-�
 | Rolle | Pfad |
 |-------|------|
 | Hook + Provider | `lib/permission/PermissionContext.tsx` |
+| Query | `lib/store/queries/permissions.ts` (`permissionKeys`, `useSelfPermissions`) |
 | Typen / Enum | `types/permission.ts` |
 | API | `lib/api/permission.ts` → `GET /api/v1/self/permissions` |
-| In-Process Pub/Sub | `lib/permission/permissionsRealtime.ts` (`subscribePermissionsChanged` / `notifyPermissionsChanged`) |
-| STOMP + Dispatch | `lib/realtime/RealtimeContext.tsx` → `eventDispatcher` (`permissions.changed` → `notifyPermissionsChanged`) |
+| STOMP + Dispatch | `lib/realtime/RealtimeContext.tsx` → `eventDispatcher` (`permissions.changed` → Topic `permissions`) |
 
 ### Form
 
@@ -119,7 +119,7 @@ Helfer:
 
 **Admin-Bypass-Asymmetrie:** Im Backend umgehen `GLOBAL_ADMIN` / `TENANT_ADMIN` Org-Permission-Checks (`OrganizationAccessService.hasOrganizationPermission`). Im Frontend macht `hasPermission` **keinen** Admin-Bypass - Admins sehen Org-Feature-UI nur, wenn die Map den Eintrag enthält (Admin-Chrome läuft über `canAccessAdministration` / `isGlobalAdmin`, nicht über Org-`hasPermission`).
 
-Cache: `localStorage`-Key `emberone_user_permissions` (`lib/permission/permissionsStorageKey.ts`, Hydrate + Write-through). Kein Fetch ohne Auth oder ohne EmberOne-`userId`. Bei Fehler: Cache leeren. Bei Logout: `clearClientCachesBeforeLogout()` in `AuthContext` leert Berechtigungen und Serwist-/SW-Caches vor `signoutRedirect()`; der OIDC-User-Key (`oidc.user:…`) entfernt die Bibliothek beim Redirect, bei Fehler zusätzlich `removeUser()` + `clearAuthLocalStorageAfterLogoutFailure()`. Realtime: STOMP `/user/queue/permissions` → `eventDispatcher` (`permissions.changed`) → `notifyPermissionsChanged()` → Refresh + Query-Invalidierung.
+Cache: React-Query-Eintrag `permissionKeys.self()` (`STALE_TIME.STANDARD`, Refetch bei Reconnect). Kein Fetch ohne Auth oder ohne EmberOne-`userId`; es gibt keine Persistenz in `localStorage`, nach einem Reload lädt der Provider neu (`isLoading`, bis die Antwort da ist). Bei Logout: `clearClientCachesBeforeLogout()` in `AuthContext` leert den Query-Cache und die Serwist-/SW-Caches vor `signoutRedirect()`; der OIDC-User-Key (`oidc.user:…`) entfernt die Bibliothek beim Redirect, bei Fehler zusätzlich `removeUser()` + `clearAuthLocalStorageAfterLogoutFailure()`. Realtime: STOMP `/user/queue/permissions` → `eventDispatcher` (`permissions.changed`, ebenso `management.activation.expired`) → Invalidierung von `permissionKeys.all` und `managementKeys.all`. Siehe [Caching](caching.md).
 
 ### Umgang mit Abweichungen
 
@@ -151,7 +151,7 @@ Typisch: Load-Gate → `hasPermission` → `NoticeCard` / Redirect / Nav ausblen
 | Claims | `lib/auth/claims.ts`, `lib/auth/jwtPayload.ts` |
 | EmberOne-User-Gate | `hooks/useHasEmberOneUserId.ts`, `lib/utils/tokenUserId.ts` |
 | Berechtigungen | `lib/permission/PermissionContext.tsx`, `types/permission.ts` |
-| Realtime-Bridge | `lib/permission/permissionsRealtime.ts`, `lib/realtime/eventDispatcher.ts` |
+| Realtime-Bridge | `lib/realtime/eventDispatcher.ts`, `lib/store/cache-invalidation.ts` |
 | Routen-Shell | `components/auth/AuthLayout.tsx`, `ProtectedRoute.tsx` |
 
 Siehe auch: [Frontend i18n](frontend-i18n.md) (`tenantLocale` aus Permissions), [Frontend PWA / Offline](frontend-pwa-offline.md) (Logout-Cache-Clear), [Token & Mandantenkontext](token-and-tenant-context.md).

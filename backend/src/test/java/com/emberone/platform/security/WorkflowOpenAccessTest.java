@@ -13,8 +13,6 @@ import static org.mockito.Mockito.*;
 
 import com.emberone.permission.domain.PermissionType;
 import com.emberone.rank.service.UserRankService;
-import com.emberone.userorganizationmembership.domain.UserOrganizationMembership;
-import com.emberone.userorganizationmembership.repository.UserOrganizationMembershipRepository;
 import com.emberone.workflow.domain.WorkflowDefinition;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.exception.WorkflowConfigurationException;
@@ -22,7 +20,6 @@ import com.emberone.workflow.service.WorkflowDefinitionService;
 import com.emberone.workflow.spi.WorkflowHandler;
 import com.emberone.workflow.spi.WorkflowHandlerRegistry;
 import com.emberone.workflow.spi.WorkflowOpenContext;
-import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +40,7 @@ class WorkflowOpenAccessTest {
     @Mock private OrganizationAccessService organizationAccessService;
     @Mock private WorkflowHandlerRegistry workflowHandlerRegistry;
     @Mock private WorkflowDefinitionService workflowDefinitionService;
-    @Mock private UserOrganizationMembershipRepository userOrganizationMembershipRepository;
+    @Mock private RequestScopedOpenerMemberships openerMemberships;
     @Mock private UserRankService userRankService;
     @Mock private WorkflowHandler<Object> handler;
 
@@ -128,9 +125,7 @@ class WorkflowOpenAccessTest {
     void canBeginSelfServiceWorkflow_rejectsWhenOpenerMembershipRequiredAndMissing() {
         prepareTokenAndHandler();
         when(handler.requiresOpenerOrganizationMembership()).thenReturn(true);
-        when(userOrganizationMembershipRepository.findActiveByUser_IdAndMainTrue(
-                        eq(USER_ID), any(Instant.class)))
-                .thenReturn(Optional.empty());
+        when(openerMemberships.hasActiveMainMembership(USER_ID)).thenReturn(false);
 
         assertThat(service.canBeginSelfServiceWorkflow(WORKFLOW_TYPE_ID)).isFalse();
         verify(handler, never()).resolveSecurityContextOrganization(any(), any());
@@ -143,17 +138,14 @@ class WorkflowOpenAccessTest {
         when(handler.requiredPermissionToOpen()).thenReturn(Optional.empty());
 
         assertThat(service.canBeginSelfServiceWorkflow(WORKFLOW_TYPE_ID)).isTrue();
-        verify(userOrganizationMembershipRepository, never())
-                .findActiveByUser_IdAndMainTrue(any(), any());
+        verify(openerMemberships, never()).hasActiveMainMembership(any());
     }
 
     @Test
     void canBeginSelfServiceWorkflow_continuesWhenOpenerMembershipRequiredAndPresent() {
         prepareEnabledWorkflow();
         when(handler.requiresOpenerOrganizationMembership()).thenReturn(true);
-        when(userOrganizationMembershipRepository.findActiveByUser_IdAndMainTrue(
-                        eq(USER_ID), any(Instant.class)))
-                .thenReturn(Optional.of(UserOrganizationMembership.builder().build()));
+        when(openerMemberships.hasActiveMainMembership(USER_ID)).thenReturn(true);
         when(handler.requiredPermissionToOpen()).thenReturn(Optional.empty());
 
         assertThat(service.canBeginSelfServiceWorkflow(WORKFLOW_TYPE_ID)).isTrue();
@@ -164,9 +156,7 @@ class WorkflowOpenAccessTest {
         when(tokenService.getUserId()).thenReturn(USER_ID);
         when(tokenService.getTenantId()).thenReturn(TENANT_ID);
         doReturn(handler).when(workflowHandlerRegistry).require(WORKFLOW_TYPE_ID);
-        when(userOrganizationMembershipRepository.existsActiveByUser_Id(
-                        eq(USER_ID), any(Instant.class)))
-                .thenReturn(false);
+        when(openerMemberships.hasActiveMembership(USER_ID)).thenReturn(false);
         when(handler.mayOpenWithoutActiveOrganizationMembership()).thenReturn(false);
 
         assertThat(service.canBeginSelfServiceWorkflow(WORKFLOW_TYPE_ID)).isFalse();
@@ -201,9 +191,7 @@ class WorkflowOpenAccessTest {
         when(tokenService.getUserId()).thenReturn(USER_ID);
         when(tokenService.getTenantId()).thenReturn(TENANT_ID);
         doReturn(handler).when(workflowHandlerRegistry).require(WORKFLOW_TYPE_ID);
-        when(userOrganizationMembershipRepository.existsActiveByUser_Id(
-                        eq(USER_ID), any(Instant.class)))
-                .thenReturn(true);
+        when(openerMemberships.hasActiveMembership(USER_ID)).thenReturn(true);
     }
 
     private void prepareEnabledWorkflow() {

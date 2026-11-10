@@ -6,5 +6,5 @@
 
 package com.emberone.standard.event;
 
-/** Published when a standard's enabled-module set changes or the standard is deleted. */
+/** Published when a standard's enabled-module set changes. */
 public record StandardEnabledModulesChangedEvent(Long tenantId, Long standardId) {}

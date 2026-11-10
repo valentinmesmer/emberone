@@ -16,7 +16,7 @@ UserOrganizationMembership (aktiv)
 UserOrganizationGroupMembership ──► PermissionGroupMapping ──► PermissionTypes
         │
         ▼
-CachedUserPermissionLoader / RequestScopedUserPermissions
+UserPermissionCache / RequestScopedUserPermissions
 ```
 
 `GroupMembershipType` steuert UX/Führung - **nicht** die ACL (Permissions kommen aus Group→PermissionGroup-Mappings).

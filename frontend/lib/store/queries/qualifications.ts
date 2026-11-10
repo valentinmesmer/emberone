@@ -10,9 +10,11 @@ import { qualificationsApi } from '@/lib/api/qualifications';
 import { organizationQualificationOverviewListDefinition } from '@/lib/list/organizationQualificationOverviewList';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
 import { userQualificationStatusesFromSelfRows } from '@/lib/qualifications/aggregateQualifications';
+import { STALE_TIME } from '@/lib/store/staleTime';
 
 export const qualificationKeys = {
   all: ['qualifications'] as const,
+  statusForOrganization: (orgId: number) => [...qualificationKeys.all, 'status', orgId] as const,
   userStatus: (orgId: number, userId: number) =>
     [...qualificationKeys.all, 'status', orgId, userId] as const,
   statusOverviewAll: (orgId: number) =>
@@ -49,7 +51,7 @@ export function useOrganizationQualificationStatusOverview(
     queryFn: () => qualificationsApi.getStatusOverview(organizationId, search),
     enabled: enabled && organizationId > 0,
     placeholderData: keepPreviousData,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -68,7 +70,9 @@ export function invalidateQualificationStatusForOrganization(
   queryClient: ReturnType<typeof useQueryClient>,
   organizationId: number,
 ) {
-  void queryClient.invalidateQueries({ queryKey: ['qualifications', 'status', organizationId] });
+  void queryClient.invalidateQueries({
+    queryKey: qualificationKeys.statusForOrganization(organizationId),
+  });
   void queryClient.invalidateQueries({
     queryKey: qualificationKeys.statusOverviewAll(organizationId),
   });

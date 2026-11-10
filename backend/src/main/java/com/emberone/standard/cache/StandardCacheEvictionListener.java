@@ -12,6 +12,7 @@ import com.emberone.platform.event.AfterCommitCallback;
 import com.emberone.platform.event.AfterCommitEventListener;
 import com.emberone.standard.event.OrganizationStandardOverrideChangedEvent;
 import com.emberone.standard.event.OrganizationTypeStandardAssignedEvent;
+import com.emberone.standard.event.StandardDeletedEvent;
 import com.emberone.standard.event.StandardEnabledModulesChangedEvent;
 import com.emberone.standard.repository.StandardAssignmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,8 @@ public class StandardCacheEvictionListener {
     private final StandardAssignmentRepository assignmentRepository;
     private final EffectiveStandardOrganizationCacheEvictor
             effectiveStandardOrganizationCacheEvictor;
-    private final EffectiveStandardTypeCache effectiveStandardTypeCache;
-    private final StandardOrganizationIdCache standardOrganizationIdCache;
+    private final EffectiveStandardTypeCacheEvictor effectiveStandardTypeCacheEvictor;
+    private final StandardOrganizationIdCacheEvictor standardOrganizationIdCacheEvictor;
     private final EnabledModulesCacheEvictor enabledModulesCacheEvictor;
 
     @AfterCommitEventListener(readOnly = true)
@@ -57,7 +58,7 @@ public class StandardCacheEvictionListener {
         if (event.tenantId() == null || event.organizationTypeId() == null) {
             return;
         }
-        effectiveStandardTypeCache.evict(event.tenantId(), event.organizationTypeId());
+        effectiveStandardTypeCacheEvictor.evict(event.tenantId(), event.organizationTypeId());
         evictOrganizationsForStandard(event.tenantId(), event.previousStandardId());
         evictOrganizationsForStandard(event.tenantId(), event.newStandardId());
         organizationRepository.findByType_IdAndStandardIdIsNull(event.organizationTypeId()).stream()
@@ -86,9 +87,18 @@ public class StandardCacheEvictionListener {
         enabledModulesCacheEvictor.evict(event.tenantId(), event.standardId());
     }
 
+    @AfterCommitCallback
+    public void onStandardDeleted(StandardDeletedEvent event) {
+        if (event.tenantId() == null || event.standardId() == null) {
+            return;
+        }
+        enabledModulesCacheEvictor.evict(event.tenantId(), event.standardId());
+        evictOrganizationsForStandard(event.tenantId(), event.standardId());
+    }
+
     private void evictOrganizationsForStandard(Long tenantId, Long standardId) {
         if (tenantId != null && standardId != null) {
-            standardOrganizationIdCache.evict(tenantId, standardId);
+            standardOrganizationIdCacheEvictor.evict(tenantId, standardId);
         }
     }
 }

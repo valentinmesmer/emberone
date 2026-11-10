@@ -134,7 +134,6 @@ class ObjectStorageServiceTest {
                 service.downloadProfileImageWithContentType("photo.png");
 
         assertThat(result.contentType()).isEqualTo(org.springframework.http.MediaType.IMAGE_PNG);
-        assertThat(result.etag()).isEqualTo("\"stub-etag\"");
     }
 
     @Test
@@ -223,11 +222,7 @@ class ObjectStorageServiceTest {
     }
 
     private void stubProfileObject(String objectKey, String s3ContentType, byte[] data) {
-        GetObjectResponse metadata =
-                GetObjectResponse.builder()
-                        .contentType(s3ContentType)
-                        .eTag("\"stub-etag\"")
-                        .build();
+        GetObjectResponse metadata = GetObjectResponse.builder().contentType(s3ContentType).build();
         ResponseInputStream<GetObjectResponse> stream =
                 new ResponseInputStream<>(
                         metadata, AbortableInputStream.create(new ByteArrayInputStream(data)));

@@ -9,6 +9,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { managementApi } from '@/lib/api/management';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import type { ManagementActivationRequest } from '@/types/management';
 
 export const managementKeys = {
@@ -25,7 +26,7 @@ export function useManagementTargets(enabled = true) {
     queryKey: managementKeys.targets(),
     queryFn: () => managementApi.getTargets(),
     enabled: hasEmberOneUserId && enabled,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -36,7 +37,7 @@ export function useMyManagementActivations() {
     queryKey: managementKeys.activations(),
     queryFn: () => managementApi.getActivations(),
     enabled: hasEmberOneUserId,
-    staleTime: 30 * 1000,
+    staleTime: STALE_TIME.LIVE,
     // Expired activations drop out of the list within a minute, even without a realtime event.
     refetchInterval: 60 * 1000,
   });

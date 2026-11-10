@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.WebRequest;
 
 @RestController
 @RequestMapping("/api/v1/auth/organizations/{organizationId}/users/{userId}/profile-image")
@@ -28,10 +29,8 @@ public class ProfileImageController {
     @GetMapping("/download")
     @PreAuthorize("@securityService.hasProfileImageReadPermission(#organizationId)")
     public ResponseEntity<InputStreamResource> downloadProfileImage(
-            @PathVariable Long organizationId, @PathVariable Long userId) {
+            @PathVariable Long organizationId, @PathVariable Long userId, WebRequest request) {
         userService.assertUserBelongsToOrganization(userId, organizationId);
-        ProfileImageService.ProfileImageDownload download =
-                profileImageService.downloadProfileImage(userId);
-        return ProfileImageDownloadResponses.ok(download);
+        return ProfileImageDownloadResponses.respond(profileImageService, userId, request);
     }
 }

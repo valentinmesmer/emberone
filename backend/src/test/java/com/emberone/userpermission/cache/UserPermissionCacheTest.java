@@ -32,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class CachedUserPermissionLoaderTest {
+class UserPermissionCacheTest {
 
     private static final Long USER_ID = 1L;
     private static final Long TENANT_ID = 2L;
@@ -45,7 +45,7 @@ class CachedUserPermissionLoaderTest {
 
     @Mock private PermissionGroupMappingRepository mappingRepository;
 
-    @InjectMocks private CachedUserPermissionLoader loader;
+    @InjectMocks private UserPermissionCache loader;
 
     private static UserOrganizationGroupMembership membership(
             OrganizationGroup group, Instant startDate, Instant endDate) {

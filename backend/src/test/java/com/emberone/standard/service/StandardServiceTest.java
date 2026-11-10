@@ -28,7 +28,7 @@ import com.emberone.standard.domain.Standard;
 import com.emberone.standard.domain.StandardKind;
 import com.emberone.standard.domain.StandardSource;
 import com.emberone.standard.event.OrganizationStandardOverrideChangedEvent;
-import com.emberone.standard.event.StandardEnabledModulesChangedEvent;
+import com.emberone.standard.event.StandardDeletedEvent;
 import com.emberone.standard.repository.StandardAssignmentRepository;
 import com.emberone.standard.repository.StandardModuleRepository;
 import com.emberone.standard.repository.StandardRepository;
@@ -234,7 +234,7 @@ class StandardServiceTest {
 
         verify(standardRepository).detachCloneLineage(3L);
         verify(standardRepository).delete(custom);
-        verify(eventPublisher).publishEvent(new StandardEnabledModulesChangedEvent(10L, 3L));
+        verify(eventPublisher).publishEvent(new StandardDeletedEvent(10L, 3L));
     }
 
     @Test

@@ -31,6 +31,10 @@ Schreiben (Upload/Delete) nur 체ber Self; Org-API ist read-only. Bei Austritt l�
 | `SelfImageController` | `/api/v1/self/profile-image` | Self (Read/Write) |
 | `ProfileImageController` | `/api/v1/auth/organizations/{organizationId}/users/{userId}/profile-image` | `PROFILE_IMAGE_READ` (Download only) |
 
+## Caching
+
+Der Download antwortet mit `Cache-Control: private, no-cache` und einem starken `ETag`. Der ETag leitet sich aus dem Objektnamen ab: Jeder Upload legt ein neues Objekt mit zuf채lligem Namen an, daher 채ndert sich der ETag genau dann, wenn sich das Bild 채ndert. `ProfileImageService.profileImageEtag` f체hrt dieselben Tenant- und Prefix-Pr체fungen wie der Download aus, ohne Object Storage zu ber체hren. Passt `If-None-Match`, antwortet der Controller `304`, ohne das Objekt zu lesen (`ProfileImageDownloadResponses.respond`). Das Frontend h채lt das Bild als Blob-URL im React-Query-Cache ([Caching](caching.md)).
+
 ## Was es nicht besitzt
 
 Allgemeine Attachments, User-Dokumente, User-Entity-Felder.

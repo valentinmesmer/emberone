@@ -36,6 +36,7 @@ import com.emberone.standard.domain.StandardModule;
 import com.emberone.standard.domain.StandardSource;
 import com.emberone.standard.event.OrganizationStandardOverrideChangedEvent;
 import com.emberone.standard.event.OrganizationTypeStandardAssignedEvent;
+import com.emberone.standard.event.StandardDeletedEvent;
 import com.emberone.standard.event.StandardEnabledModulesChangedEvent;
 import com.emberone.standard.repository.StandardAssignmentRepository;
 import com.emberone.standard.repository.StandardModuleRepository;
@@ -523,7 +524,7 @@ public class StandardService {
         }
         standardRepository.detachCloneLineage(id);
         standardRepository.delete(standard);
-        eventPublisher.publishEvent(new StandardEnabledModulesChangedEvent(tenantId, id));
+        eventPublisher.publishEvent(new StandardDeletedEvent(tenantId, id));
         log.info("Deleted custom standard {}", id);
     }
 

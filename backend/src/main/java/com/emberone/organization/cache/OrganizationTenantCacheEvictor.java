@@ -13,6 +13,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrganizationTenantCacheEvictor {
 
-    @CacheEvict(cacheNames = CacheNames.ORG_IN_TENANT, key = "#organizationId + ':' + #tenantId")
+    @CacheEvict(cacheNames = CacheNames.ORG_IN_TENANT, key = "#tenantId + ':' + #organizationId")
     public void evict(Long organizationId, Long tenantId) {}
 }

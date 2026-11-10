@@ -11,6 +11,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { appointmentKeys } from './queries/appointments';
 import { emergencyContactKeys } from './queries/emergencyContacts';
 import { eventKeys } from './queries/events';
+import { managementKeys } from './queries/management';
 import { notificationKeys } from './queries/notifications';
 import { onboardingInvitationKeys } from './queries/onboardingInvitation';
 import { organizationOpenWorkflowKeys } from './queries/organizationOpenWorkflows';
@@ -31,7 +32,6 @@ export type ServerCacheTopic =
   | { type: 'events' }
   | { type: 'permissions' }
   | { type: 'appointments' }
-  | { type: 'appointment'; organizationId: number; id: number }
   | { type: 'emergencyContacts' }
   | { type: 'notifications' }
   | { type: 'todos' }
@@ -50,7 +50,7 @@ export function invalidateServerCacheTopic(
       return queryClient.invalidateQueries({ queryKey: organizationKeys.byId(topic.id) });
     case 'organizationGroups':
       return queryClient.invalidateQueries({
-        queryKey: [...organizationKeys.all, topic.organizationId, 'groups'],
+        queryKey: organizationKeys.groupsRoot(topic.organizationId),
       });
     case 'users':
       return queryClient.invalidateQueries({ queryKey: userKeys.all });
@@ -66,19 +66,13 @@ export function invalidateServerCacheTopic(
     case 'events':
       return queryClient.invalidateQueries({ queryKey: eventKeys.all });
     case 'permissions':
-      return queryClient.invalidateQueries({ queryKey: permissionKeys.all });
+      // Management rights derive from activations and add to the direct permissions.
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: permissionKeys.all }),
+        queryClient.invalidateQueries({ queryKey: managementKeys.all }),
+      ]).then(() => {});
     case 'appointments':
       return queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-    case 'appointment':
-      return Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: appointmentKeys.detail(topic.organizationId, topic.id),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: appointmentKeys.participationStats(topic.organizationId, topic.id),
-        }),
-        queryClient.invalidateQueries({ queryKey: appointmentKeys.all }),
-      ]).then(() => {});
     case 'emergencyContacts':
       return queryClient.invalidateQueries({ queryKey: emergencyContactKeys.all });
     case 'notifications':

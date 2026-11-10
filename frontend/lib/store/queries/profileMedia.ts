@@ -4,7 +4,14 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  matchQuery,
+  type QueryCacheNotifyEvent,
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import {
   blobToObjectUrl,
@@ -31,9 +38,18 @@ export const profileMediaKeys = {
     [...profileMediaKeys.all, 'resolved', downloadUrl] as const,
 };
 
+const RESOLVED_IMAGE_KEY = [...profileMediaKeys.all, 'resolved'] as const;
+
+/** Frees the blob behind a resolved image when React Query garbage-collects or clears the entry. */
+export function revokeResolvedImageOnRemoval(event: QueryCacheNotifyEvent): void {
+  if (event.type === 'removed' && matchQuery({ queryKey: RESOLVED_IMAGE_KEY }, event.query)) {
+    revokeObjectUrlIfBlob(event.query.state.data as string | null | undefined);
+  }
+}
+
 function revokeResolvedProfileImageCache(queryClient: QueryClient) {
   for (const [, cachedUrl] of queryClient.getQueriesData<string | null>({
-    queryKey: [...profileMediaKeys.all, 'resolved'],
+    queryKey: RESOLVED_IMAGE_KEY,
   })) {
     revokeObjectUrlIfBlob(cachedUrl);
   }
@@ -42,12 +58,16 @@ function revokeResolvedProfileImageCache(queryClient: QueryClient) {
 /** The download URLs are stable, so drop the resolved blobs and let mounted images refetch (ETag revalidation). */
 export function invalidateSelfProfileImage(queryClient: QueryClient) {
   revokeResolvedProfileImageCache(queryClient);
-  void queryClient.resetQueries({ queryKey: [...profileMediaKeys.all, 'resolved'] });
+  void queryClient.resetQueries({ queryKey: RESOLVED_IMAGE_KEY });
 }
 
 /**
- * Shared resolver: one fetch per download URL (browser HTTP cache + React Query).
- * Returns a blob object URL for image elements; revoked when cache entries are removed.
+ * Shared resolver: one fetch per download URL, cached by React Query (the server answers
+ * revalidation with 304). Returns a blob object URL for image elements; revoked when the cache
+ * entry is removed (`revokeResolvedImageOnRemoval`).
+ *
+ * Fetch errors are not swallowed: a failed query is retried on the next mount instead of being
+ * cached as "no image" for the rest of the session.
  */
 export function useAuthenticatedProfileImageObjectUrl(
   downloadUrl: string | null | undefined,
@@ -59,12 +79,8 @@ export function useAuthenticatedProfileImageObjectUrl(
       if (!downloadUrl) {
         return null;
       }
-      try {
-        const blob = await fetchAuthenticatedBlob(downloadUrl);
-        return blob ? blobToObjectUrl(blob) : null;
-      } catch {
-        return null;
-      }
+      const blob = await fetchAuthenticatedBlob(downloadUrl);
+      return blob ? blobToObjectUrl(blob) : null;
     },
     enabled: enabled && downloadUrl != null,
     ...SESSION_IMAGE_CACHE,

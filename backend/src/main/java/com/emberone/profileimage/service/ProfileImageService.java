@@ -13,6 +13,8 @@ import com.emberone.platform.storage.service.ObjectStorageTransactionCoordinator
 import com.emberone.profileimage.domain.UserProfileImage;
 import com.emberone.profileimage.exception.ProfileImageNotFoundException;
 import com.emberone.profileimage.repository.UserProfileImageRepository;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -83,7 +85,26 @@ public class ProfileImageService {
         return objectName;
     }
 
+    /**
+     * Entity tag of the user's current profile image. Every upload gets a new random object name,
+     * so the tag changes exactly when the image does and can be derived without touching object
+     * storage. Lets callers answer {@code If-None-Match} before any download starts.
+     */
+    public String profileImageEtag(Long userId) {
+        return etagOf(requireOwnedObjectName(userId));
+    }
+
     public ProfileImageDownload downloadProfileImage(Long userId) {
+        String objectName = requireOwnedObjectName(userId);
+        ObjectStorageService.ProfileImageObject object =
+                objectStorageService.downloadProfileImageWithContentType(objectName);
+        return new ProfileImageDownload(
+                new InputStreamResource(object.inputStream()),
+                object.contentType(),
+                etagOf(objectName));
+    }
+
+    private String requireOwnedObjectName(Long userId) {
         UserProfileImage userProfileImage =
                 userProfileImageRepository
                         .findById(userId)
@@ -105,11 +126,11 @@ public class ProfileImageService {
             log.warn("User {} attempted unauthorized profile image access", userId);
             throw new SecurityException("Unauthorized access to profile image");
         }
+        return objectName;
+    }
 
-        ObjectStorageService.ProfileImageObject object =
-                objectStorageService.downloadProfileImageWithContentType(objectName);
-        return new ProfileImageDownload(
-                new InputStreamResource(object.inputStream()), object.contentType(), object.etag());
+    private static String etagOf(String objectName) {
+        return "\"" + UUID.nameUUIDFromBytes(objectName.getBytes(StandardCharsets.UTF_8)) + "\"";
     }
 
     @Transactional

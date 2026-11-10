@@ -17,6 +17,7 @@ import com.emberone.platform.cache.CacheNames;
 import com.emberone.standard.domain.StandardAssignment;
 import com.emberone.standard.event.OrganizationStandardOverrideChangedEvent;
 import com.emberone.standard.event.OrganizationTypeStandardAssignedEvent;
+import com.emberone.standard.event.StandardDeletedEvent;
 import com.emberone.standard.event.StandardEnabledModulesChangedEvent;
 import com.emberone.standard.repository.StandardAssignmentRepository;
 import java.util.List;
@@ -121,12 +122,28 @@ class StandardCacheEvictionListenerTest {
         assertThat(modulesCache.get(TENANT_ID + ":" + STANDARD_ID)).isNull();
     }
 
+    @Test
+    void standardDeletedEvictsModulesAndOrganizationsCacheKeys() {
+        var modulesCache = cacheManager.getCache(CacheNames.ENABLED_MODULES_BY_STANDARD);
+        var orgsCache = cacheManager.getCache(CacheNames.ORGANIZATIONS_FOR_STANDARD);
+        assertThat(modulesCache).isNotNull();
+        assertThat(orgsCache).isNotNull();
+        modulesCache.put(TENANT_ID + ":" + STANDARD_ID, java.util.Set.of());
+        orgsCache.put(TENANT_ID + ":" + STANDARD_ID, java.util.List.of());
+
+        listener.onStandardDeleted(new StandardDeletedEvent(TENANT_ID, STANDARD_ID));
+
+        assertThat(modulesCache.get(TENANT_ID + ":" + STANDARD_ID)).isNull();
+        assertThat(orgsCache.get(TENANT_ID + ":" + STANDARD_ID)).isNull();
+    }
+
     @Configuration
     @EnableCaching
     @Import({
         StandardCacheEvictionListener.class,
         EffectiveStandardOrganizationCacheEvictor.class,
-        EffectiveStandardTypeCache.class,
+        EffectiveStandardTypeCacheEvictor.class,
+        StandardOrganizationIdCacheEvictor.class,
         StandardOrganizationIdCache.class,
         EnabledModulesCacheEvictor.class
     })

@@ -75,7 +75,7 @@ Prosa auf Deutsch; Identifier (Klassen, Enums, Properties, Pfade) auf Englisch w
 
 | Dokument | Inhalt |
 |----------|--------|
-| [Caching](caching.md) | Redis-Caches, TTLs, After-Commit-Eviction-Listener |
+| [Caching](caching.md) | Redis-Caches, TTLs, After-Commit-Eviction, Request-Memoizing, KI-Rate-Limit, HTTP-ETag, React-Query-Stufen |
 | [Logging](logging.md) | SLF4J-Levels, fachliches Logging, MDC, ECS JSON, Request-Korrelation |
 | [Realtime / WebSocket](realtime.md) | STOMP `/ws`, Topic-Namensgebung, Subscribe-Auth, Domain-Notifier |
 | [Benachrichtigungssystem](notification-system.md) | Outbox, Typ-Registry, Kanäle, neuen Typ hinzufügen |

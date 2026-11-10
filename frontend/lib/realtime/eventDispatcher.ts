@@ -7,7 +7,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { emitManagementActivationExpired } from '@/lib/management/activationExpiry';
 import { emitNotificationCreated } from '@/lib/notification/realtimeToast';
-import { notifyPermissionsChanged } from '@/lib/permission/permissionsRealtime';
 import { invalidateServerCacheTopic } from '@/lib/store/cache-invalidation';
 import { invalidateAfterEventAttendanceChange } from '@/lib/store/queries/eventAttendance';
 import { managementKeys } from '@/lib/store/queries/management';
@@ -58,7 +57,6 @@ export function dispatchRealtimeEvent(queryClient: QueryClient, event: RealtimeE
 
   switch (event.type) {
     case 'permissions.changed':
-      notifyPermissionsChanged();
       void invalidateServerCacheTopic(queryClient, { type: 'permissions' });
       return;
     case 'management.activation.expired': {
@@ -76,20 +74,9 @@ export function dispatchRealtimeEvent(queryClient: QueryClient, event: RealtimeE
       }
       return;
     }
-    case 'appointment.updated': {
-      const appointmentId = event.entityIds?.appointmentId;
-      const organizationId = event.entityIds?.organizationId;
-      if (appointmentId != null && organizationId != null) {
-        void invalidateServerCacheTopic(queryClient, {
-          type: 'appointment',
-          organizationId,
-          id: appointmentId,
-        });
-      } else {
-        void invalidateServerCacheTopic(queryClient, { type: 'appointments' });
-      }
+    case 'appointment.updated':
+      void invalidateServerCacheTopic(queryClient, { type: 'appointments' });
       return;
-    }
     case 'notification.created': {
       const notification = applyNotificationCreated(queryClient, event.payload);
       if (notification) {

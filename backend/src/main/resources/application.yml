@@ -127,6 +127,21 @@ authentik:
     token: ${AUTHENTIK_API_TOKEN}
 
 emberone:
+  cache:
+    # Entry TTL per Redis cache (names: platform.cache.CacheNames). Every cache needs one; the
+    # start fails on a missing or unknown name. Evictions on domain events are the correctness
+    # mechanism, the TTL only bounds staleness (see concept caching.md). Auth-relevant caches stay short.
+    ttl:
+      userPermissions: 5m
+      activeOrgMembership: 5m
+      userActive: 60s
+      orgInTenant: 60m
+      effectiveStandardByOrgType: 30m
+      effectiveStandardByOrg: 30m
+      organizationsForStandard: 30m
+      enabledModulesByStandard: 30m
+      tenantLocale: 24h
+      tenantFederalState: 24h
   identity:
     provider: authentik
     deprovision-cron: ${EMBERONE_IDENTITY_DEPROVISION_CRON:0 * * * * *}

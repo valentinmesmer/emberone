@@ -11,6 +11,7 @@ import {
   type UpdateCertificationEventGrantRequest,
 } from '@/lib/api/eventCertificationGrants';
 import { certificationKeys } from '@/lib/store/queries/certifications';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import type { EventType } from '@/types/event';
 
 export const eventCertificationGrantKeys = {
@@ -38,7 +39,7 @@ export function useEventCertificationGrants(
     queryKey: eventCertificationGrantKeys.list(organizationId, eventType, eventId),
     queryFn: () => eventCertificationGrantsApi.list(organizationId, eventType, eventId),
     enabled: options?.enabled ?? true,
-    staleTime: 2 * 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -57,7 +58,7 @@ export function useEventCertificationGrantDetail(
     queryFn: () =>
       eventCertificationGrantsApi.get(organizationId, eventType, eventId, grantId ?? 0),
     enabled: (options?.enabled ?? true) && grantId != null,
-    staleTime: 60 * 1000,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
