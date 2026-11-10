@@ -6,7 +6,6 @@
 
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { Pencil } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -14,11 +13,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { useTranslation } from '@/hooks/useTranslation';
-import {
-  invalidateSelfProfileImage,
-  useAuthenticatedProfileImageObjectUrl,
-  useSelfProfileImage,
-} from '@/lib/store';
+import { useAuthenticatedProfileImageObjectUrl, useSelfProfileImage } from '@/lib/store';
 import { cn } from '@/lib/utils/cn';
 import { EditProfileImageModal } from './EditProfileImageModal';
 
@@ -32,7 +27,6 @@ interface ProfileImageProps {
 
 export function ProfileImage({ firstName, lastName, onImageUpdate }: ProfileImageProps) {
   const t = useTranslation();
-  const queryClient = useQueryClient();
   const hasEmberOneUserId = useHasEmberOneUserId();
   const { data: downloadUrl = null, isLoading: urlLoading } =
     useSelfProfileImage(hasEmberOneUserId);
@@ -40,13 +34,6 @@ export function ProfileImage({ firstName, lastName, onImageUpdate }: ProfileImag
     useAuthenticatedProfileImageObjectUrl(downloadUrl, hasEmberOneUserId);
   const isLoading = urlLoading || blobLoading;
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleImageUpdate = () => {
-    invalidateSelfProfileImage(queryClient);
-    if (onImageUpdate) {
-      onImageUpdate();
-    }
-  };
 
   return (
     <>
@@ -67,7 +54,6 @@ export function ProfileImage({ firstName, lastName, onImageUpdate }: ProfileImag
               width={80}
               height={80}
               className="h-20 w-20 rounded-full object-cover"
-              onError={() => invalidateSelfProfileImage(queryClient)}
               unoptimized
             />
           ) : (
@@ -98,7 +84,7 @@ export function ProfileImage({ firstName, lastName, onImageUpdate }: ProfileImag
         currentImageUrl={imageUrl}
         firstName={firstName}
         lastName={lastName}
-        onImageUpdate={handleImageUpdate}
+        onImageUpdate={onImageUpdate}
       />
     </>
   );

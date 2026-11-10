@@ -7,7 +7,6 @@
 package com.emberone.profileimage.controller;
 
 import com.emberone.profileimage.service.ProfileImageService;
-import java.time.Duration;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -15,15 +14,13 @@ import org.springframework.http.ResponseEntity;
 
 final class ProfileImageDownloadResponses {
 
-    private static final Duration CACHE_MAX_AGE = Duration.ofDays(7);
-
     private ProfileImageDownloadResponses() {}
 
     static ResponseEntity<InputStreamResource> ok(
             ProfileImageService.ProfileImageDownload download) {
         ResponseEntity.BodyBuilder builder =
                 ResponseEntity.ok()
-                        .cacheControl(CacheControl.maxAge(CACHE_MAX_AGE).cachePrivate())
+                        .cacheControl(CacheControl.noCache().cachePrivate())
                         .header(
                                 HttpHeaders.CONTENT_DISPOSITION,
                                 "inline; filename=\"profile-image\"")

@@ -39,16 +39,10 @@ function revokeResolvedProfileImageCache(queryClient: QueryClient) {
   }
 }
 
-function revokeSelfProfileImageCache(queryClient: QueryClient) {
-  const prev = queryClient.getQueryData<string | null>(profileMediaKeys.selfImage());
-  revokeObjectUrlIfBlob(prev);
-}
-
+/** The download URLs are stable, so drop the resolved blobs and let mounted images refetch (ETag revalidation). */
 export function invalidateSelfProfileImage(queryClient: QueryClient) {
-  revokeSelfProfileImageCache(queryClient);
   revokeResolvedProfileImageCache(queryClient);
-  queryClient.removeQueries({ queryKey: profileMediaKeys.selfImage() });
-  queryClient.removeQueries({ queryKey: [...profileMediaKeys.all, 'resolved'] });
+  void queryClient.resetQueries({ queryKey: [...profileMediaKeys.all, 'resolved'] });
 }
 
 /**

@@ -45,7 +45,7 @@ class ProfileImageControllerTest {
         verify(userService).assertUserBelongsToOrganization(9L, 10L);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("inline");
-        assertThat(response.getHeaders().getCacheControl()).contains("max-age");
+        assertThat(response.getHeaders().getCacheControl()).contains("no-cache");
         assertThat(response.getHeaders().getETag()).isEqualTo("\"etag\"");
         assertThat(response.getBody()).isEqualTo(resource);
     }
