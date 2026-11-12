@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-import type { DrivingLicenseClassDto, DrivingLicenseDto } from '@/lib/api/drivingLicenses';
 import { getTodayIsoDate } from '@/lib/utils/date';
 
 /** Driving license document is valid when documentExpirationDate is unset or on/after today. */
@@ -31,10 +30,9 @@ export function isDrivingLicenseClassValidOn(
   return trimmed >= referenceDate;
 }
 
-export function findClass(
-  license: DrivingLicenseDto | null | undefined,
-  definitionId: number,
-): DrivingLicenseClassDto | undefined {
+export function findClass<
+  C extends { tenantDrivingLicenseDefinitionId: number; expirationDate: string | null },
+>(license: { classes: C[] } | null | undefined, definitionId: number): C | undefined {
   return (license?.classes ?? []).find(
     (licenseClass) => licenseClass.tenantDrivingLicenseDefinitionId === definitionId,
   );

@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** The current user's own response, embedded in {@link AppointmentDto#getMyResponse()}. */
 public class MyAppointmentResponseDto {
-    private Long appointmentId;
     private AppointmentResponseValue value;
     private String comment;
 

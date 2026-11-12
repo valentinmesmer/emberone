@@ -6,18 +6,17 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard } from '@/components/ui/message-cards';
 import { Select } from '@/components/ui/select';
-import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   FUNCTION_GRANT_MEMBERSHIP_TYPES,
   type OrgGroupFunctionGrantBySlot,
 } from '@/lib/admin/standardFunctionGrants';
 import type { FunctionGrantMembershipType, StandardContentItemDto } from '@/lib/api/standards';
-import { type TenantFunctionDto, tenantFunctionsApi } from '@/lib/api/tenantFunctions';
+import { useQueryErrorToast, useTenantFunctions } from '@/lib/store';
 
 interface Props {
   tenantId: number;
@@ -35,10 +34,6 @@ export function StandardOrgGroupFunctionGrantFields({
   disabled = false,
 }: Props) {
   const t = useTranslation();
-  const { showError } = useToast();
-
-  const [loading, setLoading] = useState(true);
-  const [functions, setFunctions] = useState<TenantFunctionDto[]>([]);
 
   const selectedFunctionKeys = useMemo(
     () =>
@@ -46,30 +41,20 @@ export function StandardOrgGroupFunctionGrantFields({
     [items],
   );
 
-  const loadFunctions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const catalog = (await tenantFunctionsApi.list(tenantId)).filter(
-        (definition) => !definition.archived && definition.active,
-      );
-      setFunctions(
-        selectedFunctionKeys.size === 0
-          ? catalog
-          : catalog.filter((definition) => selectedFunctionKeys.has(definition.configKey)),
-      );
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.standards.functions.loadCatalogFailed'));
-      setFunctions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, selectedFunctionKeys, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadFunctions();
-    });
-  }, [loadFunctions]);
+  const {
+    data: catalogData,
+    isPending: loading,
+    error: catalogError,
+  } = useTenantFunctions(tenantId);
+  useQueryErrorToast(catalogError, { messageKey: 'admin.standards.functions.loadCatalogFailed' });
+  const functions = useMemo(() => {
+    const catalog = (catalogData ?? []).filter(
+      (definition) => !definition.archived && definition.active,
+    );
+    return selectedFunctionKeys.size === 0
+      ? catalog
+      : catalog.filter((definition) => selectedFunctionKeys.has(definition.configKey));
+  }, [catalogData, selectedFunctionKeys]);
 
   const options = [
     { value: '', label: t('admin.standards.functions.noGrant') },

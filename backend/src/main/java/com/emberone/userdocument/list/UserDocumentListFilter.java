@@ -6,13 +6,15 @@
 
 package com.emberone.userdocument.list;
 
+import java.util.List;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestParam;
 
 public record UserDocumentListFilter(
         @RequestParam(required = false) String tag,
         @RequestParam(required = false) UserDocumentListViewed viewed,
-        @RequestParam(required = false) String contentType) {
+        @RequestParam(required = false) String contentType,
+        @RequestParam(required = false) List<Long> ids) {
 
     public UserDocumentListFilter {
         if (viewed == null) {
@@ -20,6 +22,7 @@ public record UserDocumentListFilter(
         }
         tag = normalizeOptionalText(tag);
         contentType = normalizeOptionalText(contentType);
+        ids = ids == null || ids.isEmpty() ? null : List.copyOf(ids);
     }
 
     private static String normalizeOptionalText(String value) {

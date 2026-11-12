@@ -106,26 +106,6 @@ public class AppointmentResponseService {
     }
 
     @Transactional(readOnly = true)
-    public List<MyAppointmentResponseDto> getMyResponses(List<Long> appointmentIds) {
-        Long userId = tokenService.requireUserId();
-        if (appointmentIds == null || appointmentIds.isEmpty()) {
-            return List.of();
-        }
-        return appointmentResponseRepository
-                .findByUserIdAndAppointmentIdIn(userId, appointmentIds)
-                .stream()
-                .map(r ->
-                        MyAppointmentResponseDto.builder()
-                                .appointmentId(r.getAppointment().getId())
-                                .value(r.getValue())
-                                .comment(r.getComment())
-                                .lastRespondedAt(r.getLastRespondedAt())
-                                .build())
-                .sorted(Comparator.comparing(MyAppointmentResponseDto::getAppointmentId))
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public AppointmentParticipationStatsDto getParticipationStats(
             Long appointmentId, Long organizationId) {
         Long userId = tokenService.getUserId();

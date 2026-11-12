@@ -6,12 +6,14 @@
 
 package com.emberone.admin.workflowdefinition.controller;
 
+import com.emberone.platform.web.list.BoundedList;
 import com.emberone.workflow.dto.SaveWorkflowRoutingRuleRequest;
 import com.emberone.workflow.dto.TenantWorkflowDefinitionDto;
 import com.emberone.workflow.dto.UpdateWorkflowDefinitionRequest;
 import com.emberone.workflow.dto.WorkflowRoutingRuleDto;
 import com.emberone.workflow.service.WorkflowDefinitionService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,14 @@ import org.springframework.web.bind.annotation.*;
 public class AdminWorkflowDefinitionController {
 
     private final WorkflowDefinitionService definitionService;
+
+    @GetMapping
+    @BoundedList("Tenant default workflow definitions; one per workflow type")
+    @PreAuthorize("@securityService.canAccessTenant(#tenantId)")
+    public ResponseEntity<List<TenantWorkflowDefinitionDto>> listTenantDefaults(
+            @PathVariable long tenantId) {
+        return ResponseEntity.ok(definitionService.listTenantDefaults(tenantId));
+    }
 
     @GetMapping("/{workflowTypeId}")
     @PreAuthorize("@securityService.canAccessTenant(#tenantId)")

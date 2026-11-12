@@ -9,7 +9,6 @@ package com.emberone.platform.ai.helpchat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -33,10 +32,8 @@ import com.emberone.platform.security.TokenService;
 import com.emberone.trainingcourse.service.TrainingCourseCatalogService;
 import com.emberone.workflow.domain.WorkflowOpenScope;
 import com.emberone.workflow.domain.WorkflowType;
-import com.emberone.workflow.dto.WorkflowOpenStateDto;
 import com.emberone.workflow.dto.WorkflowTypeCatalogDto;
 import com.emberone.workflow.service.BeginnableWorkflowTypeService;
-import com.emberone.workflow.service.WorkflowService;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +58,6 @@ class HelpChatServiceTest {
     @Mock AiGateway gateway;
     @Mock TokenService tokenService;
     @Mock BeginnableWorkflowTypeService beginnableService;
-    @Mock WorkflowService workflowService;
     @Mock CertificationCatalogService certificationCatalogService;
     @Mock TrainingCourseCatalogService trainingCourseCatalogService;
     @Mock DrivingLicenseCatalogService drivingLicenseCatalogService;
@@ -80,7 +76,6 @@ class HelpChatServiceTest {
                         new AiAvailabilityGuard(properties),
                         tokenService,
                         beginnableService,
-                        workflowService,
                         new HelpTextProvider(
                                 Map.of(
                                         "NAME_CHANGE", "Namensänderung Hilfetext",
@@ -100,9 +95,6 @@ class HelpChatServiceTest {
         lenient()
                 .when(tenantLocaleService.resolveTenantLocale(any()))
                 .thenReturn(SupportedLocale.DE);
-        lenient()
-                .when(workflowService.getOpenStateForCurrentUser(anyLong()))
-                .thenReturn(WorkflowOpenStateDto.builder().typeBlocked(false).build());
     }
 
     private static MessageSource messages() {
@@ -224,9 +216,13 @@ class HelpChatServiceTest {
 
     @Test
     void blockedTypeIsNotSuggestedButMentionedToTheModel() {
-        beginnable(type(WorkflowType.NAME_CHANGE, WorkflowOpenScope.SELF));
-        when(workflowService.getOpenStateForCurrentUser(WorkflowType.NAME_CHANGE.getId()))
-                .thenReturn(WorkflowOpenStateDto.builder().typeBlocked(true).build());
+        beginnable(
+                WorkflowTypeCatalogDto.builder()
+                        .workflowTypeId(WorkflowType.NAME_CHANGE.getId())
+                        .workflowTypeKey(WorkflowType.NAME_CHANGE.name())
+                        .openScope(WorkflowOpenScope.SELF)
+                        .typeBlocked(true)
+                        .build());
         when(gateway.complete(any()))
                 .thenReturn(
                         json(

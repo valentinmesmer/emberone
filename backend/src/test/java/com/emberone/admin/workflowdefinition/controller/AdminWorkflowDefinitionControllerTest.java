@@ -31,6 +31,18 @@ class AdminWorkflowDefinitionControllerTest {
     @InjectMocks AdminWorkflowDefinitionController controller;
 
     @Test
+    void listTenantDefaultsDelegatesToService() {
+        List<TenantWorkflowDefinitionDto> definitions =
+                List.of(TenantWorkflowDefinitionDto.builder().id(1L).build());
+        when(definitionService.listTenantDefaults(3L)).thenReturn(definitions);
+
+        ResponseEntity<List<TenantWorkflowDefinitionDto>> response =
+                controller.listTenantDefaults(3L);
+
+        assertThat(response.getBody()).isEqualTo(definitions);
+    }
+
+    @Test
     void getTenantDefaultDelegatesToService() {
         TenantWorkflowDefinitionDto definition =
                 TenantWorkflowDefinitionDto.builder().id(1L).build();

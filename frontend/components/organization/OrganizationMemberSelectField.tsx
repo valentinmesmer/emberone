@@ -88,14 +88,18 @@ export function OrganizationMemberSelectField({
     return () => window.clearTimeout(handle);
   }, [isOpen, searchQuery]);
 
-  const { data: remoteUsers = [], isLoading: remoteLoading } = useOrganizationMembersForPicker(
-    usesRemoteList && isOpen ? organizationId : null,
-    debouncedSearch,
-  );
-
   const { data: lookupUsers = [], isLoading: lookupLoading } = useUsersForOrganization(
     usesRemoteList ? organizationId : null,
   );
+
+  // Without a search term the picker shows the lookup list; only a search hits the server again.
+  const isSearching = debouncedSearch.trim().length > 0;
+  const { data: searchedUsers = [], isLoading: searchLoading } = useOrganizationMembersForPicker(
+    usesRemoteList && isOpen ? organizationId : null,
+    debouncedSearch,
+  );
+  const remoteUsers = isSearching ? searchedUsers : lookupUsers;
+  const remoteLoading = isSearching ? searchLoading : lookupLoading;
 
   const catalogMembers = useMemo(() => {
     const base = usersProp ?? (usesRemoteList ? lookupUsers : []);

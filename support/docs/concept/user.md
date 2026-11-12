@@ -29,7 +29,7 @@ Produkt-API für User-Hard-Delete gibt es nicht. Hard-Delete von User-Zeilen erf
 - `User`, `UserContactInformation`, `Salutation`
 - Create/Update inkl. Username- und PersonalNumber-Vergabe
 - Self-API: Profil, Org-Tree, Attendance-Stats-Hooks, Notification-E-Mail-Verifikation, eigene Onboarding-Einladungen
-- Org-API: User unter Organisationen (List, Create, Update Personal-Data); Org-Mitgliedschaft beenden nur per Workflow Typ 13 (kein direktes Deactivate unter `/auth/organizations/...`) - Konto-Deaktivierung nur Admin `POST …/admin/tenants/{tenantId}/users/{userId}/deactivate`
+- Org-API: User unter Organisationen (List, Einzel-GET `GET /api/v1/auth/users/organizations/{orgId}/users/{userId}` mit `USER_READ` und derselben Sichtbarkeit wie die Liste (aktives, nicht deaktiviertes Mitglied, sonst 404), Create, Update Personal-Data); Org-Mitgliedschaft beenden nur per Workflow Typ 13 (kein direktes Deactivate unter `/auth/organizations/...`) - Konto-Deaktivierung nur Admin `POST …/admin/tenants/{tenantId}/users/{userId}/deactivate`
 - Public: Notification-E-Mail-Verify-Token
 
 | Controller | Prefix |

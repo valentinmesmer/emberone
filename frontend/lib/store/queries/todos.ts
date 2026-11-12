@@ -58,7 +58,7 @@ export function useOpenTodoCount(options?: { enabled?: boolean }) {
       return result.count;
     },
     enabled: hasEmberOneUserId && (options?.enabled ?? true),
-    staleTime: STALE_TIME.REALTIME,
+    staleTime: STALE_TIME.LIVE,
     refetchInterval,
   });
 }

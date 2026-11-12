@@ -6,6 +6,7 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { StandardCatalogCheckboxList } from '@/components/admin/standards/StandardCatalogCheckboxList';
 import { WorkflowDefinitionOrgField } from '@/components/admin/WorkflowDefinitionOrgField';
@@ -14,6 +15,7 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { workflowsApi } from '@/lib/api/workflows';
+import { invalidateAdminTenantCatalog } from '@/lib/store';
 import type { FlatAdminOrganization } from '@/lib/utils/adminOrgTree';
 import type { RoutingSubjectOption } from '@/lib/workflows/routingDimensions';
 import type { WorkflowRoutingRuleDto } from '@/types/workflow';
@@ -48,6 +50,7 @@ export function AdminTenantWorkflowRoutingRuleModal({
 }: AdminTenantWorkflowRoutingRuleModalProps) {
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [subjectIds, setSubjectIds] = useState<Set<number>>(() => new Set(rule?.subjectIds ?? []));
   const [staticOrgIds, setStaticOrgIds] = useState<Set<number>>(
@@ -88,6 +91,7 @@ export function AdminTenantWorkflowRoutingRuleModal({
             body,
           )
         : await workflowsApi.createTenantWorkflowRoutingRule(tenantId, workflowTypeId, body);
+      await invalidateAdminTenantCatalog(queryClient, 'workflows', tenantId);
       showSuccess(t('admin.workflowDefinitions.routing.saved'));
       onSaved(saved);
     } catch (e) {

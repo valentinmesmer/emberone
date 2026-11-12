@@ -985,8 +985,9 @@ public class UserService {
                 .build();
     }
 
+    /** One member of the organization, same visibility as {@link #listUsersForOrganization}. */
     @Transactional(readOnly = true)
-    public List<UserDto> getUsersByOrganizationId(Long organizationId) {
+    public UserDto getUserForOrganization(Long organizationId, Long userId) {
         organizationRepository
                 .findById(organizationId)
                 .orElseThrow(() -> new OrganizationNotFoundException(organizationId));
@@ -995,19 +996,16 @@ public class UserService {
                 organizationGroupRepository.findIdsByOrganizationIdAndTypeIn(
                         organizationId, OrganizationGroupType.userInterfaceVisibleTypes());
 
-        List<UserOrganizationMembership> memberships =
-                userOrganizationMembershipRepository.findActiveByOrganization_Id(
-                        organizationId, Instant.now());
-
-        return memberships.stream()
-                .map(UserOrganizationMembership::getUser)
-                .filter(user -> user.getDeactivatedAt() == null)
-                .map(user -> toOrganizationUserDto(user, organizationGroupIds))
-                .sorted(
-                        Comparator.comparing(UserDto::getLastName, String.CASE_INSENSITIVE_ORDER)
-                                .thenComparing(UserDto::getFirstName, String.CASE_INSENSITIVE_ORDER)
-                                .thenComparing(UserDto::getId))
-                .collect(Collectors.toList());
+        User user =
+                userRepository
+                        .findOne(
+                                Specification.allOf(
+                                        OrganizationMemberListSpecs.withId(userId),
+                                        OrganizationMemberListSpecs.activeInOrganization(
+                                                organizationId),
+                                        OrganizationMemberListSpecs.notDeactivated()))
+                        .orElseThrow(() -> new UserNotFoundException(userId));
+        return toOrganizationUserDto(user, organizationGroupIds);
     }
 
     private UserDto toOrganizationUserDto(User user, List<Long> organizationGroupIds) {

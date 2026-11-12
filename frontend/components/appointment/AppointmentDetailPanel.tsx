@@ -14,11 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useOrganizationMembership } from '@/hooks/useWorkspaceOrganizations';
-import {
-  useAppointmentParticipationStats,
-  useMyAppointmentResponses,
-  useSubmitAppointmentResponse,
-} from '@/lib/store';
+import { useAppointmentParticipationStats, useSubmitAppointmentResponse } from '@/lib/store';
 import { formatAppointmentDateTimeRange } from '@/lib/utils/date';
 import { isResponseDeadlinePassed } from '@/lib/utils/responseDeadline';
 import {
@@ -30,7 +26,6 @@ import {
   AppointmentResponseMode,
   AppointmentResponseValue,
   AudienceScope,
-  type MyAppointmentResponseDto,
 } from '@/types/appointment';
 
 /** Selected response uses the same colors as the row tint in the list (green = yes, red = no, gray = uncertain). */
@@ -43,13 +38,11 @@ const selectedResponseClasses: Record<AppointmentResponseValue, string> = {
 interface AppointmentDetailPanelProps {
   organizationId: number;
   appointment: AppointmentDto;
-  canWrite: boolean;
 }
 
 export function AppointmentDetailPanel({
   organizationId,
   appointment,
-  canWrite,
 }: AppointmentDetailPanelProps) {
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
@@ -59,11 +52,9 @@ export function AppointmentDetailPanel({
   const submitResponseMutation = useSubmitAppointmentResponse();
 
   const { isMember } = useOrganizationMembership(organizationId);
-  const { data: myResponses = [] } = useMyAppointmentResponses(isMember ? [appointment.id] : []);
-  const myResponse: MyAppointmentResponseDto | undefined = myResponses[0];
-
   const collectsResponses =
     appointment.responseMode !== AppointmentResponseMode.NONE && !appointment.archived;
+  const myResponse = appointment.myResponse ?? undefined;
   // Only memberships answer; the participation stats stay visible for managers.
   const canRespond = isMember && collectsResponses;
   const participationStatsQuery = useAppointmentParticipationStats(organizationId, appointment.id, {
@@ -145,12 +136,13 @@ export function AppointmentDetailPanel({
         {audienceLabel && <p className="text-xs text-[var(--text-secondary)]">{audienceLabel}</p>}
       </div>
 
-      <AppointmentAttachments
-        organizationId={organizationId}
-        appointmentId={appointment.id}
-        canManage={canWrite}
-        compact
-      />
+      {(appointment.attachmentCount ?? 0) > 0 && (
+        <AppointmentAttachments
+          organizationId={organizationId}
+          appointmentId={appointment.id}
+          compact
+        />
+      )}
 
       {canRespond && (
         <section className="space-y-2 rounded-lg border border-[var(--border-color)] p-3">

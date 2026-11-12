@@ -41,22 +41,22 @@ export const certificationKeys = {
     [...certificationKeys.all, 'catalog', orgId, userId] as const,
 };
 
-export function useMyCertificationStatus() {
+export function useMyCertificationStatus(enabled = true) {
   const hasEmberOneUserId = useHasEmberOneUserId();
   return useQuery({
     queryKey: certificationKeys.myStatus(),
     queryFn: () => certificationsApi.getMyStatus(),
-    enabled: hasEmberOneUserId,
+    enabled: hasEmberOneUserId && enabled,
     staleTime: STALE_TIME.LIST,
   });
 }
 
-export function useMyCertificationRecords() {
+export function useMyCertificationRecords(enabled = true) {
   const hasEmberOneUserId = useHasEmberOneUserId();
   return useQuery({
     queryKey: certificationKeys.myRecords(),
     queryFn: () => certificationsApi.getMyRecords(),
-    enabled: hasEmberOneUserId,
+    enabled: hasEmberOneUserId && enabled,
     staleTime: STALE_TIME.LIST,
   });
 }

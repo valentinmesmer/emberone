@@ -15,6 +15,7 @@ import com.emberone.workflow.dto.UpdateWorkflowDefinitionRequest;
 import com.emberone.workflow.dto.WorkflowRoutingRuleDto;
 import com.emberone.workflow.exception.WorkflowConfigurationException;
 import com.emberone.workflow.repository.WorkflowDefinitionRepository;
+import java.util.List;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,12 @@ public class WorkflowDefinitionService {
     public TenantWorkflowDefinitionDto getTenantDefault(long tenantId, Long workflowTypeId) {
         return withTenantContext(
                 tenantId, () -> tenantWorkflowDefinitionService.getDto(tenantId, workflowTypeId));
+    }
+
+    @Transactional
+    public List<TenantWorkflowDefinitionDto> listTenantDefaults(long tenantId) {
+        return withTenantContext(
+                tenantId, () -> tenantWorkflowDefinitionService.listDtos(tenantId));
     }
 
     @Transactional

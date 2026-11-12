@@ -11,6 +11,7 @@ import com.emberone.userdocument.domain.UserDocument;
 import com.emberone.userdocument.domain.UserDocumentTag;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import java.util.Collection;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
@@ -44,6 +45,14 @@ public final class UserDocumentListSpecs {
             case UNREAD -> (root, query, cb) -> cb.isNull(root.get("viewedAt"));
             case READ -> (root, query, cb) -> cb.isNotNull(root.get("viewedAt"));
         };
+    }
+
+    /** Restricts the list to the given documents; {@code null} or empty leaves it unconstrained. */
+    public static Specification<UserDocument> idsFilter(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return ListSpecs.unconstrained();
+        }
+        return (root, query, cb) -> root.get("id").in(ids);
     }
 
     public static Specification<UserDocument> contentTypeFilter(String contentType) {

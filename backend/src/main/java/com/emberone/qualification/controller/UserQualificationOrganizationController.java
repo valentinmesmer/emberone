@@ -6,11 +6,14 @@
 
 package com.emberone.qualification.controller;
 
+import com.emberone.platform.security.SecurityService;
 import com.emberone.platform.web.list.ListQuery;
 import com.emberone.qualification.dto.CreateQualificationOrgDecisionRequest;
 import com.emberone.qualification.dto.QualificationStatusItemPageDto;
+import com.emberone.qualification.dto.UserQualificationDetailDto;
 import com.emberone.qualification.dto.UserQualificationOrgDecisionDto;
 import com.emberone.qualification.list.QualificationListFilter;
+import com.emberone.qualification.service.QualificationDetailService;
 import com.emberone.qualification.service.QualificationOrgDecisionService;
 import com.emberone.qualification.service.QualificationStatusService;
 import com.emberone.user.service.UserService;
@@ -28,6 +31,8 @@ public class UserQualificationOrganizationController {
 
     private final QualificationStatusService statusService;
     private final QualificationOrgDecisionService orgDecisionService;
+    private final QualificationDetailService detailService;
+    private final SecurityService securityService;
     private final UserService userService;
 
     @GetMapping("/status")
@@ -40,6 +45,29 @@ public class UserQualificationOrganizationController {
         userService.assertUserBelongsToOrganization(userId, organizationId);
         return ResponseEntity.ok(
                 statusService.listStatusItemsForUser(organizationId, userId, query, filter));
+    }
+
+    /**
+     * One qualification with the evidence of its prerequisites. Qualification read is required;
+     * certification, training course and driving license sections are filled only with the matching
+     * read permission.
+     */
+    @GetMapping("/{definitionId}")
+    @PreAuthorize("@securityService.hasQualificationReadPermission(#organizationId)")
+    public ResponseEntity<UserQualificationDetailDto> getDetail(
+            @PathVariable Long organizationId,
+            @PathVariable Long userId,
+            @PathVariable Long definitionId) {
+        userService.assertUserBelongsToOrganization(userId, organizationId);
+        return ResponseEntity.ok(
+                detailService.getOrgDetail(
+                        organizationId,
+                        userId,
+                        definitionId,
+                        new QualificationDetailService.EvidenceAccess(
+                                securityService.hasCertificationReadPermission(organizationId),
+                                securityService.hasTrainingCourseReadPermission(organizationId),
+                                securityService.hasDrivingLicenseReadPermission(organizationId))));
     }
 
     @PostMapping("/{qualificationConfigKey}/org-decision")

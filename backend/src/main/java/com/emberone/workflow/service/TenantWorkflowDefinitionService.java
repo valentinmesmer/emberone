@@ -47,6 +47,24 @@ public class TenantWorkflowDefinitionService {
                 tenantId, () -> toDto(requireDefinition(tenantId, workflowTypeId)));
     }
 
+    /** All tenant default definitions (one per baseline workflow type), sorted by type id. */
+    @Transactional
+    public List<TenantWorkflowDefinitionDto> listDtos(long tenantId) {
+        return withTenantContext(
+                tenantId,
+                () ->
+                        federalStateService
+                                .settings(tenantId)
+                                .tenantBaseline()
+                                .workflowDefinitions()
+                                .stream()
+                                .map(WorkflowDefinitionBaseline::workflowTypeId)
+                                .sorted()
+                                .map(workflowTypeId ->
+                                        toDto(requireDefinition(tenantId, workflowTypeId)))
+                                .toList());
+    }
+
     @Transactional
     public TenantWorkflowDefinitionDto update(
             long tenantId,

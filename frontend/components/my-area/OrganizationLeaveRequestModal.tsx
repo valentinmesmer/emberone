@@ -27,7 +27,6 @@ import {
   useOrganizationTree,
   useSubmitOrganizationLeaveRequestWorkflow,
   useUpdateWorkflowPayload,
-  useWorkflowOpenState,
 } from '@/lib/store';
 import { formBlockers } from '@/lib/utils';
 import { findMainOrganizationInTree } from '@/lib/utils/organizationTree';
@@ -64,20 +63,13 @@ export function OrganizationLeaveRequestModal({
     useOrganizationLeaveTargets(isOpen);
   const { data: organizationTree } = useOrganizationTree();
   const { data: beginnableTypes = [] } = useMyBeginnableWorkflowTypes();
-  const mainOrganizationChangeBeginnable = useMemo(
-    () =>
-      beginnableTypes.some(
-        (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.MAIN_ORGANIZATION_CHANGE,
-      ),
-    [beginnableTypes],
+  const mainOrganizationChangeType = beginnableTypes.find(
+    (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.MAIN_ORGANIZATION_CHANGE,
   );
-  const { data: mainOrganizationChangeOpenState } = useWorkflowOpenState(
-    WORKFLOW_TYPE_IDS.MAIN_ORGANIZATION_CHANGE,
-    isOpen && mainOrganizationChangeBeginnable,
-  );
+  const mainOrganizationChangeBeginnable = mainOrganizationChangeType != null;
   const { data: mainChangeTargets = [], isLoading: mainChangeTargetsLoading } =
     useMainOrganizationChangeTargets(isOpen && mainOrganizationChangeBeginnable);
-  const mainOrganizationChangeOpenBlocked = mainOrganizationChangeOpenState?.typeBlocked ?? false;
+  const mainOrganizationChangeOpenBlocked = mainOrganizationChangeType?.typeBlocked ?? false;
   const mainOrganizationChangeNoTargetsBlocked =
     mainChangeTargetsLoading || mainChangeTargets.length === 0;
   const mainOrganizationChangeLinkDisabled =

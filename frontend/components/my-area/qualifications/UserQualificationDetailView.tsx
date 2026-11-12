@@ -28,7 +28,7 @@ import type {
   QualificationPrerequisiteDetailDto,
   QualificationStatusItemDto,
 } from '@/lib/api/qualifications';
-import type { TrainingCourseTypeDto, TrainingCourseUserRecordDto } from '@/lib/api/trainingCourses';
+import type { TrainingCourseTypeDto } from '@/lib/api/trainingCourses';
 import { CERTIFICATION_STATUS_BADGE_TONE } from '@/lib/certifications/statusPresentation';
 import {
   findOpenCertificationWorkflow,
@@ -51,21 +51,18 @@ import {
   qualificationDetailItemFromStatuses,
   qualificationListBadgeLabel,
   qualificationOrgEntriesFromStatuses,
+  userQualificationStatusesFromSelfRows,
 } from '@/lib/qualifications/aggregateQualifications';
 import { QUALIFICATION_STATUS_ROW_TONE } from '@/lib/qualifications/statusPresentation';
 import {
   useMyAvailableDrivingLicenseDefinitions,
   useMyAvailableTrainingCourseTypes,
   useMyBeginnableWorkflowTypes,
-  useMyCertificationStatus,
-  useMyDrivingLicense,
   useMyOrganizations,
   useMyRequestableCertificationDefinitions,
-  useMyTrainingCourseRecords,
   useMyWorkflowOpenedPage,
-  useSelfQualificationStatus,
+  useSelfQualificationDetail,
   useWorkflowOpenConcurrencyKeys,
-  useWorkflowOpenState,
 } from '@/lib/store';
 import {
   filterSubmittableTrainingCourseTypes,
@@ -84,11 +81,10 @@ export interface UserQualificationDetailViewProps {
 
 export function UserQualificationDetailView({ definitionId }: UserQualificationDetailViewProps) {
   const t = useTranslation();
-  const { data: statuses = [], isLoading: statusLoading } = useSelfQualificationStatus();
+  const { data: detail, isLoading: detailLoading } = useSelfQualificationDetail(definitionId);
   const { data: memberships = [], isLoading: orgsLoading } = useMyOrganizations();
-  const { data: certStatus, isLoading: certLoading } = useMyCertificationStatus();
-  const { data: trainingRecords = [], isLoading: trainingLoading } = useMyTrainingCourseRecords();
-  const { data: drivingLicense, isLoading: drivingLicenseLoading } = useMyDrivingLicense();
+  const certifications = detail?.certifications;
+  const drivingLicense = detail?.drivingLicense ?? null;
   const { data: openedWorkflows = [] } = useMyWorkflowOpenedPage();
   const { data: beginnableTypes = [] } = useMyBeginnableWorkflowTypes();
   const { data: availableTrainingTypes = [] } = useMyAvailableTrainingCourseTypes();
@@ -112,6 +108,11 @@ export function UserQualificationDetailView({ definitionId }: UserQualificationD
           .map((organization) => [organization.id, organization.name] as const),
       ),
     [memberships],
+  );
+
+  const statuses = useMemo(
+    () => userQualificationStatusesFromSelfRows(detail?.organizations ?? []),
+    [detail?.organizations],
   );
 
   const item = useMemo(
@@ -143,13 +144,10 @@ export function UserQualificationDetailView({ definitionId }: UserQualificationD
       ),
     [beginnableTypes],
   );
-  const drivingLicenseWorkflowBeginnable = useMemo(
-    () =>
-      beginnableTypes.some(
-        (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.DRIVING_LICENSE_RECORD,
-      ),
-    [beginnableTypes],
+  const drivingLicenseType = beginnableTypes.find(
+    (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.DRIVING_LICENSE_RECORD,
   );
+  const drivingLicenseWorkflowBeginnable = drivingLicenseType != null;
 
   const { data: catalogDefinitions = [] } = useMyRequestableCertificationDefinitions(
     certificationWorkflowBeginnable,
@@ -162,10 +160,6 @@ export function UserQualificationDetailView({ definitionId }: UserQualificationD
     WORKFLOW_TYPE_IDS.TRAINING_COURSE_RECORD,
     trainingWorkflowBeginnable,
   );
-  const { data: drivingLicenseOpenState } = useWorkflowOpenState(
-    WORKFLOW_TYPE_IDS.DRIVING_LICENSE_RECORD,
-    drivingLicenseWorkflowBeginnable,
-  );
 
   const submittableTrainingTypes = useMemo(
     () => filterSubmittableTrainingCourseTypes(availableTrainingTypes, trainingOpenKeys),
@@ -176,20 +170,16 @@ export function UserQualificationDetailView({ definitionId }: UserQualificationD
     [openedWorkflows],
   );
   const canOpenDrivingLicenseWorkflow =
-    drivingLicenseWorkflowBeginnable && !(drivingLicenseOpenState?.typeBlocked ?? false);
+    drivingLicenseWorkflowBeginnable && !drivingLicenseType.typeBlocked;
   const submittableCertItems = useMemo(
     () =>
-      mergeSubmittableCertificationOptions(
-        certStatus?.items ?? [],
-        catalogDefinitions,
-        certOpenKeys,
-      ),
-    [catalogDefinitions, certOpenKeys, certStatus?.items],
+      mergeSubmittableCertificationOptions(certifications ?? [], catalogDefinitions, certOpenKeys),
+    [catalogDefinitions, certOpenKeys, certifications],
   );
 
   const certByName = useMemo(
-    () => new Map((certStatus?.items ?? []).map((entry) => [entry.certDefinitionName, entry])),
-    [certStatus?.items],
+    () => new Map((certifications ?? []).map((entry) => [entry.certDefinitionName, entry])),
+    [certifications],
   );
 
   const certDefinitionByConfigKey = useMemo(() => {
@@ -271,18 +261,10 @@ export function UserQualificationDetailView({ definitionId }: UserQualificationD
   const resolveTrainingType = (detail: QualificationPrerequisiteDetailDto) =>
     trainingTypeByConfigKey.get(detail.configKey) ?? trainingTypeByName.get(detail.name) ?? null;
 
-  const trainingRecordByTypeName = useMemo(() => {
-    const map = new Map<string, TrainingCourseUserRecordDto>();
-    for (const record of trainingRecords) {
-      for (const granted of record.grantedTypes) {
-        const typeName = granted.courseTypeName?.trim();
-        if (typeName && !map.has(typeName)) {
-          map.set(typeName, record);
-        }
-      }
-    }
-    return map;
-  }, [trainingRecords]);
+  const trainingRecordIdByConfigKey = useMemo(
+    () => new Map((detail?.trainingRecords ?? []).map((ref) => [ref.configKey, ref.recordId])),
+    [detail?.trainingRecords],
+  );
 
   const drivingLicenseSubmitPresetClasses = useMemo(() => {
     const existing =
@@ -380,7 +362,7 @@ export function UserQualificationDetailView({ definitionId }: UserQualificationD
   const resolveTrainingHref = (detail: QualificationPrerequisiteDetailDto) => {
     const openWorkflowId = resolveTrainingOpenWorkflowId(detail);
     if (openWorkflowId != null) return getMyAreaWorkflowDetailPath(openWorkflowId);
-    return resolveTrainingCourseHref(detail, trainingRecordByTypeName);
+    return resolveTrainingCourseHref(detail, trainingRecordIdByConfigKey);
   };
 
   const resolveCertificationHref = (detail: QualificationPrerequisiteDetailDto) => {
@@ -408,8 +390,7 @@ export function UserQualificationDetailView({ definitionId }: UserQualificationD
     setDrivingLicenseSubmitDefinitionId(action.definitionId);
   };
 
-  const loading =
-    statusLoading || orgsLoading || certLoading || trainingLoading || drivingLicenseLoading;
+  const loading = detailLoading || orgsLoading;
 
   if (loading) {
     return <LoadingState variant="embedded" size="sm" />;
@@ -658,9 +639,9 @@ function resolveOpenWorkflowBadge(
 
 function resolveTrainingCourseHref(
   detail: QualificationStatusItemDto['trainingCourseDetails'][number],
-  trainingRecordByTypeName: Map<string, TrainingCourseUserRecordDto>,
+  trainingRecordIdByConfigKey: Map<string, number>,
 ) {
-  const record = trainingRecordByTypeName.get(detail.name);
-  if (!record) return null;
-  return getMyAreaTrainingCourseRecordDetailPath(record.id);
+  const recordId = trainingRecordIdByConfigKey.get(detail.configKey);
+  if (recordId == null) return null;
+  return getMyAreaTrainingCourseRecordDetailPath(recordId);
 }

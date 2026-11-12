@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantOnboardingDocumentEditModal } from '@/components/admin/AdminTenantOnboardingDocumentEditModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,11 @@ import {
   type TenantOnboardingDocumentDefinitionDto,
   tenantOnboardingDocumentsApi,
 } from '@/lib/api/tenantOnboardingDocuments';
+import {
+  invalidateAdminTenantCatalog,
+  useQueryErrorToast,
+  useTenantOnboardingDocuments,
+} from '@/lib/store';
 import { getAdminTenantOnboardingDocumentDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantOnboardingDocumentManagementProps {
@@ -39,8 +45,6 @@ export function AdminTenantOnboardingDocumentManagement({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [documents, setDocuments] = useState<TenantOnboardingDocumentDefinitionDto[]>([]);
   const [busy, setBusy] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -54,25 +58,17 @@ export function AdminTenantOnboardingDocumentManagement({
   const [unarchiveTarget, setUnarchiveTarget] =
     useState<TenantOnboardingDocumentDefinitionDto | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      setDocuments(await tenantOnboardingDocumentsApi.list(tenantId));
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.tenantStandards.onboardingDocuments.loadFailed'),
-      );
-      setDocuments([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: documents = [],
+    isPending: loading,
+    error: loadError,
+  } = useTenantOnboardingDocuments(tenantId);
+  useQueryErrorToast(loadError, {
+    messageKey: 'admin.tenantStandards.onboardingDocuments.loadFailed',
+  });
+  const reload = () =>
+    void invalidateAdminTenantCatalog(queryClient, 'onboardingDocuments', tenantId);
 
   const openCreate = () => {
     setEditing(null);
@@ -91,7 +87,7 @@ export function AdminTenantOnboardingDocumentManagement({
       await tenantOnboardingDocumentsApi.delete(tenantId, deleteTarget.configKey);
       showSuccess(t('admin.tenantStandards.onboardingDocuments.deleted'));
       setDeleteTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error
@@ -110,7 +106,7 @@ export function AdminTenantOnboardingDocumentManagement({
       await tenantOnboardingDocumentsApi.archive(tenantId, archiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.onboardingDocuments.archived'));
       setArchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error
@@ -129,7 +125,7 @@ export function AdminTenantOnboardingDocumentManagement({
       await tenantOnboardingDocumentsApi.unarchive(tenantId, unarchiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.onboardingDocuments.unarchived'));
       setUnarchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error
@@ -249,7 +245,7 @@ export function AdminTenantOnboardingDocumentManagement({
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           setFormOpen(false);
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         document={editing}

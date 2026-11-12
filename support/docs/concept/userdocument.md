@@ -35,7 +35,7 @@ ObjectStorageService (user-documents-bucket)
 - `UserDocument`, `UserDocumentTag`, `UserDocumentLink` (Tabelle `doc_documents`)
 - Max 10MB je Dokument
 - `UserDocumentLinkResolver` - löst Navigationspfade für Dokument-Links auf (System-Links werden vertrauenswürdig über `UserDocumentSystemWriter.applyTrustedLinks` gesetzt)
-- Self-API: List/Download + Unread-Count/mark-viewed - **kein** Upload/Update/Delete (Self-Einreichung nur per Workflow `USER_DOCUMENT_SUBMISSION`, Typ 15)
+- Self-API: List/Einzel-GET/Download + Unread-Count/mark-viewed - **kein** Upload/Update/Delete (Self-Einreichung nur per Workflow `USER_DOCUMENT_SUBMISSION`, Typ 15)
 - Org-API (`DOCUMENT_READ` / `DOCUMENT_WRITE`): Upload/Update/Meta - **kein** Delete (Archiv ist append-only)
 
 | Controller | Prefix |
@@ -43,7 +43,7 @@ ObjectStorageService (user-documents-bucket)
 | `UserDocumentSelfController` | `/api/v1/self/documents` (paginiert: `ListQuery` + Filter `tag`, `viewed`, `contentType`; Sortierung per `sort` mit `createdAt` (Hochgeladen, Standard `createdAt,desc`), `title`; `GET …/list-filter-options` für Tag- und Dateityp-Optionen; Legacy `GET …/tags` mit `@BoundedList` für bounded Lookups) |
 | `UserDocumentOrganizationController` | `/api/v1/auth/organizations/{organizationId}/users/{userId}/documents` (gleicher Listen-Vertrag) |
 
-Dokumentlisten (`GET` ohne Id): `page`/`size` (max. 200), Antwort `PageDto`.
+Dokumentlisten (`GET` ohne Id): `page`/`size` (max. 200), Antwort `PageDto`. Zusätzlicher Filter `ids` (mehrfach) lädt gezielt die Metadaten bestimmter Dokumente, z. B. die `userDocumentIds` eines Zertifizierungs-, Lehrgangs- oder Führerschein-Records (ein Request statt Einzel-GETs je Dokument). Einzel-GET `GET …/documents/{documentId}` (Self und Org, gleiche Berechtigung wie die Liste: Self-Service-User bzw. `DOCUMENT_READ`) liefert ein Dokument; fremde Id → Fehler wie beim Download.
 
 ## Was es nicht besitzt
 

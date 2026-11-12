@@ -6,9 +6,8 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
 import { AdminOrganizationOnboardingDocumentManagement } from '@/components/admin/AdminOrganizationOnboardingDocumentManagement';
-import { standardsApi } from '@/lib/api/standards';
+import { useAdminOrganizationStandard, useStandardOnboardingSteps } from '@/lib/store';
 
 interface AdminOrganizationOnboardingDocumentSectionProps {
   tenantId: number;
@@ -19,32 +18,14 @@ export function AdminOrganizationOnboardingDocumentSection({
   tenantId,
   organizationId,
 }: AdminOrganizationOnboardingDocumentSectionProps) {
-  const [stepEnabled, setStepEnabled] = useState<boolean | null>(null);
+  const orgStandard = useAdminOrganizationStandard(tenantId, organizationId);
+  const effectiveStandardId = orgStandard.data?.effectiveStandardId ?? null;
+  const steps = useStandardOnboardingSteps(tenantId, effectiveStandardId);
 
-  const loadStepEnabled = useCallback(async () => {
-    try {
-      const orgStandard = await standardsApi.getOrganizationStandard(tenantId, organizationId);
-      const effectiveStandardId = orgStandard.effectiveStandardId;
-      if (effectiveStandardId == null) {
-        setStepEnabled(false);
-        return;
-      }
-      const stepsResponse = await standardsApi.getOnboardingSteps(tenantId, effectiveStandardId);
-      setStepEnabled(
-        stepsResponse.steps.some((step) => step.stepType === 'ORGANIZATION_ENTRY_DOCUMENTS'),
-      );
-    } catch {
-      setStepEnabled(false);
-    }
-  }, [tenantId, organizationId]);
+  const stepEnabled =
+    steps.data?.steps.some((step) => step.stepType === 'ORGANIZATION_ENTRY_DOCUMENTS') ?? false;
 
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadStepEnabled();
-    });
-  }, [loadStepEnabled]);
-
-  if (stepEnabled !== true) {
+  if (!stepEnabled) {
     return null;
   }
 

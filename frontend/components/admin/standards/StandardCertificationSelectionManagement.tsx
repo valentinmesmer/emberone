@@ -15,10 +15,7 @@ import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
-import {
-  type TenantCertDefinitionDto,
-  tenantCertificationsApi,
-} from '@/lib/api/tenantCertifications';
+import { useQueryErrorToast, useTenantCertifications } from '@/lib/store';
 
 interface Props {
   state: StandardContentState;
@@ -40,8 +37,6 @@ export function StandardCertificationSelectionManagement({ state, embedded = fal
   const { showError } = useToast();
   const { tenantId, standardId, items, editable } = state;
 
-  const [loading, setLoading] = useState(true);
-  const [catalog, setCatalog] = useState<TenantCertDefinitionDto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const selectedRef = useRef(selected);
@@ -60,26 +55,18 @@ export function StandardCertificationSelectionManagement({ state, embedded = fal
     [items],
   );
 
-  const loadCatalog = useCallback(async () => {
-    setLoading(true);
-    try {
-      const definitions = await tenantCertificationsApi.list(tenantId);
-      setCatalog(definitions.filter((definition) => !definition.archived));
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.standards.certifications.loadCatalogFailed'),
-      );
-      setCatalog([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadCatalog();
-    });
-  }, [loadCatalog]);
+  const {
+    data: catalogData,
+    isPending: loading,
+    error: catalogError,
+  } = useTenantCertifications(tenantId);
+  useQueryErrorToast(catalogError, {
+    messageKey: 'admin.standards.certifications.loadCatalogFailed',
+  });
+  const catalog = useMemo(
+    () => (catalogData ?? []).filter((definition) => !definition.archived),
+    [catalogData],
+  );
 
   useEffect(() => {
     if (setsEqual(selectedFromStandard, lastSavedRef.current)) return;

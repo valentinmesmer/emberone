@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import {
   AdminMobileLayout,
   OrgTreeSection,
@@ -30,11 +31,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
 import { hasLeaderIssueInRoots, summarizeLeaderIssuesFromTree } from '@/lib/admin/orgLeaderIssues';
 import {
-  type AdminOrganizationTreeNodeDto,
   adminApi,
   type SetupOrganizationRequest,
   type TenantAdminDetailDto,
 } from '@/lib/api/admin';
+import {
+  invalidateAdminTenantList,
+  setAdminTenantData,
+  useAdminOrganizationTree,
+  useAdminTenant,
+  useQueryErrorToast,
+} from '@/lib/store';
 import {
   getAdminStandardsPath,
   getAdminTenantRetentionPath,
@@ -61,9 +68,7 @@ function TenantDetailPageInner() {
   const [createRootOrgSignal, setCreateRootOrgSignal] = useState(0);
   const { showSuccess, showError } = useToast();
 
-  const [tenant, setTenant] = useState<TenantAdminDetailDto | null>(null);
-  const [treeRoots, setTreeRoots] = useState<AdminOrganizationTreeNodeDto[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [nameModalOpen, setNameModalOpen] = useState(false);
   const [savingName, setSavingName] = useState(false);
   const [creatingRootOrg, setCreatingRootOrg] = useState(false);
@@ -73,30 +78,17 @@ function TenantDetailPageInner() {
   const tenantOutOfScope =
     !isGlobalAdmin && idValid && (authTenantId == null || tenantId !== authTenantId);
 
-  const loadTenant = useCallback(async () => {
-    if (!idValid) return;
-    setLoading(true);
-    try {
-      const data = await adminApi.getTenant(tenantId);
-      setTenant(data);
-      setTreeRoots(null);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.errors.tenantLoadFailed'));
-      setTenant(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [idValid, tenantId, showError, t]);
+  const tenantQuery = useAdminTenant(
+    tenantId,
+    canAccessAdministration && !authLoading && idValid && !tenantOutOfScope,
+  );
+  useQueryErrorToast(tenantQuery.error, { messageKey: 'admin.errors.tenantLoadFailed' });
+  const tenant = tenantQuery.data ?? null;
+  const loading = tenantQuery.isLoading;
+  const treeQuery = useAdminOrganizationTree(tenantId, (tenant?.rootOrganizations.length ?? 0) > 0);
+  const treeRoots = treeQuery.data?.roots ?? null;
 
-  useEffect(() => {
-    if (!canAccessAdministration || authLoading || !idValid || tenantOutOfScope) {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      void loadTenant();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [canAccessAdministration, authLoading, idValid, loadTenant, tenantOutOfScope]);
+  const setTenant = (updated: TenantAdminDetailDto) => setAdminTenantData(queryClient, updated);
 
   async function handleCreateRootOrg(data: SetupOrganizationRequest) {
     if (!tenant) return;
@@ -125,6 +117,7 @@ function TenantDetailPageInner() {
       await adminApi.purgeTenant(tenant.id, { confirmationName: tenant.name });
       showSuccess(t('admin.tenantPurge.success'));
       setPurgeModalOpen(false);
+      void invalidateAdminTenantList(queryClient);
       router.push('/admin/tenants');
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.errors.purgeTenantFailed'));
@@ -281,7 +274,6 @@ function TenantDetailPageInner() {
               standardsConfiguredForOrgCreation={tenant.standardsConfiguredForOrgCreation}
               onRootOrgCreated={handleCreateRootOrg}
               creatingRootOrg={creatingRootOrg}
-              onTreeLoaded={setTreeRoots}
               showLeaderIssueBanner={false}
               openCreateSignal={createRootOrgSignal}
             />

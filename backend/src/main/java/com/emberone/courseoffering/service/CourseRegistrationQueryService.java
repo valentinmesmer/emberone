@@ -210,6 +210,21 @@ public class CourseRegistrationQueryService {
                 .build();
     }
 
+    /** One registration of a member for the member view; same access rules as the list. */
+    @Transactional(readOnly = true)
+    public UserCourseRegistrationDto getForUser(Long userId, Long registrationId) {
+        CourseRegistration registration =
+                registrationRepository
+                        .findByIdAndUserId(registrationId, userId)
+                        .orElseThrow(() -> new CourseRegistrationNotFoundException(registrationId));
+        OfferingLookup lookup = lookup(List.of(registration));
+        CourseOffering offering = lookup.offerings().get(offeringId(registration));
+        if (offering == null) {
+            throw new CourseOfferingNotFoundException(offeringId(registration));
+        }
+        return toUserDto(registration, offering, lookup);
+    }
+
     /** The caller's own registrations, with what the caller may still do with each. */
     @Transactional(readOnly = true)
     public SelfCourseRegistrationPageDto listForSelf(Long userId, ListQuery query) {

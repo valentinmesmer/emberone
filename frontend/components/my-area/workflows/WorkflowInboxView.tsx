@@ -24,7 +24,6 @@ import { usePaginatedListRuntimeOptions } from '@/lib/list/useListFilterOptions'
 import { workflowInboxListDefinition } from '@/lib/list/workflowList';
 import { getMyAreaWorkflowDetailPath } from '@/lib/my-area/myAreaSections';
 import {
-  useBlockedBeginnableWorkflowTypeIds,
   useMyBeginnableWorkflowTypes,
   useMyWorkflowOpenedPage,
   useMyWorkflowParticipationsPage,
@@ -78,13 +77,9 @@ export function WorkflowInboxView() {
   const [beginTypeId, setBeginTypeId] = useState<number | null>(null);
   const [beginModalOpen, setBeginModalOpen] = useState(false);
   const [beginModalKey, setBeginModalKey] = useState(0);
-  const blockedTypeIds = useBlockedBeginnableWorkflowTypeIds(beginnableTypes);
   const availableTypes = useMemo(
-    () =>
-      beginnableTypes.filter(
-        (type) => type.listedInBeginnableCatalog && !blockedTypeIds.has(type.workflowTypeId),
-      ),
-    [beginnableTypes, blockedTypeIds],
+    () => beginnableTypes.filter((type) => type.listedInBeginnableCatalog && !type.typeBlocked),
+    [beginnableTypes],
   );
   const showAddWorkflow = availableTypes.length > 0;
 

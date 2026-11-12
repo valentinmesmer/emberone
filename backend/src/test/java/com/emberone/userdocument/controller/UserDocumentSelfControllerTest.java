@@ -68,7 +68,7 @@ class UserDocumentSelfControllerTest {
                         .hasNext(false)
                         .build();
         ListQuery query = new ListQuery(0, null, null, null);
-        UserDocumentListFilter filter = new UserDocumentListFilter("hr", null, null);
+        UserDocumentListFilter filter = new UserDocumentListFilter("hr", null, null, null);
         when(userDocumentService.listDocuments(5L, query, filter)).thenReturn(page);
 
         ResponseEntity<UserDocumentPageDto> response = controller.listDocuments(query, filter);

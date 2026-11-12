@@ -6,6 +6,7 @@
 
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi, type CreateAdminLeadershipGroupMembershipRequest } from '@/lib/api/admin';
+import { STALE_TIME } from '@/lib/store/staleTime';
 import type { UpdateUserOrganizationGroupMembershipRequest } from '@/types/user';
 import { invalidateAfterOrgGroupMembershipChange } from './userOrganizationGroupMembership';
 
@@ -36,6 +37,7 @@ export function useAdminLeadershipGroupMemberships(tenantId: number, organizatio
   return useQuery({
     queryKey: adminLeadershipGroupKeys.memberships(tenantId, organizationId),
     queryFn: () => adminApi.getLeadershipGroupMemberships(tenantId, organizationId),
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -43,6 +45,7 @@ export function useAdminOrganizationUsers(tenantId: number, organizationId: numb
   return useQuery({
     queryKey: adminLeadershipGroupKeys.organizationUsers(tenantId, organizationId),
     queryFn: () => adminApi.getAdminOrganizationUsers(tenantId, organizationId),
+    staleTime: STALE_TIME.LIST,
   });
 }
 

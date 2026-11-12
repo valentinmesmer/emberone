@@ -12,7 +12,6 @@ import type {
   AppointmentParticipationStatsDto,
   AppointmentResponseDto,
   CreateAppointmentRequest,
-  MyAppointmentResponseDto,
   SeriesEditScope,
   SubmitAppointmentResponseRequest,
   UpcomingAppointmentsDto,
@@ -116,14 +115,6 @@ export const appointmentApi = {
   async getUpcoming(limit = 5): Promise<UpcomingAppointmentsDto> {
     return apiClient.get<UpcomingAppointmentsDto>(
       `/api/v1/self/appointments/upcoming?limit=${limit}`,
-    );
-  },
-
-  async getMyResponses(appointmentIds: number[]): Promise<MyAppointmentResponseDto[]> {
-    if (appointmentIds.length === 0) return [];
-    const query = appointmentIds.map((id) => `appointmentIds=${id}`).join('&');
-    return apiClient.get<MyAppointmentResponseDto[]>(
-      `/api/v1/self/appointments/my-responses?${query}`,
     );
   },
 

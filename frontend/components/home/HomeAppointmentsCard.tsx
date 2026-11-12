@@ -15,12 +15,7 @@ import {
   getDepartmentSectionPath,
 } from '@/lib/department/sections';
 import { usePermissions } from '@/lib/permission/PermissionContext';
-import {
-  useMyAppointmentResponses,
-  useMyOrganizations,
-  useUIStore,
-  useUpcomingAppointments,
-} from '@/lib/store';
+import { useMyOrganizations, useUIStore, useUpcomingAppointments } from '@/lib/store';
 import { getAppointmentResponseTone } from '@/lib/utils/appointmentResponse';
 import { formatDateShort, formatTime } from '@/lib/utils/date';
 import { AppointmentResponseMode } from '@/types/appointment';
@@ -46,13 +41,6 @@ export function HomeAppointmentsCard() {
   const appointments = useMemo(
     () => upcomingAppointmentsPage?.content ?? [],
     [upcomingAppointmentsPage?.content],
-  );
-
-  const appointmentIds = useMemo(() => appointments.map((a) => a.id), [appointments]);
-  const { data: myResponses = [] } = useMyAppointmentResponses(appointmentIds);
-  const myResponseByAppointmentId = useMemo(
-    () => new Map(myResponses.map((r) => [r.appointmentId, r])),
-    [myResponses],
   );
 
   const isLoading = isPending && isFetching;
@@ -91,7 +79,7 @@ export function HomeAppointmentsCard() {
             item.organizationId,
             PermissionTypeEnum.APPOINTMENT_READ,
           );
-          const tone = getAppointmentResponseTone(item, myResponseByAppointmentId.get(item.id));
+          const tone = getAppointmentResponseTone(item, item.myResponse ?? undefined);
           return (
             <ListRow
               key={item.id}

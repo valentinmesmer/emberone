@@ -11,7 +11,7 @@ import { LoadingState } from '@/components/ui/loading';
 import { ErrorState, NotFoundState } from '@/components/ui/message-cards';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getOrganizationUserSectionPath } from '@/lib/navigation/userManagementSections';
-import { useOrganizationUserCourseRegistrations } from '@/lib/store';
+import { useOrganizationUserCourseRegistration } from '@/lib/store';
 
 export interface OrgUserCourseRegistrationDetailViewProps {
   organizationId: number;
@@ -27,15 +27,10 @@ export function OrgUserCourseRegistrationDetailView({
 }: OrgUserCourseRegistrationDetailViewProps) {
   const t = useTranslation();
   const {
-    data: registrations = [],
+    data: registration,
     isPending,
     isError,
-  } = useOrganizationUserCourseRegistrations({
-    organizationId,
-    userId,
-    listQuery: {},
-    fetchAll: true,
-  });
+  } = useOrganizationUserCourseRegistration(organizationId, userId, registrationId);
 
   if (isPending) {
     return <LoadingState variant="embedded" size="sm" />;
@@ -45,7 +40,6 @@ export function OrgUserCourseRegistrationDetailView({
     return <ErrorState message={t('courseOfferings.list.loadFailed')} />;
   }
 
-  const registration = registrations.find((item) => item.id === registrationId);
   if (!registration) {
     return <NotFoundState message={t('courseOfferings.registrations.notFound')} />;
   }

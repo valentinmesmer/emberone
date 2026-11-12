@@ -112,4 +112,38 @@ class UserDocumentOrganizationControllerSecurityTest {
                                 .with(SecurityTestFixtures.tenantUserJwt()))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void documentRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/organizations/10/users/42/documents/7"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void documentForbiddenWithoutPermission() throws Exception {
+        when(documentSecurityService.hasDocumentReadPermission(SecurityTestFixtures.ORG_ID))
+                .thenReturn(false);
+
+        mockMvc.perform(
+                        get("/api/v1/auth/organizations/10/users/42/documents/7")
+                                .with(SecurityTestFixtures.tenantUserJwt()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void documentAllowedWithPermission() throws Exception {
+        when(documentSecurityService.hasDocumentReadPermission(SecurityTestFixtures.ORG_ID))
+                .thenReturn(true);
+        doNothing()
+                .when(userDocumentService)
+                .assertUserBelongsToOrganization(
+                        SecurityTestFixtures.USER_ID, SecurityTestFixtures.ORG_ID);
+        when(userDocumentService.getDocument(SecurityTestFixtures.USER_ID, 7L))
+                .thenReturn(com.emberone.userdocument.dto.UserDocumentDto.builder().id(7L).build());
+
+        mockMvc.perform(
+                        get("/api/v1/auth/organizations/10/users/42/documents/7")
+                                .with(SecurityTestFixtures.tenantUserJwt()))
+                .andExpect(status().isOk());
+    }
 }

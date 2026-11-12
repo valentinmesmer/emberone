@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { CheckboxControl } from '@/components/ui/checkbox';
 import { DetailCardHeader } from '@/components/ui/detail-card-header';
@@ -15,14 +15,17 @@ import { ErrorState, NotFoundState } from '@/components/ui/message-cards';
 import { Select } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { tenantCertificationsApi } from '@/lib/api/tenantCertifications';
-import { tenantDrivingLicenseDefinitionsApi } from '@/lib/api/tenantDrivingLicenseDefinitions';
 import type { QualificationRequirementMode } from '@/lib/api/tenantQualifications';
-import { tenantTrainingCourseTypesApi } from '@/lib/api/tenantTrainingCourseTypes';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useSetBackHref } from '@/lib/navigation/backHrefOverride';
 import { usePermissions } from '@/lib/permission/PermissionContext';
-import { useOrganizationCourseOffering, useReplaceCourseOfferingPrerequisites } from '@/lib/store';
+import {
+  useOrganizationCourseOffering,
+  useReplaceCourseOfferingPrerequisites,
+  useTenantCertifications,
+  useTenantDrivingLicenseDefinitions,
+  useTenantTrainingCourseTypes,
+} from '@/lib/store';
 import { cn } from '@/lib/utils/cn';
 import {
   canEditCourseOffering,
@@ -114,8 +117,38 @@ export function CourseOfferingPrerequisiteKindDetailView({
   } = useOrganizationCourseOffering(canRead ? organizationId : null, offeringId, canRead);
   const replace = useReplaceCourseOfferingPrerequisites(organizationId, offeringId);
 
-  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
-  const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const catalogTenantId = tenantId ?? 0;
+  const catalogEnabled = Boolean(tenantId);
+  const courseCatalog = useTenantTrainingCourseTypes(
+    catalogTenantId,
+    catalogEnabled && kind === 'TRAINING_COURSE',
+  );
+  const certificationCatalog = useTenantCertifications(
+    catalogTenantId,
+    catalogEnabled && kind === 'CERTIFICATION',
+  );
+  const licenseCatalog = useTenantDrivingLicenseDefinitions(
+    catalogTenantId,
+    catalogEnabled && kind === 'DRIVING_LICENSE',
+  );
+  const catalogQuery =
+    kind === 'TRAINING_COURSE'
+      ? courseCatalog
+      : kind === 'CERTIFICATION'
+        ? certificationCatalog
+        : licenseCatalog;
+  const loadingCatalog = catalogQuery.isLoading;
+  const catalog: CatalogItem[] = useMemo(
+    () =>
+      (catalogQuery.data ?? [])
+        .filter((item) => !item.archived)
+        .map((item) => ({
+          configKey: item.configKey,
+          abbreviation: item.abbreviation,
+          name: item.name,
+        })),
+    [catalogQuery.data],
+  );
 
   const editable = Boolean(canWrite && offering && canEditCourseOffering(offering.status));
   const prereq = offering?.prerequisites ?? null;
@@ -128,53 +161,6 @@ export function CourseOfferingPrerequisiteKindDetailView({
     [prereq, kind],
   );
   const mode = modeForKind(prereq, kind);
-
-  const loadCatalog = useCallback(async () => {
-    if (!tenantId) return;
-    setLoadingCatalog(true);
-    try {
-      if (kind === 'TRAINING_COURSE') {
-        const courses = await tenantTrainingCourseTypesApi.list(tenantId);
-        setCatalog(
-          courses
-            .filter((item) => !item.archived)
-            .map((item) => ({
-              configKey: item.configKey,
-              abbreviation: item.abbreviation,
-              name: item.name,
-            })),
-        );
-      } else if (kind === 'CERTIFICATION') {
-        const certs = await tenantCertificationsApi.list(tenantId);
-        setCatalog(
-          certs
-            .filter((item) => !item.archived)
-            .map((item) => ({
-              configKey: item.configKey,
-              abbreviation: item.abbreviation,
-              name: item.name,
-            })),
-        );
-      } else {
-        const licenses = await tenantDrivingLicenseDefinitionsApi.list(tenantId);
-        setCatalog(
-          licenses
-            .filter((item) => !item.archived)
-            .map((item) => ({
-              configKey: item.configKey,
-              abbreviation: item.abbreviation,
-              name: item.name,
-            })),
-        );
-      }
-    } finally {
-      setLoadingCatalog(false);
-    }
-  }, [tenantId, kind]);
-
-  useEffect(() => {
-    void loadCatalog();
-  }, [loadCatalog]);
 
   const modeOptions = [
     { value: 'ALL', label: t('admin.tenantStandards.qualifications.modeAll') },

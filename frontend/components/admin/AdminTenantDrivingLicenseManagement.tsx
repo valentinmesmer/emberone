@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantDrivingLicenseDefinitionEditModal } from '@/components/admin/AdminTenantDrivingLicenseDefinitionEditModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,11 @@ import {
   type TenantDrivingLicenseDefinitionDto,
   tenantDrivingLicenseDefinitionsApi,
 } from '@/lib/api/tenantDrivingLicenseDefinitions';
+import {
+  invalidateAdminTenantCatalog,
+  useQueryErrorToast,
+  useTenantDrivingLicenseDefinitions,
+} from '@/lib/store';
 import { getAdminTenantDrivingLicenseDefinitionDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantDrivingLicenseManagementProps {
@@ -39,8 +45,6 @@ export function AdminTenantDrivingLicenseManagement({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [definitions, setDefinitions] = useState<TenantDrivingLicenseDefinitionDto[]>([]);
   const [busy, setBusy] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -53,25 +57,14 @@ export function AdminTenantDrivingLicenseManagement({
     null,
   );
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      setDefinitions(await tenantDrivingLicenseDefinitionsApi.list(tenantId));
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.tenantStandards.drivingLicenses.loadFailed'),
-      );
-      setDefinitions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: definitions = [],
+    isPending: loading,
+    error: loadError,
+  } = useTenantDrivingLicenseDefinitions(tenantId);
+  useQueryErrorToast(loadError, { messageKey: 'admin.tenantStandards.drivingLicenses.loadFailed' });
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'drivingLicenses', tenantId);
 
   const openCreate = () => {
     setEditing(null);
@@ -94,7 +87,7 @@ export function AdminTenantDrivingLicenseManagement({
       await tenantDrivingLicenseDefinitionsApi.delete(tenantId, deleteTarget.configKey);
       showSuccess(t('admin.tenantStandards.drivingLicenses.deleted'));
       setDeleteTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.drivingLicenses.deleteFailed'),
@@ -111,7 +104,7 @@ export function AdminTenantDrivingLicenseManagement({
       await tenantDrivingLicenseDefinitionsApi.archive(tenantId, archiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.drivingLicenses.archived'));
       setArchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.drivingLicenses.archiveFailed'),
@@ -128,7 +121,7 @@ export function AdminTenantDrivingLicenseManagement({
       await tenantDrivingLicenseDefinitionsApi.unarchive(tenantId, unarchiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.drivingLicenses.unarchived'));
       setUnarchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.drivingLicenses.unarchiveFailed'),
@@ -235,7 +228,7 @@ export function AdminTenantDrivingLicenseManagement({
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           setFormOpen(false);
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         definition={editing}

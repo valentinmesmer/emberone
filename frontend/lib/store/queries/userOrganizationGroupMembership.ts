@@ -25,9 +25,6 @@ export function invalidateAfterOrgGroupMembershipChange(
 ): void {
   void queryClient.invalidateQueries({ queryKey: userKeys.byOrganization(organizationId) });
   void queryClient.invalidateQueries({
-    queryKey: userKeys.byOrganizationIncludingChildren(organizationId),
-  });
-  void queryClient.invalidateQueries({
     predicate: (q) =>
       Array.isArray(q.queryKey) &&
       q.queryKey[0] === organizationKeys.all[0] &&

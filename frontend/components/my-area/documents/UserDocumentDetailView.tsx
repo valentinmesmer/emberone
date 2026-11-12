@@ -23,7 +23,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useViewAttachment } from '@/hooks/useViewAttachment';
 import { userDocumentApi } from '@/lib/api/userDocument';
 import { usePermissions } from '@/lib/permission/PermissionContext';
-import { useMarkDocumentViewed, useUserDocuments } from '@/lib/store';
+import { useMarkDocumentViewed, useUserDocument } from '@/lib/store';
 import { downloadBlob } from '@/lib/utils/downloadBlob';
 import { resolveGatedAppNavigationHref } from '@/lib/utils/sourceLink';
 import { formatFileSize, formatUserDocumentTag } from '@/lib/utils/userDocumentFormat';
@@ -37,14 +37,13 @@ export function UserDocumentDetailView({ documentId }: UserDocumentDetailViewPro
   const t = useTranslation();
   const { hasPermission } = usePermissions();
   const { showError } = useToast();
-  const { data: documents = [], isLoading } = useUserDocuments();
+  const { data: doc, isLoading } = useUserDocument(documentId);
   const navigationContext = { scope: 'self' as const };
 
   const [downloading, setDownloading] = useState(false);
   const { view, viewingKey } = useViewAttachment();
   const markViewed = useMarkDocumentViewed();
 
-  const doc = documents.find((d) => d.id === documentId);
   const viewing = viewingKey === String(documentId);
 
   useEffect(() => {

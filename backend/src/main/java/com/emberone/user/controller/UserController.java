@@ -35,6 +35,13 @@ public class UserController {
         return ResponseEntity.ok(userService.listUsersForOrganization(organizationId, query));
     }
 
+    @GetMapping("/organizations/{organizationId}/users/{userId}")
+    @PreAuthorize("@securityService.hasUserReadPermission(#organizationId)")
+    public ResponseEntity<UserDto> getUserForOrganization(
+            @PathVariable Long organizationId, @PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserForOrganization(organizationId, userId));
+    }
+
     @PostMapping("/organizations/{organizationId}")
     @PreAuthorize("@securityService.hasUserWritePermission(#organizationId)")
     public ResponseEntity<UserDto> createUserForOrganization(

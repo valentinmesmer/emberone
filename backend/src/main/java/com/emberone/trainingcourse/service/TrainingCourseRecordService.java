@@ -112,6 +112,15 @@ public class TrainingCourseRecordService {
     }
 
     @Transactional(readOnly = true)
+    public TrainingCourseUserRecordDto getRecord(Long userId, Long submissionId) {
+        TrainingCourseUserSubmission submission = requireSubmissionForUser(userId, submissionId);
+        return toDto(
+                submission,
+                loadDocumentIdsBySubmission(List.of(submission))
+                        .getOrDefault(submission.getId(), List.of()));
+    }
+
+    @Transactional(readOnly = true)
     public List<TrainingCoursePendingSubmissionDto> listPendingSubmissions(Long userId) {
         List<TrainingCoursePendingSubmissionDto> pending = new ArrayList<>();
         for (Workflow workflow : workflowRepository.findOpenedByUser(userId)) {

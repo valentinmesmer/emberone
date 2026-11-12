@@ -13,10 +13,13 @@ import com.emberone.attachment.repository.EntityAttachmentRepository;
 import com.emberone.platform.security.EmberOneJwtClaims;
 import com.emberone.platform.storage.service.ObjectStorageService;
 import com.emberone.platform.storage.service.ObjectStorageTransactionCoordinator;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -111,6 +114,19 @@ public class EntityAttachmentService {
                 .stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    /** Batch count per entity id (one query); entities without attachments are absent. */
+    @Transactional(readOnly = true)
+    public Map<Long, Long> countByEntityIds(
+            EntityAttachmentType entityType, Collection<Long> entityIds) {
+        if (entityIds.isEmpty()) {
+            return Map.of();
+        }
+        return entityAttachmentRepository
+                .countByEntityTypeAndEntityIdIn(entityType, entityIds)
+                .stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
     }
 
     @Transactional(readOnly = true)

@@ -33,7 +33,7 @@ export function useAdminManagementActivations({
     listQuery: listQuery as AdminListRequest,
     queryFn: (query) => adminApi.listManagementActivationsPage(query),
     enabled,
-    staleTime: STALE_TIME.LIVE,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -43,6 +43,6 @@ export function useAdminManagementActivation(activationId: number) {
     queryKey: adminManagementActivationKeys.detail(activationId),
     queryFn: () => adminApi.getManagementActivation(activationId),
     enabled: activationId > 0,
-    staleTime: STALE_TIME.LIVE,
+    staleTime: STALE_TIME.LIST,
   });
 }

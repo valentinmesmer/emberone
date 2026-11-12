@@ -24,6 +24,7 @@ import type {
   SelfCourseOfferingDto,
   SelfCourseOfferingPageDto,
   UpdateCourseOfferingRequest,
+  UserCourseRegistrationDto,
   UserCourseRegistrationPageDto,
 } from '@/types/courseOffering';
 import { apiClient } from './client';
@@ -287,6 +288,16 @@ export const courseOfferingsApi = {
     const query = buildQuery(request);
     return apiClient.get<OrganizationCourseRegistrationPageDto>(
       withQuery(`/api/v1/auth/organizations/${organizationId}/course-registrations`, query),
+    );
+  },
+
+  getUserRegistration(
+    organizationId: number,
+    userId: number,
+    registrationId: number,
+  ): Promise<UserCourseRegistrationDto> {
+    return apiClient.get<UserCourseRegistrationDto>(
+      `/api/v1/auth/organizations/${organizationId}/users/${userId}/course-registrations/${registrationId}`,
     );
   },
 

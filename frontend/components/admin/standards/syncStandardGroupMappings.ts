@@ -5,6 +5,7 @@
  */
 
 import { type StandardContentDto, standardsApi } from '@/lib/api/standards';
+import { queryClient, standardContentQueryOptions } from '@/lib/store';
 
 export async function syncStandardGroupMappings(
   tenantId: number,
@@ -32,5 +33,5 @@ export async function syncStandardGroupMappings(
   if (content) {
     return content;
   }
-  return standardsApi.getContent(tenantId, standardId);
+  return queryClient.fetchQuery(standardContentQueryOptions(tenantId, standardId));
 }

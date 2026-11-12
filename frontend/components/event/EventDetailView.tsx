@@ -147,7 +147,9 @@ export function EventDetailView({
       await updateEvent(eventType, organizationId, event.id, data);
       showSuccess(t('events.success.updated'));
       setEditOpen(false);
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      await queryClient.invalidateQueries({
+        queryKey: eventKeys.forType(eventType, organizationId),
+      });
     } catch {
       showError(t('events.errors.updateFailed'));
     } finally {

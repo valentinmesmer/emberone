@@ -63,6 +63,10 @@ export interface AppointmentDto {
   archived?: boolean;
   /** True when the current user has not yet opened / marked this appointment as read. */
   unread?: boolean;
+  /** The current user's own response; absent when none or when the user is no member. */
+  myResponse?: MyAppointmentResponseDto | null;
+  /** Number of attachments; absent on create/update responses. */
+  attachmentCount?: number;
 }
 
 export interface AppointmentResponseDto {
@@ -75,7 +79,6 @@ export interface AppointmentResponseDto {
 }
 
 export interface MyAppointmentResponseDto {
-  appointmentId: number;
   value: AppointmentResponseValue;
   comment?: string;
   lastRespondedAt: string;

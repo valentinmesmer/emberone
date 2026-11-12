@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import com.emberone.platform.web.list.ListQuery;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.WorkflowDto;
-import com.emberone.workflow.dto.WorkflowOpenConcurrencyKeysDto;
 import com.emberone.workflow.dto.WorkflowOpenStateDto;
 import com.emberone.workflow.dto.WorkflowPageDto;
 import com.emberone.workflow.dto.WorkflowTypeCatalogDto;
@@ -76,7 +75,6 @@ class WorkflowSelfControllerTest {
         WorkflowOpenStateDto state =
                 WorkflowOpenStateDto.builder()
                         .workflowTypeId(WorkflowType.ORGANIZATION_JOIN_REQUEST.getId())
-                        .typeBlocked(false)
                         .openConcurrencyKeys(List.of("org:5"))
                         .build();
         when(workflowService.getOpenStateForCurrentUser(
@@ -87,23 +85,5 @@ class WorkflowSelfControllerTest {
                 controller.getOpenState(WorkflowType.ORGANIZATION_JOIN_REQUEST.getId());
 
         assertThat(response.getBody()).isEqualTo(state);
-    }
-
-    @Test
-    void getOpenConcurrencyKeysDelegatesToService() {
-        List<WorkflowOpenConcurrencyKeysDto> keys =
-                List.of(
-                        WorkflowOpenConcurrencyKeysDto.builder()
-                                .workflowTypeId(WorkflowType.ORGANIZATION_JOIN_REQUEST.getId())
-                                .keys(List.of("org:5"))
-                                .build());
-        when(workflowService.getOpenConcurrencyKeysForCurrentUser(
-                        WorkflowType.ORGANIZATION_JOIN_REQUEST.getId()))
-                .thenReturn(keys);
-
-        ResponseEntity<List<WorkflowOpenConcurrencyKeysDto>> response =
-                controller.getOpenConcurrencyKeys(WorkflowType.ORGANIZATION_JOIN_REQUEST.getId());
-
-        assertThat(response.getBody()).isEqualTo(keys);
     }
 }

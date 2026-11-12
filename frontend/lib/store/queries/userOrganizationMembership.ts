@@ -23,9 +23,6 @@ export function invalidateAfterOrgMembershipChange(
   userId?: number,
 ): void {
   void queryClient.invalidateQueries({ queryKey: userKeys.byOrganization(organizationId) });
-  void queryClient.invalidateQueries({
-    queryKey: userKeys.byOrganizationIncludingChildren(organizationId),
-  });
   void queryClient.invalidateQueries({ queryKey: organizationKeys.myOrganizations() });
   if (userId != null) {
     void queryClient.invalidateQueries({

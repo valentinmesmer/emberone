@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AdminOrganizationTypeEditModal } from '@/components/admin/AdminOrganizationTypeEditModal';
 import {
   StandardDetailAction,
@@ -23,10 +24,15 @@ import { LoadingState } from '@/components/ui/loading';
 import { EmptyStateCard, NoticeCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { adminApi } from '@/lib/api/admin';
-import { type OrganizationTypeDto, organizationTypesApi } from '@/lib/api/organizationTypes';
+import { organizationTypesApi } from '@/lib/api/organizationTypes';
+import {
+  invalidateAdminTenantCatalog,
+  markAdminTenantCatalogStale,
+  useAdminOrganizationTree,
+  useTenantOrganizationTypes,
+} from '@/lib/store';
 import { compareText } from '@/lib/i18n/locale';
-import { type FlatAdminOrganization, flattenAdminOrgTree } from '@/lib/utils/adminOrgTree';
+import { flattenAdminOrgTree } from '@/lib/utils/adminOrgTree';
 import {
   getAdminOrganizationDetailPath,
   getAdminTenantStandardsPath,
@@ -45,58 +51,28 @@ export function AdminOrganizationTypeDetailView({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [organizationType, setOrganizationType] = useState<OrganizationTypeDto | null>(null);
-  const [organizations, setOrganizations] = useState<FlatAdminOrganization[]>([]);
-  const [organizationsLoadFailed, setOrganizationsLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    setOrganizationsLoadFailed(false);
-    try {
-      const types = await organizationTypesApi.list(tenantId);
-      const match = types.find((entry) => entry.id === typeId) ?? null;
-      if (!match) {
-        setLoadFailed(true);
-        setOrganizationType(null);
-        setOrganizations([]);
-        return;
-      }
-
-      setOrganizationType(match);
-      try {
-        const orgTree = await adminApi.getAdminOrganizationTree(tenantId);
-        setOrganizations(
-          flattenAdminOrgTree(orgTree.roots).filter((org) => org.organizationTypeId === typeId),
-        );
-      } catch {
-        setOrganizations([]);
-        setOrganizationsLoadFailed(true);
-      }
-    } catch {
-      setLoadFailed(true);
-      setOrganizationType(null);
-      setOrganizations([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, typeId]);
+  const queryClient = useQueryClient();
+  const typesQuery = useTenantOrganizationTypes(tenantId);
+  const treeQuery = useAdminOrganizationTree(tenantId, typesQuery.isSuccess);
+  const organizationType = useMemo(
+    () => typesQuery.data?.find((entry) => entry.id === typeId) ?? null,
+    [typesQuery.data, typeId],
+  );
+  const loading = typesQuery.isPending;
+  const loadFailed = typesQuery.isError;
+  const organizationsLoadFailed = treeQuery.isError;
 
   const sortedOrganizations = useMemo(
-    () => [...organizations].sort((a, b) => compareText(a.name, b.name)),
-    [organizations],
+    () =>
+      flattenAdminOrgTree(treeQuery.data?.roots ?? [])
+        .filter((org) => org.organizationTypeId === typeId)
+        .sort((a, b) => compareText(a.name, b.name)),
+    [treeQuery.data, typeId],
   );
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
 
   const navigateBack = () => {
     router.push(getAdminTenantStandardsPath(tenantId));
@@ -108,6 +84,7 @@ export function AdminOrganizationTypeDetailView({
     try {
       await organizationTypesApi.remove(tenantId, organizationType.id);
       showSuccess(t('admin.organizationTypes.deleted'));
+      void markAdminTenantCatalogStale(queryClient, 'organizationTypes', tenantId);
       navigateBack();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.organizationTypes.errors.deleteFailed'));
@@ -180,7 +157,7 @@ export function AdminOrganizationTypeDetailView({
         onClose={() => setEditOpen(false)}
         onSaved={() => {
           setEditOpen(false);
-          void loadData();
+          void invalidateAdminTenantCatalog(queryClient, 'organizationTypes', tenantId);
         }}
         tenantId={tenantId}
         organizationType={organizationType}

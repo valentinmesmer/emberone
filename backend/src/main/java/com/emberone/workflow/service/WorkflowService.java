@@ -350,35 +350,6 @@ public class WorkflowService {
     }
 
     @Transactional(readOnly = true)
-    public List<WorkflowOpenConcurrencyKeysDto> getOpenConcurrencyKeysForCurrentUser(
-            Long workflowTypeId) {
-        Long userId = tokenService.requireUserId();
-        if (workflowTypeId != null) {
-            handlerRegistry.require(workflowTypeId);
-            return List.of(
-                    WorkflowOpenConcurrencyKeysDto.builder()
-                            .workflowTypeId(workflowTypeId)
-                            .keys(
-                                    List.copyOf(
-                                            openConcurrencyService.findOpenKeys(
-                                                    userId, workflowTypeId)))
-                            .build());
-        }
-        return handlerRegistry.all().stream()
-                .map(handler ->
-                        WorkflowOpenConcurrencyKeysDto.builder()
-                                .workflowTypeId(handler.workflowTypeId())
-                                .keys(
-                                        List.copyOf(
-                                                openConcurrencyService.findOpenKeys(
-                                                        userId, handler.workflowTypeId())))
-                                .build())
-                .filter(dto -> !dto.getKeys().isEmpty())
-                .sorted(Comparator.comparingLong(WorkflowOpenConcurrencyKeysDto::getWorkflowTypeId))
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public WorkflowPageDto listOpenedByUserInOrganization(
             Long userId, Long organizationId, ListQuery query, WorkflowListFilter filter) {
         if (!userRepository.existsById(userId)) {
@@ -1735,14 +1706,8 @@ public class WorkflowService {
     }
 
     private WorkflowOpenStateDto buildOpenState(Long userId, long workflowTypeId) {
-        WorkflowHandler<?> handler = handlerRegistry.require(workflowTypeId);
-        boolean typeBlocked =
-                !handler.allowsMultipleConcurrentOpen()
-                        && workflowRepository.existsActiveByOpenedByUserIdAndWorkflowTypeId(
-                                userId, workflowTypeId);
         return WorkflowOpenStateDto.builder()
                 .workflowTypeId(workflowTypeId)
-                .typeBlocked(typeBlocked)
                 .openConcurrencyKeys(
                         List.copyOf(openConcurrencyService.findOpenKeys(userId, workflowTypeId)))
                 .build();

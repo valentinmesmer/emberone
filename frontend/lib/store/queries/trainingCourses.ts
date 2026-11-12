@@ -23,9 +23,12 @@ import { usePagedList } from '@/lib/store/usePagedList';
 export const trainingCourseKeys = {
   all: ['trainingCourses'] as const,
   myRecords: () => [...trainingCourseKeys.all, 'my-records'] as const,
+  myRecord: (recordId: number) => [...trainingCourseKeys.myRecords(), 'detail', recordId] as const,
   myAvailableTypes: () => [...trainingCourseKeys.all, 'my-available-types'] as const,
   userRecords: (orgId: number, userId: number) =>
     [...trainingCourseKeys.all, 'user-records', orgId, userId] as const,
+  userRecord: (orgId: number, userId: number, recordId: number) =>
+    [...trainingCourseKeys.userRecords(orgId, userId), 'detail', recordId] as const,
   pendingSubmissions: (orgId: number, userId: number) =>
     [...trainingCourseKeys.all, 'pending-submissions', orgId, userId] as const,
   catalog: (orgId: number, userId: number) =>
@@ -52,6 +55,30 @@ export function useMyTrainingCourseRecords(enabled = true) {
     queryKey: [...trainingCourseKeys.myRecords(), 'all'] as const,
     queryFn: () => fetchAllPageContent((page) => trainingCoursesApi.getMyRecords({ page })),
     enabled: hasEmberOneUserId && enabled,
+    staleTime: STALE_TIME.LIST,
+  });
+}
+
+export function useMyTrainingCourseRecord(recordId: number, enabled = true) {
+  const hasEmberOneUserId = useHasEmberOneUserId();
+  return useQuery({
+    queryKey: trainingCourseKeys.myRecord(recordId),
+    queryFn: () => trainingCoursesApi.getMyRecord(recordId),
+    enabled: hasEmberOneUserId && enabled && recordId > 0,
+    staleTime: STALE_TIME.LIST,
+  });
+}
+
+export function useUserTrainingCourseRecord(
+  organizationId: number,
+  userId: number,
+  recordId: number,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: trainingCourseKeys.userRecord(organizationId, userId, recordId),
+    queryFn: () => trainingCoursesApi.getUserRecord(organizationId, userId, recordId),
+    enabled: enabled && organizationId > 0 && userId > 0 && recordId > 0,
     staleTime: STALE_TIME.LIST,
   });
 }

@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Pencil, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AdminTenantWorkflowDefinitionEditModal } from '@/components/admin/AdminTenantWorkflowDefinitionEditForm';
 import { AdminTenantWorkflowRoutingRuleModal } from '@/components/admin/AdminTenantWorkflowRoutingRuleModal';
 import {
@@ -27,21 +28,21 @@ import { NoticeCard } from '@/components/ui/message-cards';
 import { SectionActions, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { adminApi } from '@/lib/api/admin';
 import { workflowsApi } from '@/lib/api/workflows';
+import {
+  invalidateAdminTenantCatalog,
+  useAdminOrganizationTree,
+  useAdminTenantWorkflowDefinitions,
+  useAdminWorkflowTypeCatalog,
+} from '@/lib/store';
 import { type FlatAdminOrganization, flattenAdminOrgTree } from '@/lib/utils/adminOrgTree';
 import { getAdminTenantWorkflowRoutingRuleDetailPath } from '@/lib/utils/adminPaths';
 import { workflowTypeTranslationKey } from '@/lib/utils/workflowLabels';
 import {
-  ROUTING_DIMENSIONS,
-  type RoutingSubjectOption,
   routingDimensionLabels,
+  useRoutingSubjectOptions,
 } from '@/lib/workflows/routingDimensions';
-import type {
-  TenantWorkflowDefinitionDto,
-  WorkflowRoutingRuleDto,
-  WorkflowTypeCatalogDto,
-} from '@/types/workflow';
+import type { WorkflowRoutingRuleDto } from '@/types/workflow';
 
 interface AdminTenantWorkflowDefinitionDetailViewProps {
   tenantId: number;
@@ -54,57 +55,27 @@ export function AdminTenantWorkflowDefinitionDetailView({
 }: AdminTenantWorkflowDefinitionDetailViewProps) {
   const t = useTranslation();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { showError, showSuccess } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [catalogEntry, setCatalogEntry] = useState<WorkflowTypeCatalogDto | null>(null);
-  const [tenantDefault, setTenantDefault] = useState<TenantWorkflowDefinitionDto | null>(null);
-  const [organizations, setOrganizations] = useState<FlatAdminOrganization[]>([]);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [subjectOptions, setSubjectOptions] = useState<RoutingSubjectOption[]>([]);
   const [ruleModalOpen, setRuleModalOpen] = useState(false);
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      const [catalog, orgTree] = await Promise.all([
-        workflowsApi.getWorkflowTypeCatalog(tenantId),
-        adminApi.getAdminOrganizationTree(tenantId),
-      ]);
-      const entry = catalog.find((item) => item.workflowTypeId === workflowTypeId) ?? null;
-      if (!entry) {
-        setCatalogEntry(null);
-        setTenantDefault(null);
-        return;
-      }
-
-      const dimension = entry.routingDimension ?? null;
-      const [defaultDefinition, options] = await Promise.all([
-        workflowsApi.getTenantWorkflowDefinition(tenantId, workflowTypeId),
-        dimension ? ROUTING_DIMENSIONS[dimension].loadOptions(tenantId) : Promise.resolve([]),
-      ]);
-
-      setCatalogEntry(entry);
-      setTenantDefault(defaultDefinition);
-      setSubjectOptions(options);
-      setOrganizations(flattenAdminOrgTree(orgTree.roots));
-    } catch {
-      setLoadFailed(true);
-      setCatalogEntry(null);
-      setTenantDefault(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, workflowTypeId]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const orgTreeQuery = useAdminOrganizationTree(tenantId);
+  const organizations: FlatAdminOrganization[] = useMemo(
+    () => flattenAdminOrgTree(orgTreeQuery.data?.roots ?? []),
+    [orgTreeQuery.data],
+  );
+  const catalogQuery = useAdminWorkflowTypeCatalog(tenantId);
+  const definitionsQuery = useAdminTenantWorkflowDefinitions(tenantId);
+  const catalogEntry =
+    catalogQuery.data?.find((item) => item.workflowTypeId === workflowTypeId) ?? null;
+  const tenantDefault =
+    definitionsQuery.data?.find((item) => item.workflowTypeId === workflowTypeId) ?? null;
+  const subjectOptions = useRoutingSubjectOptions(tenantId, catalogEntry?.routingDimension ?? null);
+  const loading = catalogQuery.isPending || definitionsQuery.isPending || orgTreeQuery.isPending;
+  const loadFailed = catalogQuery.isError || definitionsQuery.isError || orgTreeQuery.isError;
 
   const orgNameById = useMemo(() => {
     const map = new Map<number, string>();
@@ -121,7 +92,6 @@ export function AdminTenantWorkflowDefinitionDetailView({
 
   const handleSaved = () => {
     setIsEditOpen(false);
-    void loadData();
   };
 
   const handleRuleCreated = (rule: WorkflowRoutingRuleDto) => {
@@ -133,9 +103,9 @@ export function AdminTenantWorkflowDefinitionDetailView({
     setBusy(true);
     try {
       await workflowsApi.restoreTenantWorkflowDefinition(tenantId, workflowTypeId);
+      await invalidateAdminTenantCatalog(queryClient, 'workflows', tenantId);
       showSuccess(t('admin.workflowDefinitions.restored'));
       setRestoreOpen(false);
-      await loadData();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.workflowDefinitions.restoreFailed'));
     } finally {

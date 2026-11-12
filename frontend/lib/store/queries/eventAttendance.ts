@@ -24,10 +24,13 @@ import { userKeys } from './users';
 
 export const eventAttendanceKeys = {
   all: ['eventAttendances'] as const,
-  list: (organizationId: number, eventCategory: string, eventId: number, listQuery: ListQuery) =>
-    [...eventAttendanceKeys.all, organizationId, eventCategory, eventId, listQuery] as const,
+  /** Attendances of one event (the paged list appends its `listQuery`). */
+  list: (organizationId: number, eventCategory: string, eventId: number) =>
+    [...eventAttendanceKeys.all, 'list', organizationId, eventCategory, eventId] as const,
+  meBatchRoot: (organizationId: number, eventCategory: string) =>
+    [...eventAttendanceKeys.all, 'me-batch', organizationId, eventCategory] as const,
   meBatch: (organizationId: number, eventCategory: string, eventIds: readonly number[]) =>
-    [...eventAttendanceKeys.all, 'me-batch', organizationId, eventCategory, eventIds] as const,
+    [...eventAttendanceKeys.meBatchRoot(organizationId, eventCategory), eventIds] as const,
 };
 
 export function invalidateAfterEventAttendanceChange(
@@ -37,21 +40,18 @@ export function invalidateAfterEventAttendanceChange(
   eventId: number,
 ) {
   const category = eventTypeToUrlSegment(eventType);
-  queryClient.invalidateQueries({
-    queryKey: [...eventAttendanceKeys.all, 'list', organizationId, category, eventId],
+  void queryClient.invalidateQueries({
+    queryKey: eventAttendanceKeys.list(organizationId, category, eventId),
   });
-  queryClient.invalidateQueries({
-    queryKey: [...eventAttendanceKeys.all, 'me-batch', organizationId, category],
+  void queryClient.invalidateQueries({
+    queryKey: eventAttendanceKeys.meBatchRoot(organizationId, category),
   });
-  queryClient.invalidateQueries({ queryKey: userKeys.operationAlarmAttendanceStats() });
+  void queryClient.invalidateQueries({ queryKey: userKeys.operationAlarmAttendanceStats() });
   // ALL_ATTENDEES grants create/remove Nachweise when attendance changes
-  queryClient.invalidateQueries({
-    queryKey: eventCertificationGrantKeys.list(organizationId, eventType, eventId),
+  void queryClient.invalidateQueries({
+    queryKey: eventCertificationGrantKeys.event(organizationId, eventType, eventId),
   });
-  queryClient.invalidateQueries({
-    queryKey: [...eventCertificationGrantKeys.all, 'detail', organizationId, eventType, eventId],
-  });
-  queryClient.invalidateQueries({ queryKey: certificationKeys.all });
+  void queryClient.invalidateQueries({ queryKey: certificationKeys.all });
 }
 
 /** Local (non-URL) list state for the attendance section of an event detail page. */
@@ -86,7 +86,7 @@ export function useEventAttendances(
   const listQuery = options?.listQuery ?? eventAttendanceListDefaultQuery;
 
   return usePagedList({
-    queryKey: [...eventAttendanceKeys.all, 'list', organizationId ?? 0, category, eventId ?? 0],
+    queryKey: eventAttendanceKeys.list(organizationId ?? 0, category, eventId ?? 0),
     listQuery,
     queryFn: (query) =>
       eventApi.listEventAttendances(organizationId ?? 0, category, eventId ?? 0, query),

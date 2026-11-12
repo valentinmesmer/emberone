@@ -53,4 +53,10 @@ public class AppointmentDto {
 
     /** True when the current user has not yet marked this appointment as read. */
     private Boolean unread;
+
+    /** The current user's own response; null when absent or when the user is no member. */
+    private MyAppointmentResponseDto myResponse;
+
+    /** Number of attachments; null where the DTO is built without enrichment (create/update). */
+    private Long attachmentCount;
 }

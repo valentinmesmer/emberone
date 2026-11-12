@@ -38,7 +38,7 @@ export function useUpdateNotificationPreference() {
       data: UpdateNotificationPreferenceRequest;
     }) => notificationPreferencesApi.update(type, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationPreferenceKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: notificationPreferenceKeys.list() });
     },
   });
 }

@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantCertificationEditModal } from '@/components/admin/AdminTenantCertificationEditModal';
 import {
   StandardDetailAction,
@@ -24,10 +25,12 @@ import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { tenantCertificationsApi } from '@/lib/api/tenantCertifications';
 import {
-  type TenantCertDefinitionDto,
-  tenantCertificationsApi,
-} from '@/lib/api/tenantCertifications';
+  invalidateAdminTenantCatalog,
+  markAdminTenantCatalogStale,
+  useTenantCertification,
+} from '@/lib/store';
 import {
   getAdminTenantCertificationDetailPath,
   getAdminTenantStandardsPath,
@@ -46,33 +49,21 @@ export function AdminTenantCertificationDetailView({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [definition, setDefinition] = useState<TenantCertDefinitionDto | null>(null);
   const [busy, setBusy] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      setDefinition(await tenantCertificationsApi.get(tenantId, configKey));
-    } catch {
-      setLoadFailed(true);
-      setDefinition(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, configKey]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: definition = null,
+    isPending: loading,
+    isError: loadFailed,
+  } = useTenantCertification(tenantId, configKey);
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'certifications', tenantId);
+  const staleOnLeave = () =>
+    void markAdminTenantCatalogStale(queryClient, 'certifications', tenantId);
 
   const navigateBack = () => {
     router.push(getAdminTenantStandardsPath(tenantId));
@@ -83,6 +74,7 @@ export function AdminTenantCertificationDetailView({
     setBusy(true);
     try {
       await tenantCertificationsApi.delete(tenantId, definition.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.certifications.deleted'));
       navigateBack();
     } catch (e) {
@@ -99,6 +91,7 @@ export function AdminTenantCertificationDetailView({
     setBusy(true);
     try {
       await tenantCertificationsApi.archive(tenantId, definition.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.certifications.archived'));
       navigateBack();
     } catch (e) {
@@ -115,9 +108,9 @@ export function AdminTenantCertificationDetailView({
     setBusy(true);
     try {
       await tenantCertificationsApi.unarchive(tenantId, definition.configKey);
+      reload();
       showSuccess(t('admin.tenantStandards.certifications.unarchived'));
       setUnarchiveOpen(false);
-      await loadData();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.certifications.unarchiveFailed'),
@@ -235,10 +228,11 @@ export function AdminTenantCertificationDetailView({
         onSaved={(savedConfigKey) => {
           setEditOpen(false);
           if (savedConfigKey !== configKey) {
+            staleOnLeave();
             router.replace(getAdminTenantCertificationDetailPath(tenantId, savedConfigKey));
             return;
           }
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         definition={definition}

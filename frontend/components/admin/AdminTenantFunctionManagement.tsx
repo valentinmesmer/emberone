@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantFunctionEditModal } from '@/components/admin/AdminTenantFunctionEditModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import { SectionActions, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type TenantFunctionDto, tenantFunctionsApi } from '@/lib/api/tenantFunctions';
+import { invalidateAdminTenantCatalog, useQueryErrorToast, useTenantFunctions } from '@/lib/store';
 import { getAdminTenantFunctionDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantFunctionManagementProps {
@@ -31,31 +33,20 @@ export function AdminTenantFunctionManagement({ tenantId }: AdminTenantFunctionM
   const t = useTranslation();
   const router = useRouter();
   const { showError, showSuccess } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [definitions, setDefinitions] = useState<TenantFunctionDto[]>([]);
   const [busy, setBusy] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TenantFunctionDto | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<TenantFunctionDto | null>(null);
   const [unarchiveTarget, setUnarchiveTarget] = useState<TenantFunctionDto | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      setDefinitions(await tenantFunctionsApi.list(tenantId));
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.tenantStandards.functions.loadFailed'));
-      setDefinitions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: definitions = [],
+    isPending: loading,
+    error: loadError,
+  } = useTenantFunctions(tenantId);
+  useQueryErrorToast(loadError, { messageKey: 'admin.tenantStandards.functions.loadFailed' });
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'functions', tenantId);
 
   const listContent = loading ? (
     <LoadingState variant="embedded" size="sm" />
@@ -150,7 +141,7 @@ export function AdminTenantFunctionManagement({ tenantId }: AdminTenantFunctionM
           editing={editing}
           isOpen
           onClose={() => setFormOpen(false)}
-          onSaved={() => void loadData()}
+          onSaved={reload}
         />
       ) : null}
 
@@ -164,7 +155,7 @@ export function AdminTenantFunctionManagement({ tenantId }: AdminTenantFunctionM
             await tenantFunctionsApi.archive(tenantId, archiveTarget.configKey);
             showSuccess(t('admin.tenantStandards.functions.archived'));
             setArchiveTarget(null);
-            await loadData();
+            reload();
           } catch (e) {
             showError(
               e instanceof Error ? e.message : t('admin.tenantStandards.functions.archiveFailed'),
@@ -188,7 +179,7 @@ export function AdminTenantFunctionManagement({ tenantId }: AdminTenantFunctionM
             await tenantFunctionsApi.unarchive(tenantId, unarchiveTarget.configKey);
             showSuccess(t('admin.tenantStandards.functions.unarchived'));
             setUnarchiveTarget(null);
-            await loadData();
+            reload();
           } catch (e) {
             showError(
               e instanceof Error ? e.message : t('admin.tenantStandards.functions.unarchiveFailed'),

@@ -100,6 +100,20 @@ export const trainingCoursesApi = {
     return apiClient.get<TrainingCourseTypeDto[]>(`${selfBase}/available-types`);
   },
 
+  getMyRecord(recordId: number): Promise<TrainingCourseUserRecordDto> {
+    return apiClient.get<TrainingCourseUserRecordDto>(`${selfBase}/records/${recordId}`);
+  },
+
+  getUserRecord(
+    organizationId: number,
+    userId: number,
+    recordId: number,
+  ): Promise<TrainingCourseUserRecordDto> {
+    return apiClient.get<TrainingCourseUserRecordDto>(
+      `${orgBase(organizationId, userId)}/records/${recordId}`,
+    );
+  },
+
   getUserRecords(
     organizationId: number,
     userId: number,

@@ -26,15 +26,13 @@ import {
   useMyBeginnableWorkflowTypes,
   useMyDrivingLicense,
   useMyWorkflowOpenedPage,
-  useUserDocuments,
-  useWorkflowOpenState,
+  useUserDocumentsByIds,
 } from '@/lib/store';
 import { WORKFLOW_TYPE_IDS } from '@/types/workflow';
 
 export function UserDrivingLicenseListView() {
   const t = useTranslation();
   const { data: license, isLoading: licenseLoading } = useMyDrivingLicense();
-  const { data: documents = [], isLoading: documentsLoading } = useUserDocuments();
   const { data: openedWorkflows = [], isPending: workflowInboxLoading } = useMyWorkflowOpenedPage();
   const { data: beginnableTypes = [] } = useMyBeginnableWorkflowTypes();
   const { data: availableDefinitions = [], isLoading: catalogLoading } =
@@ -47,19 +45,10 @@ export function UserDrivingLicenseListView() {
     [openedWorkflows],
   );
 
-  const drivingLicenseWorkflowBeginnable = useMemo(
-    () =>
-      beginnableTypes.some(
-        (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.DRIVING_LICENSE_RECORD,
-      ),
-    [beginnableTypes],
+  const drivingLicenseType = beginnableTypes.find(
+    (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.DRIVING_LICENSE_RECORD,
   );
-  const { data: drivingLicenseOpenState } = useWorkflowOpenState(
-    WORKFLOW_TYPE_IDS.DRIVING_LICENSE_RECORD,
-    drivingLicenseWorkflowBeginnable,
-  );
-  const canOpenSubmitWorkflow =
-    drivingLicenseWorkflowBeginnable && !(drivingLicenseOpenState?.typeBlocked ?? false);
+  const canOpenSubmitWorkflow = drivingLicenseType != null && !drivingLicenseType.typeBlocked;
 
   const classDefinitions = useMemo(
     () => availableDefinitions.filter((definition) => definition.active),
@@ -70,12 +59,9 @@ export function UserDrivingLicenseListView() {
     classDefinitions.find((definition) => definition.id === definitionId)?.name ??
     `#${definitionId}`;
 
-  const linkedDocuments = useMemo(() => {
-    const documentIds = new Set(license?.userDocumentIds ?? []);
-    return documents.filter((doc) => documentIds.has(doc.id));
-  }, [documents, license?.userDocumentIds]);
+  const { data: linkedDocuments = [] } = useUserDocumentsByIds(license?.userDocumentIds ?? []);
 
-  const isLoading = licenseLoading || documentsLoading || workflowInboxLoading || catalogLoading;
+  const isLoading = licenseLoading || workflowInboxLoading || catalogLoading;
 
   const hasContent = license != null || openDrivingLicenseWorkflow != null;
 

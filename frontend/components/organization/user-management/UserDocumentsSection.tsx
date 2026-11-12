@@ -53,11 +53,14 @@ export function UserDocumentsSection({
     userId,
     listQuery: listState.listQuery,
   });
-  const { data: availableTags = [] } = useOrganizationUserDocumentTags(organizationId, userId);
+  const [editTarget, setEditTarget] = useState<UserDocumentDto | null>(null);
+  const { data: availableTags = [] } = useOrganizationUserDocumentTags(
+    organizationId,
+    userId,
+    canWrite && (isAddOpen || editTarget !== null),
+  );
   const uploadDocument = useUploadOrganizationUserDocument(organizationId, userId);
   const updateDocument = useUpdateOrganizationUserDocument(organizationId, userId);
-
-  const [editTarget, setEditTarget] = useState<UserDocumentDto | null>(null);
 
   return (
     <div className="space-y-3">

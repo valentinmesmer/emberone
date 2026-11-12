@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
+import type { CertificationStatusItemDto } from '@/lib/api/certifications';
+import type { DrivingLicenseDefinitionDto } from '@/lib/api/drivingLicenses';
 import { buildQuery } from '@/lib/api/paged';
 import type { QualificationRequirementMode } from '@/lib/api/tenantQualifications';
 import type { ListQuery } from '@/lib/list/types';
@@ -87,6 +89,36 @@ export interface SelfQualificationStatusItemDto {
 
 export type SelfQualificationStatusItemPageDto = PageResponse<SelfQualificationStatusItemDto>;
 
+export interface QualificationTrainingRecordRefDto {
+  configKey: string;
+  recordId: number;
+}
+
+export interface QualificationDrivingLicenseDto {
+  documentExpirationDate: string | null;
+  classes: {
+    tenantDrivingLicenseDefinitionId: number;
+    grantDate: string | null;
+    expirationDate: string | null;
+  }[];
+}
+
+/** Org view of one qualification; evidence sections are empty without the matching permission. */
+export interface UserQualificationDetailDto {
+  item: QualificationStatusItemDto;
+  certifications: CertificationStatusItemDto[];
+  trainingRecords: QualificationTrainingRecordRefDto[];
+  drivingLicense: QualificationDrivingLicenseDto | null;
+  drivingLicenseDefinitions: DrivingLicenseDefinitionDto[];
+}
+
+export interface SelfQualificationDetailDto {
+  organizations: SelfQualificationStatusItemDto[];
+  certifications: CertificationStatusItemDto[];
+  trainingRecords: QualificationTrainingRecordRefDto[];
+  drivingLicense: QualificationDrivingLicenseDto | null;
+}
+
 export type QualificationListRequest = ListQuery & {
   status?: QualificationExerciseStatus;
 };
@@ -109,6 +141,20 @@ export const qualificationsApi = {
     });
     const base = `${orgBase(organizationId, userId)}/status`;
     return apiClient.get<QualificationStatusItemPageDto>(qs ? `${base}?${qs}` : base);
+  },
+
+  getUserDetail(
+    organizationId: number,
+    userId: number,
+    definitionId: number,
+  ): Promise<UserQualificationDetailDto> {
+    return apiClient.get<UserQualificationDetailDto>(
+      `${orgBase(organizationId, userId)}/${definitionId}`,
+    );
+  },
+
+  getSelfDetail(definitionId: number): Promise<SelfQualificationDetailDto> {
+    return apiClient.get<SelfQualificationDetailDto>(`/api/v1/self/qualifications/${definitionId}`);
   },
 
   getStatusOverview(

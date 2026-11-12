@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.emberone.platform.security.TokenService;
 import com.emberone.testsupport.SecurityTestFixtures;
 import com.emberone.testsupport.SecurityWebMvcTestConfig;
+import com.emberone.trainingcourse.dto.TrainingCourseUserRecordDto;
 import com.emberone.trainingcourse.service.TrainingCourseCatalogService;
 import com.emberone.trainingcourse.service.TrainingCourseRecordService;
 import java.util.List;
@@ -45,6 +46,23 @@ class UserTrainingCourseSelfControllerSecurityTest {
 
         mockMvc.perform(
                         get("/api/v1/self/training-courses/available-types")
+                                .with(SecurityTestFixtures.tenantUserJwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void selfRecordRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/self/training-courses/records/7"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void selfRecordAllowedForTenantUserAndScopedToCaller() throws Exception {
+        when(recordService.getRecord(SecurityTestFixtures.USER_ID, 7L))
+                .thenReturn(TrainingCourseUserRecordDto.builder().id(7L).build());
+
+        mockMvc.perform(
+                        get("/api/v1/self/training-courses/records/7")
                                 .with(SecurityTestFixtures.tenantUserJwt()))
                 .andExpect(status().isOk());
     }

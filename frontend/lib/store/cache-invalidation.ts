@@ -55,14 +55,9 @@ export function invalidateServerCacheTopic(
     case 'users':
       return queryClient.invalidateQueries({ queryKey: userKeys.all });
     case 'usersForOrganization':
-      return Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: userKeys.byOrganization(topic.organizationId),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: userKeys.byOrganizationIncludingChildren(topic.organizationId),
-        }),
-      ]).then(() => {});
+      return queryClient.invalidateQueries({
+        queryKey: userKeys.byOrganization(topic.organizationId),
+      });
     case 'events':
       return queryClient.invalidateQueries({ queryKey: eventKeys.all });
     case 'permissions':

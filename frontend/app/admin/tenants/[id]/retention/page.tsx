@@ -7,17 +7,17 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import { AdminMobileLayout } from '@/components/admin';
 import { Card } from '@/components/ui/card';
 import { FieldDisplay } from '@/components/ui/field-display';
 import { ListContainer, ListRow } from '@/components/ui/list';
 import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
-import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
-import { adminApi, type RetentionCategory, type TenantRetentionProfileDto } from '@/lib/api/admin';
+import type { RetentionCategory } from '@/lib/api/admin';
+import { useQueryErrorToast, useTenantRetentionProfile } from '@/lib/store';
 import { getAdminTenantRetentionCategoryPath } from '@/lib/navigation/adminWorkspace';
 import {
   formatRetentionPeriod,
@@ -39,37 +39,17 @@ function RetentionPageInner() {
     isLoading: authLoading,
   } = useAuth();
   const t = useTranslation();
-  const { showError } = useToast();
-
-  const [profile, setProfile] = useState<TenantRetentionProfileDto | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const tenantOutOfScope =
     !isGlobalAdmin && idValid && (authTenantId == null || tenantId !== authTenantId);
 
-  const loadProfile = useCallback(async () => {
-    if (!idValid) return;
-    setLoading(true);
-    try {
-      const data = await adminApi.getTenantRetentionProfile(tenantId);
-      setProfile(data);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.errors.retentionLoadFailed'));
-      setProfile(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [idValid, tenantId, showError, t]);
-
-  useEffect(() => {
-    if (!canAccessAdministration || authLoading || !idValid || tenantOutOfScope) {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      void loadProfile();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [canAccessAdministration, authLoading, idValid, loadProfile, tenantOutOfScope]);
+  const profileQuery = useTenantRetentionProfile(
+    tenantId,
+    canAccessAdministration && !authLoading && idValid && !tenantOutOfScope,
+  );
+  useQueryErrorToast(profileQuery.error, { messageKey: 'admin.errors.retentionLoadFailed' });
+  const profile = profileQuery.data ?? null;
+  const loading = profileQuery.isLoading;
 
   if (authLoading) {
     return (

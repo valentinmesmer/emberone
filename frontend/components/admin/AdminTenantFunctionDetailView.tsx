@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantFunctionEditModal } from '@/components/admin/AdminTenantFunctionEditModal';
 import {
   StandardDetailAction,
@@ -24,7 +25,12 @@ import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type TenantFunctionDto, tenantFunctionsApi } from '@/lib/api/tenantFunctions';
+import { tenantFunctionsApi } from '@/lib/api/tenantFunctions';
+import {
+  invalidateAdminTenantCatalog,
+  markAdminTenantCatalogStale,
+  useTenantFunction,
+} from '@/lib/store';
 import { getAdminTenantStandardsPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantFunctionDetailViewProps {
@@ -40,38 +46,26 @@ export function AdminTenantFunctionDetailView({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [item, setItem] = useState<TenantFunctionDto | null>(null);
   const [busy, setBusy] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      setItem(await tenantFunctionsApi.get(tenantId, configKey));
-    } catch {
-      setLoadFailed(true);
-      setItem(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, configKey]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: item = null,
+    isPending: loading,
+    isError: loadFailed,
+  } = useTenantFunction(tenantId, configKey);
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'functions', tenantId);
+  const staleOnLeave = () => void markAdminTenantCatalogStale(queryClient, 'functions', tenantId);
 
   const handleArchive = async () => {
     if (!item) return;
     setBusy(true);
     try {
       await tenantFunctionsApi.archive(tenantId, item.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.functions.archived'));
       router.push(getAdminTenantStandardsPath(tenantId));
     } catch (e) {
@@ -88,9 +82,9 @@ export function AdminTenantFunctionDetailView({
     setBusy(true);
     try {
       await tenantFunctionsApi.unarchive(tenantId, item.configKey);
+      reload();
       showSuccess(t('admin.tenantStandards.functions.unarchived'));
       setUnarchiveOpen(false);
-      await loadData();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.functions.unarchiveFailed'),
@@ -169,7 +163,7 @@ export function AdminTenantFunctionDetailView({
           editing={item}
           isOpen
           onClose={() => setEditOpen(false)}
-          onSaved={() => void loadData()}
+          onSaved={reload}
         />
       ) : null}
 

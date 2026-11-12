@@ -122,9 +122,19 @@ Grant-Guards: Definition braucht Org-Entscheidung; im Org-Katalog; nicht `PREREQ
 | HTTP | Pfad | Aktion |
 |------|------|--------|
 | GET | `/status` | Status für User |
+| GET | `/{definitionId}` | Detail einer Qualifikation (`UserQualificationDetailDto`) |
 | POST/PUT | `/{qualificationConfigKey}/org-decision` | Grant / Update |
 
 Außerdem: Org-Overview `OrganizationQualificationController` (`GET …/qualifications/status-overview?search=`: gruppierte Antwort `groups[]` mit `members[]`, Gruppen alphabetisch nach Name; kein `page`/`sort`. `search` ist eine serverseitige Token-Suche, Groß-/Kleinschreibung egal, alle Tokens müssen im selben Text passen (`ListSpecs.searchTokens`, max. 5 Wörter, sonst 400): Trifft der Gruppenname, bleiben alle Mitglieder; sonst bleiben nur passende Mitglieder (`userDisplayName`) und Gruppen ohne Treffer entfallen. `appointableMembers` bleibt unverändert; Frontend filtert nicht clientseitig), Self/Org-User-Status als paginierte Item-Listen (`ListQuery` + optional `status`) unter `GET …/qualifications/status` (`QualificationStatusItemPageDto` bzw. Self mit `organizationId` pro Zeile).
+
+### Detail-Endpoints (ein Request pro Sicht)
+
+Die Detailseiten laden genau einen Endpoint statt je Nachweis-Art eine Query (`QualificationDetailService`):
+
+- **Org:** `GET /api/v1/auth/organizations/{orgId}/users/{userId}/qualifications/{definitionId}`. `item` (Status wie in der Liste), `certifications` (Zertifizierungs-Status nur der Voraussetzungs-Zertifizierungen), `trainingRecords` (je Kurstyp-Config-Key die neueste Record-ID), `drivingLicense` (Dokument-Ablauf + Klassen), `drivingLicenseDefinitions` (nur die Voraussetzungs-Definitionen). Berechtigung: `hasQualificationReadPermission`; die Nachweis-Abschnitte werden nur mit `hasCertificationReadPermission` / `hasTrainingCourseReadPermission` / `hasDrivingLicenseReadPermission` befüllt, sonst leer (wie zuvor, wo die Einzel-Endpoints 403 lieferten). Nicht im Org-Katalog → 404.
+- **Self:** `GET /api/v1/self/qualifications/{definitionId}` (`isSelfServiceUser`, wie die Nachweis-Self-APIs). `organizations[]` (Status je Mitglieds-Org, `SelfQualificationStatusItemDto`) plus dieselben Nachweis-Abschnitte; in keiner Org-Katalog → 404.
+
+Die Listen (`…/status`) bleiben unverändert; Frontend lädt sie weiter vollständig (Self-Liste/Home aggregieren clientseitig über alle Orgs, Org-Sektion gruppiert nach Status).
 
 ## Sync & Listener
 

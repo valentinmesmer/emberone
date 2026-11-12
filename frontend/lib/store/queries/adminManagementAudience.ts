@@ -6,6 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi, type ReplaceManagementAudiencesRequest } from '@/lib/api/admin';
+import { STALE_TIME } from '@/lib/store/staleTime';
 
 export const adminManagementAudienceKeys = {
   all: ['admin', 'managementAudience'] as const,
@@ -17,6 +18,7 @@ export function useAdminManagementAudiences(tenantId: number, organizationId: nu
   return useQuery({
     queryKey: adminManagementAudienceKeys.settings(tenantId, organizationId),
     queryFn: () => adminApi.getManagementAudiences(tenantId, organizationId),
+    staleTime: STALE_TIME.LIST,
   });
 }
 

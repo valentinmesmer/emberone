@@ -8,6 +8,7 @@
 
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { appointmentAttachmentApi } from '@/lib/api/appointmentAttachment';
+import { appointmentKeys } from '@/lib/store/queries/appointments';
 import { STALE_TIME } from '@/lib/store/staleTime';
 import type { EntityAttachmentDto } from '@/types/attachment';
 
@@ -17,15 +18,15 @@ export const appointmentAttachmentKeys = {
     [...appointmentAttachmentKeys.all, organizationId, appointmentId] as const,
 };
 
-/**
- * Appointment DTOs carry no attachment data, so a change only affects this list; the appointment
- * queries stay untouched.
- */
+/** A change affects this list and the `attachmentCount` of the appointment records. */
 export function invalidateAppointmentAttachments(
   queryClient: QueryClient,
   organizationId: number,
   appointmentId: number,
 ): Promise<void> {
+  void queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+  void queryClient.invalidateQueries({ queryKey: appointmentKeys.details() });
+  void queryClient.invalidateQueries({ queryKey: appointmentKeys.upcomingRoot() });
   return queryClient.invalidateQueries({
     queryKey: appointmentAttachmentKeys.list(organizationId, appointmentId),
   });

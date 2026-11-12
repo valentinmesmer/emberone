@@ -35,14 +35,13 @@ import {
 } from '@/lib/list/appointmentList';
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
-  appointmentKeys,
-  eventAttendanceKeys,
   eventKeys,
+  invalidateAfterEventAttendanceChange,
+  invalidateAppointmentRecords,
   useAppointmentAudienceGroups,
   useAppointmentList,
   useCreateAppointment,
   useDeleteAppointment,
-  useMyAppointmentResponses,
   useOrganizationById,
   useUpdateAppointment,
   useUrlSyncedAppointmentListState,
@@ -124,14 +123,7 @@ function AppointmentListContent({ organizationId, isMember }: AppointmentListCon
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-    refetch,
   } = useAppointmentList({ organizationId, listQuery: listState.listQuery });
-  const appointmentIds = useMemo(() => appointments.map((a) => a.id), [appointments]);
-  const { data: myResponses = [] } = useMyAppointmentResponses(isMember ? appointmentIds : []);
-  const myResponseByAppointmentId = useMemo(
-    () => new Map(myResponses.map((r) => [r.appointmentId, r])),
-    [myResponses],
-  );
   const createMutation = useCreateAppointment(organizationId);
   const updateMutation = useUpdateAppointment(organizationId);
   const deleteMutation = useDeleteAppointment(organizationId);
@@ -172,7 +164,6 @@ function AppointmentListContent({ organizationId, isMember }: AppointmentListCon
       await deleteMutation.mutateAsync({ appointmentId: appointment.id, scope });
       showSuccess(t('appointments.success.deleted'));
       setDeleteTarget(null);
-      refetch();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('appointments.errors.deleteFailed'));
     }
@@ -191,7 +182,6 @@ function AppointmentListContent({ organizationId, isMember }: AppointmentListCon
       });
       showSuccess(t('appointments.success.updated'));
       setEditTarget(null);
-      refetch();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('appointments.errors.updateFailed'));
     }
@@ -207,9 +197,10 @@ function AppointmentListContent({ organizationId, isMember }: AppointmentListCon
       setIsCreatingEvent(true);
       const created = await createEvent(eventType, data);
       showSuccess(t('events.success.created'));
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
-      await queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      refetch();
+      void queryClient.invalidateQueries({
+        queryKey: eventKeys.forType(eventType, organizationId),
+      });
+      invalidateAppointmentRecords(queryClient);
       return created;
     } catch {
       showError(t('events.errors.createFailed'));
@@ -234,7 +225,12 @@ function AppointmentListContent({ organizationId, isMember }: AppointmentListCon
       } else {
         showSuccess(t('events.attendance.importFromAppointmentNone'));
       }
-      await queryClient.invalidateQueries({ queryKey: eventAttendanceKeys.all });
+      invalidateAfterEventAttendanceChange(
+        queryClient,
+        organizationId,
+        importAfterCreate.eventType,
+        importAfterCreate.event.id,
+      );
     } catch (e) {
       showError(e instanceof Error ? e.message : t('events.attendance.addFailed'));
     } finally {
@@ -302,7 +298,7 @@ function AppointmentListContent({ organizationId, isMember }: AppointmentListCon
             const promoteAllowed = canWrite && promotePermission && !appointment.archived;
             const promoteStartOk = hasAppointmentStarted(appointment.start);
             const tone = isMember
-              ? getAppointmentListTone(appointment, myResponseByAppointmentId.get(appointment.id))
+              ? getAppointmentListTone(appointment, appointment.myResponse ?? undefined)
               : 'default';
             return (
               <ListRow
@@ -403,7 +399,6 @@ function AppointmentListContent({ organizationId, isMember }: AppointmentListCon
           try {
             const created = await createMutation.mutateAsync(data);
             showSuccess(t('appointments.success.created'));
-            refetch();
             return created;
           } catch (e) {
             showError(e instanceof Error ? e.message : t('appointments.errors.createFailed'));

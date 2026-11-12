@@ -15,7 +15,7 @@ import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
-import { type TenantRankDto, tenantRanksApi } from '@/lib/api/tenantRanks';
+import { useQueryErrorToast, useTenantRanks } from '@/lib/store';
 
 interface Props {
   state: StandardContentState;
@@ -37,8 +37,6 @@ export function StandardRankSelectionManagement({ state, embedded = false }: Pro
   const { showError } = useToast();
   const { tenantId, standardId, items, editable } = state;
 
-  const [loading, setLoading] = useState(true);
-  const [catalog, setCatalog] = useState<TenantRankDto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const selectedRef = useRef(selected);
   const lastSavedRef = useRef<Set<string>>(new Set());
@@ -53,24 +51,12 @@ export function StandardRankSelectionManagement({ state, embedded = false }: Pro
     [items],
   );
 
-  const loadCatalog = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await tenantRanksApi.list(tenantId);
-      setCatalog(response.filter((rank) => !rank.archived));
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.standards.ranks.loadCatalogFailed'));
-      setCatalog([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadCatalog();
-    });
-  }, [loadCatalog]);
+  const { data: catalogData, isPending: loading, error: catalogError } = useTenantRanks(tenantId);
+  useQueryErrorToast(catalogError, { messageKey: 'admin.standards.ranks.loadCatalogFailed' });
+  const catalog = useMemo(
+    () => (catalogData ?? []).filter((definition) => !definition.archived),
+    [catalogData],
+  );
 
   useEffect(() => {
     if (setsEqual(selectedFromStandard, lastSavedRef.current)) return;

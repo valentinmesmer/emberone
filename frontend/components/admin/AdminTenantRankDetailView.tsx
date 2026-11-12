@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantRankEditModal } from '@/components/admin/AdminTenantRankEditModal';
 import {
   StandardDetailAction,
@@ -24,7 +25,12 @@ import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type TenantRankDto, tenantRanksApi } from '@/lib/api/tenantRanks';
+import { tenantRanksApi } from '@/lib/api/tenantRanks';
+import {
+  invalidateAdminTenantCatalog,
+  markAdminTenantCatalogStale,
+  useTenantRank,
+} from '@/lib/store';
 import { getAdminTenantStandardsPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantRankDetailViewProps {
@@ -37,38 +43,26 @@ export function AdminTenantRankDetailView({ tenantId, configKey }: AdminTenantRa
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [item, setItem] = useState<TenantRankDto | null>(null);
   const [busy, setBusy] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      setItem(await tenantRanksApi.get(tenantId, configKey));
-    } catch {
-      setLoadFailed(true);
-      setItem(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, configKey]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: item = null,
+    isPending: loading,
+    isError: loadFailed,
+  } = useTenantRank(tenantId, configKey);
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'ranks', tenantId);
+  const staleOnLeave = () => void markAdminTenantCatalogStale(queryClient, 'ranks', tenantId);
 
   const handleArchive = async () => {
     if (!item) return;
     setBusy(true);
     try {
       await tenantRanksApi.archive(tenantId, item.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.ranks.archived'));
       router.push(getAdminTenantStandardsPath(tenantId));
     } catch (e) {
@@ -83,9 +77,9 @@ export function AdminTenantRankDetailView({ tenantId, configKey }: AdminTenantRa
     setBusy(true);
     try {
       await tenantRanksApi.unarchive(tenantId, item.configKey);
+      reload();
       showSuccess(t('admin.tenantStandards.ranks.unarchived'));
       setUnarchiveOpen(false);
-      await loadData();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.tenantStandards.ranks.unarchiveFailed'));
     } finally {
@@ -166,7 +160,7 @@ export function AdminTenantRankDetailView({ tenantId, configKey }: AdminTenantRa
           editing={item}
           isOpen
           onClose={() => setEditOpen(false)}
-          onSaved={() => void loadData()}
+          onSaved={reload}
         />
       ) : null}
 

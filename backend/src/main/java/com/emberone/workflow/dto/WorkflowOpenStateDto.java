@@ -24,12 +24,6 @@ public class WorkflowOpenStateDto {
     private long workflowTypeId;
 
     /**
-     * True when {@code allowsMultipleConcurrentOpen} is false and an active instance already
-     * exists.
-     */
-    private boolean typeBlocked;
-
-    /**
      * Active concurrency keys for this workflow type (empty when only type-level blocking applies).
      */
     private List<String> openConcurrencyKeys;

@@ -17,7 +17,6 @@ import {
   useOrganizationLeaveTargets,
   useOrganizationTree,
   useSelfOnboardingInvitations,
-  useWorkflowOpenState,
 } from '@/lib/store';
 import { WORKFLOW_TYPE_IDS } from '@/types/workflow';
 import type { OrganizationMembershipRequestActionsProps } from './OrganizationMembershipRequestActions';
@@ -27,20 +26,6 @@ export function useMyAreaOrganizationRequests() {
   const { data: organizationTree } = useOrganizationTree();
   const { data: selfOnboardingInvitations = [] } = useSelfOnboardingInvitations();
   const { data: beginnableTypes = [] } = useMyBeginnableWorkflowTypes();
-  const { data: mainOrganizationChangeOpenState } = useWorkflowOpenState(
-    WORKFLOW_TYPE_IDS.MAIN_ORGANIZATION_CHANGE,
-  );
-  const organizationGroupJoinBeginnableForState = useMemo(
-    () =>
-      beginnableTypes.some(
-        (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.ORGANIZATION_GROUP_JOIN_REQUEST,
-      ),
-    [beginnableTypes],
-  );
-  const { data: organizationGroupJoinOpenState } = useWorkflowOpenState(
-    WORKFLOW_TYPE_IDS.ORGANIZATION_GROUP_JOIN_REQUEST,
-    organizationGroupJoinBeginnableForState,
-  );
   const hasActiveOnboardingInvitation = useMemo(
     () =>
       selfOnboardingInvitations.some(
@@ -52,10 +37,6 @@ export function useMyAreaOrganizationRequests() {
   const organizationJoinEligible = !hasActiveOnboardingInvitation;
   const { data: joinableOrganizations = [], isLoading: joinableOrganizationsLoading } =
     useJoinableOrganizations(organizationJoinEligible);
-  const { data: organizationJoinOpenState } = useWorkflowOpenState(
-    WORKFLOW_TYPE_IDS.ORGANIZATION_JOIN_REQUEST,
-    organizationJoinEligible,
-  );
 
   const [organizationJoinOpen, setOrganizationJoinOpen] = useState(false);
   const [organizationJoinModalKey, setOrganizationJoinModalKey] = useState(0);
@@ -68,7 +49,9 @@ export function useMyAreaOrganizationRequests() {
   const [organizationGroupJoinOpen, setOrganizationGroupJoinOpen] = useState(false);
   const [organizationGroupJoinModalKey, setOrganizationGroupJoinModalKey] = useState(0);
 
-  const organizationJoinTypeBlocked = organizationJoinOpenState?.typeBlocked ?? false;
+  const typeBlockedOf = (workflowTypeId: number) =>
+    beginnableTypes.find((type) => type.workflowTypeId === workflowTypeId)?.typeBlocked ?? false;
+  const organizationJoinTypeBlocked = typeBlockedOf(WORKFLOW_TYPE_IDS.ORGANIZATION_JOIN_REQUEST);
   const organizationJoinNoTargetsBlocked =
     joinableOrganizationsLoading || joinableOrganizations.length === 0;
   /** ORGANIZATION_JOIN_REQUEST („Eintritt beantragen“) - not onboarding submission („Eintritt einreichen“). */
@@ -85,7 +68,9 @@ export function useMyAreaOrganizationRequests() {
       ),
     [beginnableTypes],
   );
-  const mainOrganizationChangeOpenBlocked = mainOrganizationChangeOpenState?.typeBlocked ?? false;
+  const mainOrganizationChangeOpenBlocked = typeBlockedOf(
+    WORKFLOW_TYPE_IDS.MAIN_ORGANIZATION_CHANGE,
+  );
   const { data: mainChangeTargets = [], isLoading: mainChangeTargetsLoading } =
     useMainOrganizationChangeTargets(mainOrganizationChangeBeginnable);
   const mainOrganizationChangeNoTargetsBlocked =
@@ -126,7 +111,9 @@ export function useMyAreaOrganizationRequests() {
       ),
     [beginnableTypes],
   );
-  const organizationGroupJoinTypeBlocked = organizationGroupJoinOpenState?.typeBlocked ?? false;
+  const organizationGroupJoinTypeBlocked = typeBlockedOf(
+    WORKFLOW_TYPE_IDS.ORGANIZATION_GROUP_JOIN_REQUEST,
+  );
 
   const hasOrganizations = Boolean(organizationTree && organizationTree.length > 0);
 

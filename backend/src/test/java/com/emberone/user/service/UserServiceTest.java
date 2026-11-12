@@ -66,6 +66,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -686,46 +687,37 @@ class UserServiceTest {
                 .satisfies(group -> assertThat(group.getName()).isEqualTo("Crew"));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    void getUsersByOrganizationIdFiltersGroupMembershipsToOrganizationGroups() {
+    void getUserForOrganizationFiltersGroupMembershipsAndRejectsNonMembers() {
         Organization organization = Organization.builder().id(10L).name("Parent").build();
         User user = User.builder().id(1L).lastName("Lovelace").firstName("Ada").build();
         when(organizationRepository.findById(10L)).thenReturn(Optional.of(organization));
         when(organizationGroupRepository.findIdsByOrganizationIdAndTypeIn(
                         eq(10L), eq(OrganizationGroupType.userInterfaceVisibleTypes())))
                 .thenReturn(List.of(20L));
-        when(organizationMembershipRepository.findActiveByOrganization_Id(
-                        eq(10L), any(Instant.class)))
+        when(userRepository.findOne(any(Specification.class)))
+                .thenReturn(Optional.of(user))
+                .thenReturn(Optional.empty());
+        when(mapper.toDto(user))
                 .thenReturn(
-                        List.of(
-                                UserOrganizationMembership.builder()
-                                        .user(user)
-                                        .organization(organization)
-                                        .startDate(Instant.now())
-                                        .build()));
-        UserDto dto =
-                UserDto.builder()
-                        .id(1L)
-                        .lastName("Lovelace")
-                        .firstName("Ada")
-                        .organizationGroupMemberships(
-                                List.of(
-                                        UserOrganizationGroupMembershipDto.builder()
-                                                .organizationGroupId(20L)
-                                                .build(),
-                                        UserOrganizationGroupMembershipDto.builder()
-                                                .organizationGroupId(99L)
-                                                .build()))
-                        .build();
-        when(mapper.toDto(user)).thenReturn(dto);
+                        UserDto.builder()
+                                .id(1L)
+                                .organizationGroupMemberships(
+                                        List.of(
+                                                UserOrganizationGroupMembershipDto.builder()
+                                                        .organizationGroupId(20L)
+                                                        .build(),
+                                                UserOrganizationGroupMembershipDto.builder()
+                                                        .organizationGroupId(99L)
+                                                        .build()))
+                                .build());
 
-        assertThat(service.getUsersByOrganizationId(10L))
-                .singleElement()
-                .satisfies(result ->
-                        assertThat(result.getOrganizationGroupMemberships())
-                                .extracting(
-                                        UserOrganizationGroupMembershipDto::getOrganizationGroupId)
-                                .containsExactly(20L));
+        assertThat(service.getUserForOrganization(10L, 1L).getOrganizationGroupMemberships())
+                .extracting(UserOrganizationGroupMembershipDto::getOrganizationGroupId)
+                .containsExactly(20L);
+        assertThatThrownBy(() -> service.getUserForOrganization(10L, 2L))
+                .isInstanceOf(UserNotFoundException.class);
     }
 
     @Test

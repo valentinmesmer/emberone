@@ -16,6 +16,7 @@ import com.emberone.platform.security.TokenService;
 import com.emberone.platform.web.list.options.ListFilterOptionsDto;
 import com.emberone.testsupport.SecurityTestFixtures;
 import com.emberone.testsupport.SecurityWebMvcTestConfig;
+import com.emberone.userdocument.dto.UserDocumentDto;
 import com.emberone.userdocument.dto.UserDocumentPageDto;
 import com.emberone.userdocument.list.UserDocumentSelfListFilterOptions;
 import com.emberone.userdocument.service.UserDocumentService;
@@ -63,6 +64,20 @@ class UserDocumentSelfControllerSecurityTest {
                 .thenReturn(UserDocumentPageDto.builder().content(List.of()).build());
 
         mockMvc.perform(get("/api/v1/self/documents").with(SecurityTestFixtures.tenantUserJwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void selfDocumentRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/self/documents/7")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void selfDocumentAllowedForTenantUserAndScopedToCaller() throws Exception {
+        when(userDocumentService.getDocument(SecurityTestFixtures.USER_ID, 7L))
+                .thenReturn(UserDocumentDto.builder().id(7L).build());
+
+        mockMvc.perform(get("/api/v1/self/documents/7").with(SecurityTestFixtures.tenantUserJwt()))
                 .andExpect(status().isOk());
     }
 

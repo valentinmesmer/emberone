@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AdminTenantQualificationEditModal } from '@/components/admin/AdminTenantQualificationEditModal';
 import {
   StandardDetailAction,
@@ -26,12 +27,16 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   type QualificationRequirementMode,
-  type TenantQualificationDefinitionDto,
   tenantQualificationsApi,
 } from '@/lib/api/tenantQualifications';
-import { tenantCertificationsApi } from '@/lib/api/tenantCertifications';
-import { tenantDrivingLicenseDefinitionsApi } from '@/lib/api/tenantDrivingLicenseDefinitions';
-import { tenantTrainingCourseTypesApi } from '@/lib/api/tenantTrainingCourseTypes';
+import {
+  invalidateAdminTenantCatalog,
+  markAdminTenantCatalogStale,
+  useTenantCertifications,
+  useTenantDrivingLicenseDefinitions,
+  useTenantQualification,
+  useTenantTrainingCourseTypes,
+} from '@/lib/store';
 import { getAdminTenantStandardsPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantQualificationDetailViewProps {
@@ -47,42 +52,39 @@ export function AdminTenantQualificationDetailView({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [item, setItem] = useState<TenantQualificationDefinitionDto | null>(null);
   const [busy, setBusy] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
-  const [nameByKey, setNameByKey] = useState<Map<string, string>>(new Map());
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      setItem(await tenantQualificationsApi.get(tenantId, configKey));
-      const [courses, certs, licenses] = await Promise.all([
-        tenantTrainingCourseTypesApi.list(tenantId),
-        tenantCertificationsApi.list(tenantId),
-        tenantDrivingLicenseDefinitionsApi.list(tenantId),
-      ]);
-      setNameByKey(
-        new Map([...courses, ...certs, ...licenses].map((entry) => [entry.configKey, entry.name])),
-      );
-    } catch {
-      setLoadFailed(true);
-      setItem(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, configKey]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const itemQuery = useTenantQualification(tenantId, configKey);
+  const coursesQuery = useTenantTrainingCourseTypes(tenantId);
+  const certsQuery = useTenantCertifications(tenantId);
+  const licensesQuery = useTenantDrivingLicenseDefinitions(tenantId);
+  const item = itemQuery.data ?? null;
+  const loading =
+    itemQuery.isPending ||
+    coursesQuery.isPending ||
+    certsQuery.isPending ||
+    licensesQuery.isPending;
+  const loadFailed =
+    itemQuery.isError || coursesQuery.isError || certsQuery.isError || licensesQuery.isError;
+  const nameByKey = useMemo(
+    () =>
+      new Map(
+        [
+          ...(coursesQuery.data ?? []),
+          ...(certsQuery.data ?? []),
+          ...(licensesQuery.data ?? []),
+        ].map((entry) => [entry.configKey, entry.name]),
+      ),
+    [coursesQuery.data, certsQuery.data, licensesQuery.data],
+  );
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'qualifications', tenantId);
+  const staleOnLeave = () =>
+    void markAdminTenantCatalogStale(queryClient, 'qualifications', tenantId);
 
   const navigateBack = () => {
     router.push(getAdminTenantStandardsPath(tenantId));
@@ -93,6 +95,7 @@ export function AdminTenantQualificationDetailView({
     setBusy(true);
     try {
       await tenantQualificationsApi.delete(tenantId, item.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.qualifications.deleted'));
       navigateBack();
     } catch (e) {
@@ -109,6 +112,7 @@ export function AdminTenantQualificationDetailView({
     setBusy(true);
     try {
       await tenantQualificationsApi.archive(tenantId, item.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.qualifications.archived'));
       navigateBack();
     } catch (e) {
@@ -125,9 +129,9 @@ export function AdminTenantQualificationDetailView({
     setBusy(true);
     try {
       await tenantQualificationsApi.unarchive(tenantId, item.configKey);
+      reload();
       showSuccess(t('admin.tenantStandards.qualifications.unarchived'));
       setUnarchiveOpen(false);
-      await loadData();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.qualifications.unarchiveFailed'),
@@ -253,7 +257,7 @@ export function AdminTenantQualificationDetailView({
         onClose={() => setEditOpen(false)}
         onSaved={() => {
           setEditOpen(false);
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         definition={item}

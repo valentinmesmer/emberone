@@ -23,7 +23,7 @@ import {
   useOpenOrganizationMembershipEndWorkflow,
   useUpdateUserOrganizationMembership,
   useUserMembershipOverview,
-  useUsersForOrganization,
+  useOrganizationUser,
 } from '@/lib/store';
 import {
   filterVisibleOrganizationGroups,
@@ -58,7 +58,7 @@ export function UserMembershipsSection({
   const { showError, showSuccess } = useToast();
 
   const { data: overview, isLoading } = useUserMembershipOverview(organizationId, userId);
-  const { data: users = [] } = useUsersForOrganization(organizationId);
+  const { data: user } = useOrganizationUser(organizationId, userId);
   const { data: assignableGroups = [] } = useAssignableOrganizationGroups(
     canWrite ? organizationId : null,
   );
@@ -73,8 +73,6 @@ export function UserMembershipsSection({
   const [isEditOrgOpen, setIsEditOrgOpen] = useState(false);
   const [isEndOrgOpen, setIsEndOrgOpen] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
-
-  const user = users.find((item) => item.id === userId);
 
   const visibleOrganizationGroups = useMemo(() => {
     if (!overview?.groups) return [];
@@ -109,7 +107,7 @@ export function UserMembershipsSection({
       setLocalBusy(true);
       const isValid = validateGroupMembershipAssignment(
         user,
-        users,
+        [user],
         visibleOrganizationGroups,
         data.organizationGroupId,
         data.startDate,

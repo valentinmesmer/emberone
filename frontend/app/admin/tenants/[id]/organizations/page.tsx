@@ -6,8 +6,9 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { AdminMobileLayout, OrgTreeSection } from '@/components/admin';
 import { Card } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/loading';
@@ -20,6 +21,7 @@ import {
   type SetupOrganizationRequest,
   type TenantAdminDetailDto,
 } from '@/lib/api/admin';
+import { setAdminTenantData, useAdminTenant, useQueryErrorToast } from '@/lib/store';
 
 const STANDARD_NOT_CONFIGURED_MESSAGE =
   'Clone the system standard and assign it to the organization type before creating organizations';
@@ -39,36 +41,21 @@ function TenantOrganizationsIndexInner() {
   const t = useTranslation();
   const { showSuccess, showError } = useToast();
 
-  const [tenant, setTenant] = useState<TenantAdminDetailDto | null>(null);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [creatingRootOrg, setCreatingRootOrg] = useState(false);
 
   const tenantOutOfScope =
     !isGlobalAdmin && idValid && (authTenantId == null || tenantId !== authTenantId);
 
-  const loadTenant = useCallback(async () => {
-    if (!idValid) return;
-    setLoading(true);
-    try {
-      const data = await adminApi.getTenant(tenantId);
-      setTenant(data);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.errors.tenantLoadFailed'));
-      setTenant(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [idValid, tenantId, showError, t]);
+  const tenantQuery = useAdminTenant(
+    tenantId,
+    canAccessAdministration && !authLoading && idValid && !tenantOutOfScope,
+  );
+  useQueryErrorToast(tenantQuery.error, { messageKey: 'admin.errors.tenantLoadFailed' });
+  const tenant = tenantQuery.data ?? null;
+  const loading = tenantQuery.isLoading;
 
-  useEffect(() => {
-    if (!canAccessAdministration || authLoading || !idValid || tenantOutOfScope) {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      void loadTenant();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [canAccessAdministration, authLoading, idValid, loadTenant, tenantOutOfScope]);
+  const setTenant = (updated: TenantAdminDetailDto) => setAdminTenantData(queryClient, updated);
 
   async function handleCreateRootOrg(data: SetupOrganizationRequest) {
     if (!tenant) return;

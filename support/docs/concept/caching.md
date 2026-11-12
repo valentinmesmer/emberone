@@ -188,8 +188,8 @@ Serverzustand läuft ausschließlich über TanStack React Query (`lib/store`); d
 
 | Stufe | Wert | Verwendung |
 |-------|------|------------|
-| `REALTIME` | 15 s | Work in Progress, den andere oft ändern (Workflow-Entscheidungen, Zähler) |
-| `LIVE` | 30 s | Postfächer und Übersichten, die Realtime-Events meist aktualisieren |
+| `REALTIME` | 15 s | Work in Progress, den andere oft ändern (Workflow-Entscheidungen) |
+| `LIVE` | 30 s | Postfächer, Zähler und Übersichten, die Realtime-Events meist aktualisieren (Unread-, Todo-Zähler, Upcoming-Termine) |
 | `LIST` | 60 s | Datensätze und Listen eines Users oder einer Organisation |
 | `STANDARD` | 5 min | Kataloge, Definitionen, Profildaten; zugleich Client-Default |
 
@@ -201,6 +201,30 @@ Defaults: `gcTime` 10 min, `retry` 1, kein Refetch bei Window-Focus oder Reconne
 - Query-Hooks liegen in `lib/store/queries`, auch Hooks für Teilansichten (`useAppointmentAttachments`, `useListFilterOptions`). Komponenten rufen `useQuery` nicht direkt. Einzige Ausnahme ist `useOnboardingApprovedEvidence` (`lib/onboarding`, mit `onboardingApprovedEvidenceKeys`): ein zusammengesetzter `useQueries`-Hook, der Treffer gegen Workflow-Payloads abgleicht.
 - Jeder Scope eines Keys bekommt einen eigenen Teil-Key. Ein Scope ohne eigenen Zweig würde unter dem Key eines anderen landen und dessen Daten überschreiben (so lag `organizationCourseOfferings` vorher auf dem Key der Organisations-Aggregate).
 
+### Request-Sparsamkeit
+
+1. **Eine Query pro Datum.** Dieselben Daten liegen unter demselben Key; mehrere Hooks teilen ihn und filtern per `select` (`useSelfPendingOnboardingInvitations`, `useWorkflowOpenConcurrencyKeys`). Zwei Endpoints für dieselbe Quelle sind ein Fehler.
+2. **`enabled` folgt der Sichtbarkeit.** Daten für Dialoge, Tabs oder Aktionen mit Schreibrecht laden erst, wenn der Dialog offen ist bzw. das Recht vorliegt (z. B. Tags nur bei offenem Upload-Modal, Zertifizierungs-Status nur bei offenem Modal des passenden Workflow-Typs, Self-Records nur bei `isSelf`).
+3. **Kein manuelles `refetch()` nach `invalidateQueries`.** Die Invalidierung lädt aktive Queries ohnehin neu.
+4. **Kein N+1 pro Listenzeile**; ausgenommen sind Profilbild-Blobs mit ETag. Braucht eine Ansicht ein Aggregat über viele Einträge, ist das ein Backend-Vorschlag, kein Frontend-Workaround.
+5. **Komponenten laden nicht direkt über Api-Module**, auch nicht per `useEffect`; sie nutzen Hooks aus `lib/store/queries`. Lesezugriffe der Admin-Konfiguration (Tenant-Kataloge, Org-Baum, Standards) liegen in `adminTenantCatalogs.ts` (Kataloge `STANDARD`, Org-Baum und Tenant `LIST`). Nach Löschen oder Archivieren mit Navigation nutzt die Mutation `markAdminTenantCatalogStale` (`refetchType: 'none'`), damit der entfernte Eintrag nicht vor der Navigation neu lädt. Einmal-Abfragen vor einer Aktion (Impact-Prüfungen) bleiben direkte Aufrufe.
+
+### Aggregat- und Einzel-Endpoints statt Client-Join
+
+Wo eine Ansicht sonst viele Requests oder einen Vollabzug (`fetchAll`) bräuchte, liefert das Backend das Ergebnis fertig. Der Client verbindet keine Listen.
+
+| Bedarf | Lösung | Domäne |
+|--------|--------|--------|
+| Typ durch Singleton-Antrag gesperrt | `typeBlocked` im `WorkflowTypeCatalogDto` (`/beginnable-types`), eine Batch-Query | [Workflow-Engine](workflow-engine.md) |
+| Eigene Zusage und Anhangszahl zu Terminen | `myResponse`, `attachmentCount` im `AppointmentDto`, je ein Batch-Load pro Seite | [Termin](appointment.md) |
+| Qualifikation mit Nachweisen | `GET …/qualifications/{definitionId}` (Self und Org) | [Qualifikation](qualification.md) |
+| Ein Dokument, Record, eine Anmeldung, ein Org-User | Einzel-GET; Dokumente für Record-Seiten per Listen-Filter `ids` | [Nutzerdokument](userdocument.md), [Lehrgang & Zertifizierung](trainingcourse-and-certification.md), [Lehrgangsangebot](courseoffering.md), [User](user.md) |
+| Alle Workflow-Definitionen eines Mandanten | `GET /api/v1/auth/admin/tenants/{id}/workflow-definitions` | [Workflow-Engine](workflow-engine.md) |
+
+Entfallen sind `GET /self/workflows/open-concurrency-keys` und `GET /self/appointments/my-responses`. Ein neuer Detail-Zugriff folgt dem Muster: Einzel-Endpoint mit denselben Rechten wie die Liste, `*SecurityTest`, Detail-Hook mit `STALE_TIME.LIST`.
+
+Bewusst nicht gebündelt: ein „Shell“-Endpoint für Self, Permissions, Organisationen und Zähler (zerschneidet die Realtime-Invalidierung pro Datum) und gebündelte Admin-Kataloge (selten geladen, ein Request pro Katalog genügt).
+
 ### Invalidierung
 
 - Mutationen invalidieren den kleinsten Key, der betroffen ist, und rufen `invalidateQueries` mit `void` auf. Beispiele: Anhänge eines Termins berühren nur `appointmentAttachmentKeys.list` (die Termin-DTOs enthalten keine Anhangsdaten); Workflow-Anträge invalidieren Listen, Zähler, beginnbare Typen und Open-State (`invalidateWorkflowLists`), nicht `workflowKeys.all` mit allen Details.
@@ -210,7 +234,7 @@ Defaults: `gcTime` 10 min, `retry` 1, kein Refetch bei Window-Focus oder Reconne
 
 ### Polling
 
-Feste Intervalle sind die Ausnahme. Wo es ein Realtime-Event gibt, pollt die Query nur, solange Realtime aus oder getrennt ist (`useRealtimePollingFallback`, z. B. Benachrichtigungen, Todos, Workflows, Termine). Festes Polling bleibt dort, wo kein Event existiert oder Zeitablauf selbst der Auslöser ist: ungelesene Dokumente (120 s), Management-Aktivierungen (60 s, laufen zeitgesteuert ab).
+Feste Intervalle sind die Ausnahme. Wo es ein Realtime-Event gibt, pollt die Query nur, solange Realtime aus oder getrennt ist (`useRealtimePollingFallback`, z. B. Benachrichtigungen, Todos, Workflows, Termine). Festes Polling bleibt dort, wo kein Event existiert oder Zeitablauf selbst der Auslöser ist: ungelesene Dokumente (120 s), Management-Aktivierungen (60 s, nur solange offene Aktivierungen im Cache liegen, da sie zeitgesteuert ablaufen).
 
 ### Profilbilder
 

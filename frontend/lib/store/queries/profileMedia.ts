@@ -130,7 +130,7 @@ export function useUploadProfileImage() {
     mutationFn: (file: File) => documentApi.uploadProfileImage(file),
     onSuccess: () => {
       invalidateSelfProfileImage(queryClient);
-      void queryClient.invalidateQueries({ queryKey: userKeys.self() });
+      void queryClient.invalidateQueries({ queryKey: userKeys.self(), exact: true });
     },
   });
 }
@@ -141,7 +141,7 @@ export function useDeleteProfileImage() {
     mutationFn: () => documentApi.deleteProfileImage(),
     onSuccess: () => {
       invalidateSelfProfileImage(queryClient);
-      void queryClient.invalidateQueries({ queryKey: userKeys.self() });
+      void queryClient.invalidateQueries({ queryKey: userKeys.self(), exact: true });
     },
   });
 }

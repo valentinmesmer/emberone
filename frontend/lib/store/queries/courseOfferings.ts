@@ -24,7 +24,7 @@ import {
 } from '@/lib/list/courseOfferingList';
 import type { ListQuery, ListQueryState } from '@/lib/list/types';
 import { useListState, useUrlSyncedListState } from '@/lib/list/useListState';
-import { workflowKeys } from '@/lib/store/queries/workflows';
+import { invalidateWorkflowLists } from '@/lib/store/queries/workflows';
 import { STALE_TIME } from '@/lib/store/staleTime';
 import { usePagedList } from '@/lib/store/usePagedList';
 import type {
@@ -37,64 +37,77 @@ import type {
 
 export const courseOfferingKeys = {
   all: ['course-offerings'] as const,
+  /** Lists, templates and details of one organization's offerings. */
+  orgRoot: (organizationId: number) => [...courseOfferingKeys.all, 'org', organizationId] as const,
   orgList: (organizationId: number, listQuery: ListQuery) =>
-    [...courseOfferingKeys.all, 'org', organizationId, listQuery] as const,
+    [...courseOfferingKeys.orgRoot(organizationId), listQuery] as const,
   orgRegistrations: (organizationId: number, listQuery: ListQuery) =>
     [...courseOfferingKeys.all, 'org-registrations', organizationId, listQuery] as const,
   orgTemplateList: (organizationId: number, listQuery: ListQuery) =>
-    [...courseOfferingKeys.all, 'org', organizationId, 'templates', listQuery] as const,
+    [...courseOfferingKeys.orgRoot(organizationId), 'templates', listQuery] as const,
   orgDetail: (organizationId: number, offeringId: number) =>
-    [...courseOfferingKeys.all, 'org', organizationId, offeringId] as const,
+    [...courseOfferingKeys.orgRoot(organizationId), offeringId] as const,
+  offerableTypes: (organizationId: number) =>
+    [...courseOfferingKeys.all, 'offerable-types', organizationId] as const,
+  audienceOptions: (organizationId: number) =>
+    [...courseOfferingKeys.all, 'audience-options', organizationId] as const,
   registrationSummary: (organizationId: number, offeringId: number) =>
     [...courseOfferingKeys.all, 'registrations-summary', organizationId, offeringId] as const,
+  /** Registration lists and details of one offering. */
+  offeringRegistrationsRoot: (organizationId: number, offeringId: number) =>
+    [...courseOfferingKeys.all, 'offering-registrations', organizationId, offeringId] as const,
   offeringRegistrations: (organizationId: number, offeringId: number, listQuery: ListQuery) =>
     [
-      ...courseOfferingKeys.all,
-      'offering-registrations',
-      organizationId,
-      offeringId,
+      ...courseOfferingKeys.offeringRegistrationsRoot(organizationId, offeringId),
       listQuery,
     ] as const,
   offeringRegistration: (organizationId: number, offeringId: number, registrationId: number) =>
     [
-      ...courseOfferingKeys.all,
-      'offering-registrations',
-      organizationId,
-      offeringId,
+      ...courseOfferingKeys.offeringRegistrationsRoot(organizationId, offeringId),
       'detail',
       registrationId,
     ] as const,
   completion: (organizationId: number, offeringId: number) =>
     [...courseOfferingKeys.all, 'completion', organizationId, offeringId] as const,
+  selfOfferingsRoot: () => [...courseOfferingKeys.all, 'self-offerings'] as const,
   selfOfferings: (listQuery: ListQuery) =>
-    [...courseOfferingKeys.all, 'self-offerings', listQuery] as const,
+    [...courseOfferingKeys.selfOfferingsRoot(), listQuery] as const,
+  selfOfferingDetailRoot: () => [...courseOfferingKeys.all, 'self-offering'] as const,
   selfOfferingDetail: (offeringId: number) =>
-    [...courseOfferingKeys.all, 'self-offering', offeringId] as const,
-  selfPrerequisites: (offeringId: number) =>
-    [...courseOfferingKeys.all, 'self-prerequisites', offeringId] as const,
+    [...courseOfferingKeys.selfOfferingDetailRoot(), offeringId] as const,
   userRegistrations: (organizationId: number, userId: number, listQuery: ListQuery) =>
     [...courseOfferingKeys.all, 'user-registrations', organizationId, userId, listQuery] as const,
+  userRegistration: (organizationId: number, userId: number, registrationId: number) =>
+    [
+      ...courseOfferingKeys.all,
+      'user-registration',
+      organizationId,
+      userId,
+      registrationId,
+    ] as const,
 };
+
+/** The own offerings and their registration state, as seen from the own area. */
+function invalidateSelfCourseOfferings(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.selfOfferingsRoot() });
+  void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.selfOfferingDetailRoot() });
+}
 
 function invalidateCourseOfferingOrgDetail(
   queryClient: ReturnType<typeof useQueryClient>,
   organizationId: number,
   offeringId: number,
 ) {
-  void queryClient.invalidateQueries({
-    queryKey: courseOfferingKeys.orgDetail(organizationId, offeringId),
-  });
+  // The org root covers the detail of this offering and every list.
+  void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.orgRoot(organizationId) });
   void queryClient.invalidateQueries({
     queryKey: courseOfferingKeys.registrationSummary(organizationId, offeringId),
   });
   void queryClient.invalidateQueries({
-    queryKey: [...courseOfferingKeys.all, 'offering-registrations', organizationId, offeringId],
+    queryKey: courseOfferingKeys.offeringRegistrationsRoot(organizationId, offeringId),
   });
   void queryClient.invalidateQueries({
     queryKey: courseOfferingKeys.completion(organizationId, offeringId),
-  });
-  void queryClient.invalidateQueries({
-    queryKey: [...courseOfferingKeys.all, 'org', organizationId],
   });
 }
 
@@ -170,7 +183,7 @@ export function useOrganizationCourseOfferingTemplates(options: {
 export function useOfferableCourseTypes(organizationId: number | null | undefined, enabled = true) {
   const orgId = organizationId ?? 0;
   return useQuery({
-    queryKey: [...courseOfferingKeys.all, 'offerable-types', orgId],
+    queryKey: courseOfferingKeys.offerableTypes(orgId),
     queryFn: () => courseOfferingsApi.listOfferableTypes(orgId),
     enabled: !!organizationId && enabled,
     staleTime: STALE_TIME.STANDARD,
@@ -184,7 +197,7 @@ export function useCourseAudienceOptions(
 ) {
   const orgId = organizationId ?? 0;
   return useQuery({
-    queryKey: [...courseOfferingKeys.all, 'audience-options', orgId],
+    queryKey: courseOfferingKeys.audienceOptions(orgId),
     queryFn: () => courseOfferingsApi.listAudienceOptions(orgId),
     enabled: !!organizationId && enabled,
     staleTime: STALE_TIME.STANDARD,
@@ -236,16 +249,28 @@ export function useOrganizationUserCourseRegistrations(options: {
   userId: number;
   listQuery: ListQuery;
   enabled?: boolean;
-  fetchAll?: boolean;
 }) {
-  const { organizationId, userId, listQuery, enabled = true, fetchAll = false } = options;
+  const { organizationId, userId, listQuery, enabled = true } = options;
   return usePagedList({
     queryKey: courseOfferingKeys.userRegistrations(organizationId, userId, listQuery),
     listQuery: listQuery as CourseRegistrationListRequest,
     queryFn: (query) => courseOfferingsApi.listUserRegistrations(organizationId, userId, query),
     enabled: enabled && organizationId > 0 && userId > 0,
     staleTime: STALE_TIME.LIST,
-    fetchAll,
+  });
+}
+
+export function useOrganizationUserCourseRegistration(
+  organizationId: number,
+  userId: number,
+  registrationId: number,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: courseOfferingKeys.userRegistration(organizationId, userId, registrationId),
+    queryFn: () => courseOfferingsApi.getUserRegistration(organizationId, userId, registrationId),
+    enabled: enabled && organizationId > 0 && userId > 0 && registrationId > 0,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -325,7 +350,7 @@ export function useWithdrawFromCourseWaitlist() {
   return useMutation({
     mutationFn: (registrationId: number) => courseOfferingsApi.withdrawFromWaitlist(registrationId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.all });
+      invalidateSelfCourseOfferings(queryClient);
     },
   });
 }
@@ -358,9 +383,7 @@ export function useCreateCourseOffering(organizationId: number) {
     mutationFn: (data: CreateCourseOfferingRequest) =>
       courseOfferingsApi.create(organizationId, data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...courseOfferingKeys.all, 'org', organizationId],
-      });
+      void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.orgRoot(organizationId) });
     },
   });
 }
@@ -371,9 +394,7 @@ export function useSaveCourseOfferingAsTemplate(organizationId: number, offering
     mutationFn: (templateName: string) =>
       courseOfferingsApi.saveAsTemplate(organizationId, offeringId, templateName),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...courseOfferingKeys.all, 'org', organizationId],
-      });
+      void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.orgRoot(organizationId) });
     },
   });
 }
@@ -388,9 +409,7 @@ export function useInstantiateCourseOfferingTemplate(organizationId: number) {
         vars.firstSessionDate,
       ),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...courseOfferingKeys.all, 'org', organizationId],
-      });
+      void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.orgRoot(organizationId) });
     },
   });
 }
@@ -411,9 +430,7 @@ export function useDeleteCourseOffering(organizationId: number) {
   return useMutation({
     mutationFn: (offeringId: number) => courseOfferingsApi.delete(organizationId, offeringId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: [...courseOfferingKeys.all, 'org', organizationId],
-      });
+      void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.orgRoot(organizationId) });
     },
   });
 }
@@ -521,8 +538,8 @@ export function useOpenCourseOfferingRegistrationWorkflow() {
   return useMutation({
     mutationFn: (offeringId: number) => workflowsApi.openCourseOfferingRegistration({ offeringId }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.all });
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
+      invalidateSelfCourseOfferings(queryClient);
+      invalidateWorkflowLists(queryClient);
     },
   });
 }
@@ -533,8 +550,8 @@ export function useOpenCourseRegistrationCancellationWorkflow() {
     mutationFn: (registrationId: number) =>
       workflowsApi.openCourseRegistrationCancellation({ registrationId }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: courseOfferingKeys.all });
-      void queryClient.invalidateQueries({ queryKey: workflowKeys.all });
+      invalidateSelfCourseOfferings(queryClient);
+      invalidateWorkflowLists(queryClient);
     },
   });
 }

@@ -19,7 +19,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { CertificationStatusItemDto } from '@/lib/api/certifications';
 import type { DrivingLicenseDefinitionDto } from '@/lib/api/drivingLicenses';
 import type { QualificationPrerequisiteDetailDto } from '@/lib/api/qualifications';
-import type { TrainingCourseUserRecordDto } from '@/lib/api/trainingCourses';
 import { CERTIFICATION_STATUS_BADGE_TONE } from '@/lib/certifications/statusPresentation';
 import {
   findClass,
@@ -33,12 +32,8 @@ import {
 } from '@/lib/navigation/userManagementSections';
 import {
   useGrantQualificationOrgDecision,
-  useOrgDrivingLicenseCatalog,
   useUpdateQualificationOrgDecision,
-  useUserCertificationStatus,
-  useUserDrivingLicense,
-  useUserQualificationStatus,
-  useUserTrainingCourseRecords,
+  useUserQualificationDetail,
 } from '@/lib/store';
 
 export interface OrgUserQualificationDetailViewProps {
@@ -56,48 +51,26 @@ export function OrgUserQualificationDetailView({
 }: OrgUserQualificationDetailViewProps) {
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
-  const { data: status, isLoading: statusLoading } = useUserQualificationStatus(
+  const { data: detail, isLoading } = useUserQualificationDetail(
     organizationId,
     userId,
+    definitionId,
   );
-  const { data: certStatus, isLoading: certLoading } = useUserCertificationStatus(
-    organizationId,
-    userId,
-  );
-  const { data: trainingRecords = [], isLoading: trainingLoading } = useUserTrainingCourseRecords(
-    organizationId,
-    userId,
-  );
-  const { data: drivingLicense, isLoading: drivingLicenseLoading } = useUserDrivingLicense(
-    organizationId,
-    userId,
-  );
-  const { data: drivingLicenseCatalog, isLoading: drivingLicenseCatalogLoading } =
-    useOrgDrivingLicenseCatalog(organizationId, userId);
   const grant = useGrantQualificationOrgDecision(organizationId, userId);
   const updateOrgDecision = useUpdateQualificationOrgDecision(organizationId, userId);
 
-  const item = status?.items.find(
-    (entry) => entry.tenantQualificationDefinitionId === definitionId,
-  );
+  const item = detail?.item;
+  const drivingLicense = detail?.drivingLicense ?? null;
 
   const certByName = useMemo(
-    () => new Map((certStatus?.items ?? []).map((entry) => [entry.certDefinitionName, entry])),
-    [certStatus?.items],
+    () => new Map((detail?.certifications ?? []).map((entry) => [entry.certDefinitionName, entry])),
+    [detail?.certifications],
   );
 
-  const trainingRecordByTypeName = useMemo(() => {
-    const map = new Map<string, TrainingCourseUserRecordDto>();
-    for (const record of trainingRecords) {
-      for (const granted of record.grantedTypes) {
-        const typeName = granted.courseTypeName?.trim();
-        if (typeName && !map.has(typeName)) {
-          map.set(typeName, record);
-        }
-      }
-    }
-    return map;
-  }, [trainingRecords]);
+  const trainingRecordIdByConfigKey = useMemo(
+    () => new Map((detail?.trainingRecords ?? []).map((ref) => [ref.configKey, ref.recordId])),
+    [detail?.trainingRecords],
+  );
 
   const drivingLicenseHref = drivingLicense
     ? getOrganizationUserSectionPath(organizationId, userId, 'driving-licenses')
@@ -119,22 +92,22 @@ export function OrgUserQualificationDetailView({
 
   const drivingLicenseDefinitionByConfigKey = useMemo(() => {
     const map = new Map<string, DrivingLicenseDefinitionDto>();
-    for (const definition of drivingLicenseCatalog?.definitions ?? []) {
+    for (const definition of detail?.drivingLicenseDefinitions ?? []) {
       const key = definition.configKey?.trim();
       if (key) map.set(key, definition);
     }
     return map;
-  }, [drivingLicenseCatalog?.definitions]);
+  }, [detail?.drivingLicenseDefinitions]);
 
   const drivingLicenseDefinitionByName = useMemo(
     () =>
       new Map(
-        (drivingLicenseCatalog?.definitions ?? []).map((definition) => [
+        (detail?.drivingLicenseDefinitions ?? []).map((definition) => [
           definition.name,
           definition,
         ]),
       ),
-    [drivingLicenseCatalog?.definitions],
+    [detail?.drivingLicenseDefinitions],
   );
 
   const resolveDrivingLicenseDefinition = (detail: QualificationPrerequisiteDetailDto) =>
@@ -177,14 +150,7 @@ export function OrgUserQualificationDetailView({
     }
   };
 
-  const loading =
-    statusLoading ||
-    certLoading ||
-    trainingLoading ||
-    drivingLicenseLoading ||
-    drivingLicenseCatalogLoading;
-
-  if (loading) {
+  if (isLoading) {
     return <LoadingState variant="embedded" size="sm" />;
   }
 
@@ -220,7 +186,12 @@ export function OrgUserQualificationDetailView({
               requirementMode={item.trainingCourseRequirementMode ?? 'ALL'}
               groupMet={item.trainingCoursesMet}
               resolveHref={(detail) =>
-                resolveTrainingCourseHref(detail, trainingRecordByTypeName, organizationId, userId)
+                resolveTrainingCourseHref(
+                  detail,
+                  trainingRecordIdByConfigKey,
+                  organizationId,
+                  userId,
+                )
               }
             />
           ) : null}
@@ -328,11 +299,11 @@ function resolveCertificationStatusBadge(
 
 function resolveTrainingCourseHref(
   detail: QualificationPrerequisiteDetailDto,
-  trainingRecordByTypeName: Map<string, TrainingCourseUserRecordDto>,
+  trainingRecordIdByConfigKey: Map<string, number>,
   organizationId: number,
   userId: number,
 ) {
-  const record = trainingRecordByTypeName.get(detail.name);
-  if (!record) return null;
-  return getOrganizationUserTrainingCourseRecordDetailPath(organizationId, userId, record.id);
+  const recordId = trainingRecordIdByConfigKey.get(detail.configKey);
+  if (recordId == null) return null;
+  return getOrganizationUserTrainingCourseRecordDetailPath(organizationId, userId, recordId);
 }

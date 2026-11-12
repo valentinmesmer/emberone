@@ -60,7 +60,7 @@ class UserDocumentOrganizationControllerTest {
                         .hasNext(false)
                         .build();
         ListQuery query = new ListQuery(0, null, null, null);
-        UserDocumentListFilter filter = new UserDocumentListFilter("contract", null, null);
+        UserDocumentListFilter filter = new UserDocumentListFilter("contract", null, null, null);
         when(userDocumentService.listDocuments(7L, query, filter)).thenReturn(page);
 
         ResponseEntity<UserDocumentPageDto> response =

@@ -29,9 +29,9 @@ import { importAppointmentYesResponsesAsEventAttendance } from '@/lib/event/impo
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import { buildAppointmentTopic, useRealtimeTopic } from '@/lib/realtime';
 import {
-  appointmentKeys,
-  eventAttendanceKeys,
   eventKeys,
+  invalidateAfterEventAttendanceChange,
+  invalidateAppointmentRecords,
   useAppointment,
   useAppointmentAudienceGroups,
   useDeleteAppointment,
@@ -87,7 +87,6 @@ export function AppointmentDetailView({
     data: appointment,
     isLoading: appointmentLoading,
     isError: appointmentError,
-    refetch,
   } = useAppointment(organizationId, appointmentId);
 
   const updateMutation = useUpdateAppointment(organizationId);
@@ -154,7 +153,6 @@ export function AppointmentDetailView({
       showSuccess(t('appointments.success.updated'));
       setEditOpen(false);
       setPendingScope(null);
-      refetch();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('appointments.errors.updateFailed'));
     }
@@ -200,9 +198,10 @@ export function AppointmentDetailView({
       setIsCreatingEvent(true);
       const created = await createEvent(targetEventType, data);
       showSuccess(t('events.success.created'));
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
-      await queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      void refetch();
+      void queryClient.invalidateQueries({
+        queryKey: eventKeys.forType(targetEventType, organizationId),
+      });
+      invalidateAppointmentRecords(queryClient);
       return created;
     } catch {
       showError(t('events.errors.createFailed'));
@@ -227,7 +226,12 @@ export function AppointmentDetailView({
       } else {
         showSuccess(t('events.attendance.importFromAppointmentNone'));
       }
-      await queryClient.invalidateQueries({ queryKey: eventAttendanceKeys.all });
+      invalidateAfterEventAttendanceChange(
+        queryClient,
+        organizationId,
+        targetEventType,
+        importAfterCreate.id,
+      );
     } catch (e) {
       showError(e instanceof Error ? e.message : t('events.attendance.addFailed'));
     } finally {
@@ -264,7 +268,6 @@ export function AppointmentDetailView({
           key={appointment.id}
           organizationId={organization.id}
           appointment={appointment}
-          canWrite={canWrite && !isArchived}
         />
       </Card>
 

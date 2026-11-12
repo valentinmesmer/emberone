@@ -55,6 +55,16 @@ public class UserDocumentOrganizationController {
         return ResponseEntity.ok(userDocumentService.listDocuments(userId, query, filter));
     }
 
+    @GetMapping("/{documentId}")
+    @PreAuthorize("@securityService.hasDocumentReadPermission(#organizationId)")
+    public ResponseEntity<UserDocumentDto> getDocument(
+            @PathVariable Long organizationId,
+            @PathVariable Long userId,
+            @PathVariable Long documentId) {
+        userDocumentService.assertUserBelongsToOrganization(userId, organizationId);
+        return ResponseEntity.ok(userDocumentService.getDocument(userId, documentId));
+    }
+
     @GetMapping("/tags")
     @PreAuthorize("@securityService.hasDocumentReadPermission(#organizationId)")
     @BoundedList("Distinct tags per user document archive")

@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantQualificationEditModal } from '@/components/admin/AdminTenantQualificationEditModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,11 @@ import {
   type TenantQualificationDefinitionDto,
   tenantQualificationsApi,
 } from '@/lib/api/tenantQualifications';
+import {
+  invalidateAdminTenantCatalog,
+  useQueryErrorToast,
+  useTenantQualifications,
+} from '@/lib/store';
 import { getAdminTenantQualificationDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantQualificationManagementProps {
@@ -39,8 +45,6 @@ export function AdminTenantQualificationManagement({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [definitions, setDefinitions] = useState<TenantQualificationDefinitionDto[]>([]);
   const [busy, setBusy] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TenantQualificationDefinitionDto | null>(null);
@@ -50,25 +54,14 @@ export function AdminTenantQualificationManagement({
     null,
   );
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      setDefinitions(await tenantQualificationsApi.list(tenantId));
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.tenantStandards.qualifications.loadFailed'),
-      );
-      setDefinitions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: definitions = [],
+    isPending: loading,
+    error: loadError,
+  } = useTenantQualifications(tenantId);
+  useQueryErrorToast(loadError, { messageKey: 'admin.tenantStandards.qualifications.loadFailed' });
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'qualifications', tenantId);
 
   const openCreate = () => {
     setEditing(null);
@@ -87,7 +80,7 @@ export function AdminTenantQualificationManagement({
       await tenantQualificationsApi.delete(tenantId, deleteTarget.configKey);
       showSuccess(t('admin.tenantStandards.qualifications.deleted'));
       setDeleteTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.qualifications.deleteFailed'),
@@ -104,7 +97,7 @@ export function AdminTenantQualificationManagement({
       await tenantQualificationsApi.archive(tenantId, archiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.qualifications.archived'));
       setArchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.qualifications.archiveFailed'),
@@ -121,7 +114,7 @@ export function AdminTenantQualificationManagement({
       await tenantQualificationsApi.unarchive(tenantId, unarchiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.qualifications.unarchived'));
       setUnarchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.qualifications.unarchiveFailed'),
@@ -227,7 +220,7 @@ export function AdminTenantQualificationManagement({
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           setFormOpen(false);
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         definition={editing}

@@ -11,7 +11,6 @@ import {
   serviceEventListDefinition,
   serviceEventListUnfilteredQuery,
 } from '@/lib/list/eventList';
-import type { ListQuery } from '@/lib/list/types';
 import type { EventDto } from '@/types/event';
 import { EventType } from '@/types/event';
 
@@ -24,14 +23,17 @@ import { usePagedList } from '@/lib/store/usePagedList';
 
 export const eventKeys = {
   all: ['events'] as const,
-  service: (organizationId: number, listQuery: ListQuery) =>
-    [...eventKeys.all, 'service', organizationId, listQuery] as const,
-  operation: (organizationId: number, listQuery: ListQuery) =>
-    [...eventKeys.all, 'operation', organizationId, listQuery] as const,
+  /** Lists (the paged list appends its `listQuery`) and details of one organization. */
+  service: (organizationId: number) => [...eventKeys.all, 'service', organizationId] as const,
+  operation: (organizationId: number) => [...eventKeys.all, 'operation', organizationId] as const,
+  forType: (eventType: EventType, organizationId: number) =>
+    eventType === EventType.SERVICE
+      ? eventKeys.service(organizationId)
+      : eventKeys.operation(organizationId),
   serviceDetail: (organizationId: number, eventId: number) =>
-    [...eventKeys.all, 'service', organizationId, 'detail', eventId] as const,
+    [...eventKeys.service(organizationId), 'detail', eventId] as const,
   operationDetail: (organizationId: number, eventId: number) =>
-    [...eventKeys.all, 'operation', organizationId, 'detail', eventId] as const,
+    [...eventKeys.operation(organizationId), 'detail', eventId] as const,
 };
 
 const defaultServiceListQuery = toListQuery(
@@ -57,7 +59,7 @@ export function useServiceEvents(
   const canFetch = options?.enabled ?? true;
   const listQuery = options?.listQuery ?? defaultServiceListQuery;
   return usePagedList<EventDto, EventListRequest>({
-    queryKey: [...eventKeys.all, 'service', organizationId ?? 0],
+    queryKey: eventKeys.service(organizationId ?? 0),
     listQuery,
     queryFn: (query) => eventApi.listServiceEvents(organizationId ?? 0, query),
     enabled: !!organizationId && canFetch,
@@ -73,7 +75,7 @@ export function useOperationEvents(
   const canFetch = options?.enabled ?? true;
   const listQuery = options?.listQuery ?? defaultOperationListQuery;
   return usePagedList<EventDto, EventListRequest>({
-    queryKey: [...eventKeys.all, 'operation', organizationId ?? 0],
+    queryKey: eventKeys.operation(organizationId ?? 0),
     listQuery,
     queryFn: (query) => eventApi.listOperationEvents(organizationId ?? 0, query),
     enabled: !!organizationId && canFetch,

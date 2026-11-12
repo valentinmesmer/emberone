@@ -105,7 +105,9 @@ export function useEventList(organizationId: number, eventType: EventType) {
       setIsDeleting(true);
       await deleteEvent(eventType, organizationId, deleteTarget.id);
       showSuccess(t('events.success.deleted'));
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      await queryClient.invalidateQueries({
+        queryKey: eventKeys.forType(eventType, organizationId),
+      });
       if (eventType === EventType.OPERATION) {
         await queryClient.invalidateQueries({ queryKey: userKeys.operationAlarmAttendanceStats() });
       }
@@ -132,7 +134,9 @@ export function useEventList(organizationId: number, eventType: EventType) {
       setIsCreating(true);
       const created = await createEvent(eventType, data);
       showSuccess(t('events.success.created'));
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      await queryClient.invalidateQueries({
+        queryKey: eventKeys.forType(eventType, organizationId),
+      });
       if (eventType === EventType.OPERATION) {
         await queryClient.invalidateQueries({ queryKey: userKeys.operationAlarmAttendanceStats() });
       }
@@ -151,7 +155,9 @@ export function useEventList(organizationId: number, eventType: EventType) {
       setIsUpdating(true);
       await updateEvent(eventType, organizationId, editingEvent.id, data);
       showSuccess(t('events.success.updated'));
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      await queryClient.invalidateQueries({
+        queryKey: eventKeys.forType(eventType, organizationId),
+      });
       closeEditModal();
     } catch {
       showError(t('events.errors.updateFailed'));

@@ -7,17 +7,19 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useMemo } from 'react';
 import { AdminMobileLayout, AdminOrgTreeView } from '@/components/admin';
 import { Card } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { SectionHeader } from '@/components/ui/section-header';
-import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type AdminOrganizationTreeResponseDto, adminApi } from '@/lib/api/admin';
-import { type OrganizationTypeDto, organizationTypesApi } from '@/lib/api/organizationTypes';
+import {
+  useAdminOrganizationTree,
+  useQueryErrorToast,
+  useTenantOrganizationTypes,
+} from '@/lib/store';
 
 function TenantOrganizationsTreeInner() {
   const params = useParams();
@@ -32,50 +34,24 @@ function TenantOrganizationsTreeInner() {
     isLoading: authLoading,
   } = useAuth();
   const t = useTranslation();
-  const { showError } = useToast();
-
-  const [data, setData] = useState<AdminOrganizationTreeResponseDto | null>(null);
-  const [organizationTypes, setOrganizationTypes] = useState<OrganizationTypeDto[]>([]);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const organizationTypeNames = useMemo(
-    () => new Map(organizationTypes.map((type) => [type.id, type.name])),
-    [organizationTypes],
-  );
 
   const tenantOutOfScope =
     !isGlobalAdmin && idValid && (authTenantId == null || tenantId !== authTenantId);
 
-  const loadTree = useCallback(async () => {
-    if (!idValid) return;
-    setLoading(true);
-    setLoadFailed(false);
-    setData(null);
-    try {
-      const [res, types] = await Promise.all([
-        adminApi.getAdminOrganizationTree(tenantId),
-        organizationTypesApi.list(tenantId),
-      ]);
-      setData(res);
-      setOrganizationTypes(types);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.errors.orgTreeLoadFailed'));
-      setLoadFailed(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [idValid, tenantId, showError, t]);
+  const queryEnabled = canAccessAdministration && !authLoading && idValid && !tenantOutOfScope;
+  const treeQuery = useAdminOrganizationTree(tenantId, queryEnabled);
+  const typesQuery = useTenantOrganizationTypes(tenantId, queryEnabled);
+  useQueryErrorToast(treeQuery.error ?? typesQuery.error, {
+    messageKey: 'admin.errors.orgTreeLoadFailed',
+  });
+  const data = treeQuery.data ?? null;
+  const loadFailed = treeQuery.isError || typesQuery.isError;
+  const loading = treeQuery.isLoading || typesQuery.isLoading;
 
-  useEffect(() => {
-    if (!canAccessAdministration || authLoading || !idValid || tenantOutOfScope) {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      void loadTree();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [canAccessAdministration, authLoading, idValid, loadTree, tenantOutOfScope]);
+  const organizationTypeNames = useMemo(
+    () => new Map((typesQuery.data ?? []).map((type) => [type.id, type.name])),
+    [typesQuery.data],
+  );
 
   if (authLoading) {
     return (

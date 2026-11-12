@@ -17,7 +17,6 @@ import com.emberone.appointment.domain.AppointmentResponse;
 import com.emberone.appointment.domain.AppointmentResponseMode;
 import com.emberone.appointment.domain.AppointmentResponseValue;
 import com.emberone.appointment.dto.AppointmentParticipantEntryDto;
-import com.emberone.appointment.dto.MyAppointmentResponseDto;
 import com.emberone.appointment.dto.SubmitAppointmentResponseRequest;
 import com.emberone.appointment.event.AppointmentChangeType;
 import com.emberone.appointment.event.AppointmentChangedEvent;
@@ -153,29 +152,6 @@ class AppointmentResponseServiceTest {
         assertThat(existing.getValue()).isEqualTo(AppointmentResponseValue.YES);
         assertThat(dto.getValue()).isEqualTo(AppointmentResponseValue.YES);
         verify(responseRepository).save(existing);
-    }
-
-    @Test
-    void getMyResponsesReturnsSortedAppointmentResponsesForCurrentUser() {
-        Appointment appointmentA = Appointment.builder().id(5L).build();
-        Appointment appointmentB = Appointment.builder().id(6L).build();
-        when(tokenService.requireUserId()).thenReturn(1L);
-        when(responseRepository.findByUserIdAndAppointmentIdIn(1L, List.of(6L, 5L)))
-                .thenReturn(
-                        List.of(
-                                AppointmentResponse.builder()
-                                        .appointment(appointmentB)
-                                        .value(AppointmentResponseValue.YES)
-                                        .build(),
-                                AppointmentResponse.builder()
-                                        .appointment(appointmentA)
-                                        .value(AppointmentResponseValue.NO)
-                                        .build()));
-
-        assertThat(service.getMyResponses(List.of(6L, 5L)))
-                .extracting(MyAppointmentResponseDto::getAppointmentId)
-                .containsExactly(5L, 6L);
-        assertThat(service.getMyResponses(List.of())).isEmpty();
     }
 
     @Test

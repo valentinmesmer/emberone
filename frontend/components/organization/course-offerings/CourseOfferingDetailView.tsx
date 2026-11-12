@@ -86,7 +86,7 @@ export function CourseOfferingDetailView({ organizationId, offeringId }: Props) 
   const { data: completion } = useCourseOfferingCompletion(
     organizationId,
     offeringId,
-    canRead && offering?.status === 'PUBLISHED',
+    canWrite && offering?.status === 'PUBLISHED',
   );
 
   const { data: summary } = useOfferingRegistrationSummary(

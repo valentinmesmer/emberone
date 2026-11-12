@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantCertificationEditModal } from '@/components/admin/AdminTenantCertificationEditModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,11 @@ import {
   type TenantCertDefinitionDto,
   tenantCertificationsApi,
 } from '@/lib/api/tenantCertifications';
+import {
+  invalidateAdminTenantCatalog,
+  useQueryErrorToast,
+  useTenantCertifications,
+} from '@/lib/store';
 import { getAdminTenantCertificationDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantCertificationManagementProps {
@@ -39,8 +45,6 @@ export function AdminTenantCertificationManagement({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [definitions, setDefinitions] = useState<TenantCertDefinitionDto[]>([]);
   const [busy, setBusy] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -49,25 +53,14 @@ export function AdminTenantCertificationManagement({
   const [archiveTarget, setArchiveTarget] = useState<TenantCertDefinitionDto | null>(null);
   const [unarchiveTarget, setUnarchiveTarget] = useState<TenantCertDefinitionDto | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      setDefinitions(await tenantCertificationsApi.list(tenantId));
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.tenantStandards.certifications.loadFailed'),
-      );
-      setDefinitions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: definitions = [],
+    isPending: loading,
+    error: loadError,
+  } = useTenantCertifications(tenantId);
+  useQueryErrorToast(loadError, { messageKey: 'admin.tenantStandards.certifications.loadFailed' });
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'certifications', tenantId);
 
   const openCreate = () => {
     setEditing(null);
@@ -90,7 +83,7 @@ export function AdminTenantCertificationManagement({
       await tenantCertificationsApi.delete(tenantId, deleteTarget.configKey);
       showSuccess(t('admin.tenantStandards.certifications.deleted'));
       setDeleteTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.certifications.deleteFailed'),
@@ -107,7 +100,7 @@ export function AdminTenantCertificationManagement({
       await tenantCertificationsApi.archive(tenantId, archiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.certifications.archived'));
       setArchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.certifications.archiveFailed'),
@@ -124,7 +117,7 @@ export function AdminTenantCertificationManagement({
       await tenantCertificationsApi.unarchive(tenantId, unarchiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.certifications.unarchived'));
       setUnarchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.certifications.unarchiveFailed'),
@@ -228,7 +221,7 @@ export function AdminTenantCertificationManagement({
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           setFormOpen(false);
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         definition={editing}

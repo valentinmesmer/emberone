@@ -38,4 +38,8 @@ public final class OrganizationMemberListSpecs {
     public static Specification<User> notDeactivated() {
         return (root, query, cb) -> cb.isNull(root.get("deactivatedAt"));
     }
+
+    public static Specification<User> withId(Long userId) {
+        return (root, query, cb) -> cb.equal(root.get("id"), userId);
+    }
 }

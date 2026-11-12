@@ -6,6 +6,7 @@
 
 package com.emberone.courseoffering.controller;
 
+import com.emberone.courseoffering.dto.UserCourseRegistrationDto;
 import com.emberone.courseoffering.dto.UserCourseRegistrationPageDto;
 import com.emberone.courseoffering.list.UserCourseRegistrationListFilter;
 import com.emberone.courseoffering.service.CourseRegistrationQueryService;
@@ -45,5 +46,15 @@ public class UserCourseRegistrationOrganizationController {
         return ResponseEntity.ok(
                 queryService.listForUser(
                         userId, query, UserCourseRegistrationListFilter.parse(status, upcoming)));
+    }
+
+    @GetMapping("/{registrationId}")
+    @PreAuthorize("@securityService.hasTrainingCourseReadPermission(#organizationId)")
+    public ResponseEntity<UserCourseRegistrationDto> get(
+            @PathVariable Long organizationId,
+            @PathVariable Long userId,
+            @PathVariable Long registrationId) {
+        userService.assertUserBelongsToOrganization(userId, organizationId);
+        return ResponseEntity.ok(queryService.getForUser(userId, registrationId));
     }
 }

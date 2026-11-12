@@ -92,7 +92,10 @@ export function AdminUserDetailView({ userId, showTenantFields = true }: AdminUs
     try {
       await adminApi.patchUserAppRole(user.tenantId, user.userId, { appRole: newRole });
       showSuccess(t('admin.roleUpdated'));
-      await queryClient.invalidateQueries({ queryKey: adminListKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminListKeys.users() }),
+        queryClient.invalidateQueries({ queryKey: adminListKeys.user(user.userId) }),
+      ]);
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.roleUpdateError'));
     } finally {
@@ -109,6 +112,7 @@ export function AdminUserDetailView({ userId, showTenantFields = true }: AdminUs
     try {
       await adminApi.deactivateUser(user.tenantId, user.userId);
       showSuccess(t('admin.userDetail.deactivateSuccess'));
+      void queryClient.invalidateQueries({ queryKey: adminListKeys.users() });
       setDeactivateOpen(false);
       router.push(getAdminUsersPath());
     } catch (err) {

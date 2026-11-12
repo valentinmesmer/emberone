@@ -42,6 +42,12 @@ public class WorkflowTypeCatalogDto {
     private boolean listedInBeginnableCatalog;
 
     /**
+     * True when {@code allowsMultipleConcurrentOpen} is false and the current user already has an
+     * active instance of this type.
+     */
+    private boolean typeBlocked;
+
+    /**
      * The catalog the type can be split by in tenant-wide routing rules, or {@code null} when only
      * the default rule exists.
      */

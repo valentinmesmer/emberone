@@ -71,9 +71,9 @@ Jeder Typ hat einen **Open-Scope** (`WorkflowOpenScope`): `SELF` (Mein Bereich) 
 
 **Exclusivity-Locks** (`wf_exclusivity_locks`, `WorkflowOpenExclusivityKeys`): Handler können `resolveOpenExclusivityKeys` liefern. Pro Mandant darf ein Key nur von **einem** aktiven Workflow gehalten werden - **über Workflow-Typen hinweg** (z. B. Typ 8 + 13 teilen `membership-exit:user:{id}:org:{id}`, Typ 7 + 14 `main-organization:user:{id}`). Locks werden beim Open/Update gesetzt und bei terminalen Status freigegeben. Es gibt keinen Backfill: eine neue `resolveOpenExclusivityKeys`-Implementierung sperrt bereits offene Instanzen erst beim nächsten Update. Race beim parallelen Open: DB-Unique `(tenant_id, lock_key)` → `WorkflowValidationException` mit Handler-`openExclusivityConflictCode`.
 
-`listedInBeginnableCatalog()` Default `false` (Start nur über Dedicated-UI). Opt-in mit `true` für Typen ohne eigenen Einstieg. `GET …/workflows/beginnable-types` liefert alle Typen, die der User starten darf (`canBeginSelfServiceWorkflow`), inkl. Flag `listedInBeginnableCatalog` (Logik in `BeginnableWorkflowTypeService`, auch vom KI-Hilfe-Chat genutzt, siehe [KI-Assistenz](ai-assistance.md)). Zusätzlich prüft `WorkflowOpenAccess.canBeginSelfServiceWorkflow` typ-spezifische Voraussetzungen (z. B. `RANK_REQUEST` nur ohne offenen `UserRank`).
+`listedInBeginnableCatalog()` Default `false` (Start nur über Dedicated-UI). Opt-in mit `true` für Typen ohne eigenen Einstieg. `GET …/workflows/beginnable-types` liefert alle Typen, die der User starten darf (`canBeginSelfServiceWorkflow`), inkl. Flag `listedInBeginnableCatalog` und `typeBlocked` (Singleton-Typ, der User hat bereits eine aktive Instanz; eine Query für alle Typen, kein Open-State-Aufruf pro Typ) (Logik in `BeginnableWorkflowTypeService`, auch vom KI-Hilfe-Chat genutzt, siehe [KI-Assistenz](ai-assistance.md)). Zusätzlich prüft `WorkflowOpenAccess.canBeginSelfServiceWorkflow` typ-spezifische Voraussetzungen (z. B. `RANK_REQUEST` nur ohne offenen `UserRank`).
 
-Die UI zum Antrag-stellen-Picker listet nur Typen mit `listedInBeginnableCatalog=true`, für die kein Singleton-`typeBlocked` (offene Instanz desselben Typs) gilt.
+Die UI zum Antrag-stellen-Picker listet nur Typen mit `listedInBeginnableCatalog=true`, für die kein Singleton-`typeBlocked` (offene Instanz desselben Typs, Feld des Katalogeintrags) gilt.
 
 ### Teilnehmer, Slots, Entscheidungen
 
@@ -303,7 +303,7 @@ Auflösung `WorkflowApproverRoutingService.resolve(typeId, subjectIds)`:
 - Die Orgs sind die Vereinigungsmenge der Standard-Orgs (für Untertypen ohne eigene Regel) und der Orgs jeder getroffenen Regel, ohne Duplikate.
 - „Nur diese Orgs entscheiden“ ist der workflowweite Wert `TenantWorkflowDefinition.staticApproversExclusive` und wirkt nur, wenn die Vereinigungsmenge nicht leer ist.
 
-API (alle `@PreAuthorize("@securityService.canAccessTenant(#tenantId)")`, Basis `/api/v1/auth/admin/tenants/{tenantId}/workflow-definitions/{workflowTypeId}`). Die Regel-Endpunkte liefern einheitlich das `WorkflowRoutingRuleDto` (`id`, `subjectIds`, `staticApproverOrganizationIds`); die Regelliste steht zusätzlich als `routingRules` im `TenantWorkflowDefinitionDto`.
+API (alle `@PreAuthorize("@securityService.canAccessTenant(#tenantId)")`, Basis `/api/v1/auth/admin/tenants/{tenantId}/workflow-definitions`; `GET` auf der Basis (`@BoundedList`) liefert alle Tenant-Default-Definitionen in einem Request, alle weiteren Pfade hängen an `/{workflowTypeId}`). Die Regel-Endpunkte liefern einheitlich das `WorkflowRoutingRuleDto` (`id`, `subjectIds`, `staticApproverOrganizationIds`); die Regelliste steht zusätzlich als `routingRules` im `TenantWorkflowDefinitionDto`.
 
 | Methode | Pfad | Antwort | Zweck |
 |---------|------|---------|-------|
@@ -340,7 +340,7 @@ Config-Change → `WorkflowConfigurationChangedEvent` → offene Instanzen recon
 | Org-Open Typ 13 | `POST …/organizations/{orgId}/users/{userId}/workflows/organization-membership-end` | Org `USER_WRITE`: Austritt eines Mitglieds öffnen |
 | Org-Open Typ 14 | `POST …/organizations/{orgId}/users/{userId}/workflows/organization-user-main-organization-change` | Org `USER_WRITE`: Haupt-Org-Wechsel eines Mitglieds öffnen |
 | `WorkflowController` | `/api/v1/auth/workflows` | Generische Instanz-Ops (get, decide, claim, cancel, payload, input-change, promotions). **Erstellt nie.** |
-| `WorkflowSelfController` | `/api/v1/self/workflows` | Paginierte Listen `GET …/opened`, `GET …/participations` (`ListQuery`, Filter `status` (mehrfach, Werte aus `WorkflowStatus`; Default je Liste im Frontend, ohne Wert keine Einschränkung)), `GET …/pending-count`, beginnbare Typen (`@BoundedList`), `GET …/open-concurrency-keys` (`@BoundedList`), `GET …/open-state/{workflowTypeId}` |
+| `WorkflowSelfController` | `/api/v1/self/workflows` | Paginierte Listen `GET …/opened`, `GET …/participations` (`ListQuery`, Filter `status` (mehrfach, Werte aus `WorkflowStatus`; Default je Liste im Frontend, ohne Wert keine Einschränkung)), `GET …/pending-count`, beginnbare Typen (`@BoundedList`), `GET …/open-state/{workflowTypeId}` (nur `openConcurrencyKeys` für Begin-/Edit-Dialoge; `typeBlocked` liefert ausschließlich der Katalog) |
 | `WorkflowOrganizationController` | `/api/v1/auth/organizations/{orgId}/workflows` | Paginierte Liste `GET …/open` (`ListQuery`, Filter `status` (mehrfach, Werte aus `WorkflowStatus`; Default je Liste im Frontend, ohne Wert keine Einschränkung); `WORKFLOW_READ`) |
 | `WorkflowUserOrganizationController` | `…/users/{userId}/workflows` | Paginierte Liste der vom User eröffneten Workflows (`ListQuery`, Filter `status` (mehrfach, Werte aus `WorkflowStatus`; Default je Liste im Frontend, ohne Wert keine Einschränkung); `WORKFLOW_READ`) |
 

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { workflowDefinitionBadges } from '@/components/admin/workflowDefinitionBadges';
 import { Card } from '@/components/ui/card';
 import { ListRow } from '@/components/ui/list';
@@ -15,7 +15,7 @@ import { EmptyState } from '@/components/ui/message-cards';
 import { SectionHeader } from '@/components/ui/section-header';
 import { WorkflowOpenScopeListSections } from '@/components/workflow/WorkflowOpenScopeListSections';
 import { useTranslation } from '@/hooks/useTranslation';
-import { workflowsApi } from '@/lib/api/workflows';
+import { useAdminTenantWorkflowDefinitions, useAdminWorkflowTypeCatalog } from '@/lib/store';
 import { getAdminTenantWorkflowDetailPath } from '@/lib/utils/adminPaths';
 import { workflowTypeTranslationKey } from '@/lib/utils/workflowLabels';
 import type { TenantWorkflowDefinitionDto, WorkflowTypeCatalogDto } from '@/types/workflow';
@@ -36,38 +36,19 @@ export function AdminTenantWorkflowDefinitionManagement({
   embedded = false,
 }: AdminTenantWorkflowDefinitionManagementProps) {
   const t = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [rows, setRows] = useState<TenantWorkflowDefinitionRow[]>([]);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      const catalog = await workflowsApi.getWorkflowTypeCatalog(tenantId);
-      const loadedRows = await Promise.all(
-        catalog.map(async (entry) => {
-          const tenantDefault = await workflowsApi.getTenantWorkflowDefinition(
-            tenantId,
-            entry.workflowTypeId,
-          );
-          return { catalogEntry: entry, tenantDefault };
-        }),
-      );
-      setRows(loadedRows);
-    } catch {
-      setLoadFailed(true);
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
+  const catalogQuery = useAdminWorkflowTypeCatalog(tenantId);
+  const definitionsQuery = useAdminTenantWorkflowDefinitions(tenantId);
+  const loading = catalogQuery.isPending || definitionsQuery.isPending;
+  const loadFailed = catalogQuery.isError || definitionsQuery.isError;
+  const rows = useMemo<TenantWorkflowDefinitionRow[]>(() => {
+    const definitionByType = new Map(
+      (definitionsQuery.data ?? []).map((definition) => [definition.workflowTypeId, definition]),
+    );
+    return (catalogQuery.data ?? []).flatMap((catalogEntry) => {
+      const tenantDefault = definitionByType.get(catalogEntry.workflowTypeId);
+      return tenantDefault ? [{ catalogEntry, tenantDefault }] : [];
     });
-  }, [loadData]);
+  }, [catalogQuery.data, definitionsQuery.data]);
 
   const listContent = loading ? (
     <LoadingState variant="embedded" size="sm" />

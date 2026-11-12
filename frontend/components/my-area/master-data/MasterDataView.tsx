@@ -7,7 +7,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AddressChangeRequestModal,
   EditNotificationEmailModal,
@@ -32,7 +32,6 @@ import {
   useSelf,
   useUpdateNotificationEmail,
   useVerifyNotificationEmail,
-  useWorkflowOpenState,
 } from '@/lib/store';
 import { WORKFLOW_TYPE_IDS } from '@/types/workflow';
 
@@ -45,8 +44,6 @@ export function MasterDataView() {
   const { data: userData, isLoading, error: userError } = useSelf();
   const { data: organizationTree } = useOrganizationTree();
   const { data: beginnableTypes = [] } = useMyBeginnableWorkflowTypes();
-  const { data: nameChangeOpenState } = useWorkflowOpenState(WORKFLOW_TYPE_IDS.NAME_CHANGE);
-  const { data: addressChangeOpenState } = useWorkflowOpenState(WORKFLOW_TYPE_IDS.ADDRESS_CHANGE);
   const updateNotificationEmail = useUpdateNotificationEmail();
   const { mutateAsync: verifyNotificationEmail } = useVerifyNotificationEmail();
   const resendVerification = useResendNotificationEmailVerification();
@@ -62,16 +59,16 @@ export function MasterDataView() {
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(() => !!verifyEmailToken);
   const verifyHandledRef = useRef<string | null>(null);
 
-  const nameChangeBeginnable = useMemo(
-    () => beginnableTypes.some((type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.NAME_CHANGE),
-    [beginnableTypes],
+  const nameChangeType = beginnableTypes.find(
+    (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.NAME_CHANGE,
   );
-  const nameChangeBlocked = nameChangeOpenState?.typeBlocked ?? false;
-  const addressChangeBeginnable = useMemo(
-    () => beginnableTypes.some((type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.ADDRESS_CHANGE),
-    [beginnableTypes],
+  const nameChangeBeginnable = nameChangeType != null;
+  const nameChangeBlocked = nameChangeType?.typeBlocked ?? false;
+  const addressChangeType = beginnableTypes.find(
+    (type) => type.workflowTypeId === WORKFLOW_TYPE_IDS.ADDRESS_CHANGE,
   );
-  const addressChangeBlocked = addressChangeOpenState?.typeBlocked ?? false;
+  const addressChangeBeginnable = addressChangeType != null;
+  const addressChangeBlocked = addressChangeType?.typeBlocked ?? false;
 
   useEffect(() => {
     if (!verifyEmailToken || verifyHandledRef.current === verifyEmailToken) {

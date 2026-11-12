@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
 import { type WorkflowListRequest, workflowsApi } from '@/lib/api/workflows';
 import type { ListQuery } from '@/lib/list/types';
@@ -47,7 +46,6 @@ import {
   type WorkflowDocumentPromotionPreviewDto,
   type WorkflowDocumentPromotionSelection,
   type WorkflowDto,
-  type WorkflowTypeCatalogDto,
   type WorkflowTypeId,
 } from '@/types/workflow';
 
@@ -59,10 +57,8 @@ export const workflowKeys = {
     [...workflowKeys.listRoot(), 'participations', listQuery] as const,
   pendingCount: () => [...workflowKeys.all, 'pending-count'] as const,
   beginnableTypes: () => [...workflowKeys.all, 'beginnable-types'] as const,
-  openState: (workflowTypeId: number) =>
-    [...workflowKeys.all, 'open-state', workflowTypeId] as const,
-  openConcurrencyKeys: (workflowTypeId?: number) =>
-    [...workflowKeys.all, 'open-concurrency-keys', workflowTypeId ?? 'all'] as const,
+  openStateRoot: () => [...workflowKeys.all, 'open-state'] as const,
+  openState: (workflowTypeId: number) => [...workflowKeys.openStateRoot(), workflowTypeId] as const,
   detail: (workflowId: number) => [...workflowKeys.all, 'detail', workflowId] as const,
   attachments: (workflowId: number) => [...workflowKeys.all, 'attachments', workflowId] as const,
   comments: (workflowId: number) => [...workflowKeys.all, 'comments', workflowId] as const,
@@ -131,53 +127,19 @@ export function useMyBeginnableWorkflowTypes() {
   return useQuery({
     queryKey: workflowKeys.beginnableTypes(),
     queryFn: () => workflowsApi.getMyBeginnableWorkflowTypes(),
-    staleTime: STALE_TIME.LIST,
-  });
-}
-
-export function useWorkflowOpenState(workflowTypeId: WorkflowTypeId, enabled = true) {
-  return useQuery({
-    queryKey: workflowKeys.openState(workflowTypeId),
-    queryFn: () => workflowsApi.getWorkflowOpenState(workflowTypeId),
-    enabled,
+    // Carries typeBlocked, which changes when the user's own workflows end.
     staleTime: STALE_TIME.LIVE,
   });
 }
 
 export function useWorkflowOpenConcurrencyKeys(workflowTypeId: WorkflowTypeId, enabled = true) {
   return useQuery({
-    queryKey: workflowKeys.openConcurrencyKeys(workflowTypeId),
-    queryFn: async () => {
-      const items = await workflowsApi.getWorkflowOpenConcurrencyKeys(workflowTypeId);
-      return items[0]?.keys ?? [];
-    },
+    queryKey: workflowKeys.openState(workflowTypeId),
+    queryFn: () => workflowsApi.getWorkflowOpenState(workflowTypeId),
     enabled,
     staleTime: STALE_TIME.LIVE,
+    select: (data) => data.openConcurrencyKeys,
   });
-}
-
-/** Workflow types blocked because the user already has an open instance (type-wide). */
-export function useBlockedBeginnableWorkflowTypeIds(types: WorkflowTypeCatalogDto[]) {
-  const singletonTypes = useMemo(
-    () => types.filter((type) => !type.allowsMultipleConcurrentOpen),
-    [types],
-  );
-  const queries = useQueries({
-    queries: singletonTypes.map((type) => ({
-      queryKey: workflowKeys.openState(type.workflowTypeId),
-      queryFn: () => workflowsApi.getWorkflowOpenState(type.workflowTypeId as WorkflowTypeId),
-      staleTime: STALE_TIME.LIVE,
-    })),
-  });
-  return useMemo(() => {
-    const blocked = new Set<number>();
-    singletonTypes.forEach((type, index) => {
-      if (queries[index]?.data?.typeBlocked) {
-        blocked.add(type.workflowTypeId);
-      }
-    });
-    return blocked;
-  }, [queries, singletonTypes]);
 }
 
 export function useWorkflow(workflowId: number | null | undefined) {
@@ -297,16 +259,11 @@ export function useUploadWorkflowCommentAttachment() {
  * Everything that lists or counts workflows or decides what may be started. Detail, comment and
  * attachment queries of single workflows are not touched; mutations invalidate those by id.
  */
-function invalidateWorkflowLists(queryClient: ReturnType<typeof useQueryClient>) {
+export function invalidateWorkflowLists(queryClient: ReturnType<typeof useQueryClient>) {
   void queryClient.invalidateQueries({ queryKey: workflowKeys.listRoot() });
   void queryClient.invalidateQueries({ queryKey: workflowKeys.pendingCount() });
   void queryClient.invalidateQueries({ queryKey: workflowKeys.beginnableTypes() });
-  void queryClient.invalidateQueries({
-    predicate: (query) =>
-      Array.isArray(query.queryKey) &&
-      query.queryKey[0] === workflowKeys.all[0] &&
-      (query.queryKey[1] === 'open-state' || query.queryKey[1] === 'open-concurrency-keys'),
-  });
+  void queryClient.invalidateQueries({ queryKey: workflowKeys.openStateRoot() });
 }
 
 /** Refetch domain data that any workflow type may mutate when the instance closes. */
@@ -323,7 +280,6 @@ function invalidateAfterWorkflowClose(queryClient: ReturnType<typeof useQueryCli
   void queryClient.invalidateQueries({ queryKey: organizationKeys.groupJoinTargets() });
   void queryClient.invalidateQueries({ queryKey: userMembershipOverviewKeys.all });
   void queryClient.invalidateQueries({ queryKey: userDocumentKeys.all });
-  void queryClient.invalidateQueries({ queryKey: workflowKeys.beginnableTypes() });
   void queryClient.invalidateQueries({ queryKey: onboardingInvitationKeys.all });
 }
 

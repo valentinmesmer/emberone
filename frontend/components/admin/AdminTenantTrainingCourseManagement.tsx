@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantTrainingCourseTypeEditModal } from '@/components/admin/AdminTenantTrainingCourseTypeEditModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,11 @@ import {
   type TenantTrainingCourseTypeDto,
   tenantTrainingCourseTypesApi,
 } from '@/lib/api/tenantTrainingCourseTypes';
+import {
+  invalidateAdminTenantCatalog,
+  useQueryErrorToast,
+  useTenantTrainingCourseTypes,
+} from '@/lib/store';
 import { getAdminTenantTrainingCourseTypeDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantTrainingCourseManagementProps {
@@ -39,8 +45,6 @@ export function AdminTenantTrainingCourseManagement({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [types, setTypes] = useState<TenantTrainingCourseTypeDto[]>([]);
   const [busy, setBusy] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -49,25 +53,15 @@ export function AdminTenantTrainingCourseManagement({
   const [archiveTarget, setArchiveTarget] = useState<TenantTrainingCourseTypeDto | null>(null);
   const [unarchiveTarget, setUnarchiveTarget] = useState<TenantTrainingCourseTypeDto | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      setTypes(await tenantTrainingCourseTypesApi.list(tenantId));
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.tenantStandards.trainingCourses.loadFailed'),
-      );
-      setTypes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: types = [],
+    isPending: loading,
+    error: loadError,
+  } = useTenantTrainingCourseTypes(tenantId);
+  useQueryErrorToast(loadError, { messageKey: 'admin.tenantStandards.trainingCourses.loadFailed' });
+  const reload = () =>
+    void invalidateAdminTenantCatalog(queryClient, 'trainingCourseTypes', tenantId);
 
   const openCreate = () => {
     setEditing(null);
@@ -90,7 +84,7 @@ export function AdminTenantTrainingCourseManagement({
       await tenantTrainingCourseTypesApi.delete(tenantId, deleteTarget.configKey);
       showSuccess(t('admin.tenantStandards.trainingCourses.deleted'));
       setDeleteTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.trainingCourses.deleteFailed'),
@@ -107,7 +101,7 @@ export function AdminTenantTrainingCourseManagement({
       await tenantTrainingCourseTypesApi.archive(tenantId, archiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.trainingCourses.archived'));
       setArchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.trainingCourses.archiveFailed'),
@@ -124,7 +118,7 @@ export function AdminTenantTrainingCourseManagement({
       await tenantTrainingCourseTypesApi.unarchive(tenantId, unarchiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.trainingCourses.unarchived'));
       setUnarchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.trainingCourses.unarchiveFailed'),
@@ -228,7 +222,7 @@ export function AdminTenantTrainingCourseManagement({
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           setFormOpen(false);
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         type={editing}

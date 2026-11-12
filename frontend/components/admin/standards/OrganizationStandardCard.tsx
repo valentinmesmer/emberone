@@ -6,7 +6,8 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -22,7 +23,13 @@ import {
   formatStandardSwitchImpactMessage,
   switchImpactRequiresConfirmation,
 } from '@/lib/admin/standardImpact';
-import { type OrganizationStandardDto, type StandardDto, standardsApi } from '@/lib/api/standards';
+import { standardsApi } from '@/lib/api/standards';
+import {
+  adminTenantCatalogKeys,
+  useAdminOrganizationStandard,
+  useQueryErrorToast,
+  useTenantStandards,
+} from '@/lib/store';
 
 interface OrganizationStandardCardProps {
   tenantId: number;
@@ -42,9 +49,6 @@ export function OrganizationStandardCard({
   const t = useTranslation();
   const { showSuccess, showError } = useToast();
 
-  const [info, setInfo] = useState<OrganizationStandardDto | null>(null);
-  const [standards, setStandards] = useState<StandardDto[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<string>('');
   const [saving, setSaving] = useState(false);
@@ -52,30 +56,18 @@ export function OrganizationStandardCard({
   const [impactMessage, setImpactMessage] = useState('');
   const [pendingStandardId, setPendingStandardId] = useState<number | null | undefined>(undefined);
 
-  const customStandards = useMemo(() => standards.filter((s) => !s.system), [standards]);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [standardInfo, list] = await Promise.all([
-        standardsApi.getOrganizationStandard(tenantId, organizationId),
-        standardsApi.listStandards(tenantId),
-      ]);
-      setInfo(standardInfo);
-      setStandards(list);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.standards.orgOverride.loadFailed'));
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, organizationId, showError, t]);
-
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      void load();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [load]);
+  const queryClient = useQueryClient();
+  const infoQuery = useAdminOrganizationStandard(tenantId, organizationId);
+  const standardsQuery = useTenantStandards(tenantId);
+  useQueryErrorToast(infoQuery.error ?? standardsQuery.error, {
+    messageKey: 'admin.standards.orgOverride.loadFailed',
+  });
+  const info = infoQuery.data ?? null;
+  const loading = infoQuery.isPending || standardsQuery.isPending;
+  const customStandards = useMemo(
+    () => (standardsQuery.data ?? []).filter((s) => !s.system),
+    [standardsQuery.data],
+  );
 
   function openEdit() {
     setSelected(info?.overrideStandardId != null ? String(info.overrideStandardId) : '');
@@ -88,7 +80,10 @@ export function OrganizationStandardCard({
       const updated = await standardsApi.setOrganizationStandard(tenantId, organizationId, {
         standardId: nextStandardId,
       });
-      setInfo(updated);
+      queryClient.setQueryData(
+        adminTenantCatalogKeys.organizationStandard(tenantId, organizationId),
+        updated,
+      );
       setEditOpen(false);
       showSuccess(t('admin.standards.orgOverride.saved'));
       onStandardChanged?.();

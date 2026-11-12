@@ -7,6 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi, type ReplaceCourseOfferingTypesRequest } from '@/lib/api/admin';
 import { tenantTrainingCourseTypesApi } from '@/lib/api/tenantTrainingCourseTypes';
+import { STALE_TIME } from '@/lib/store/staleTime';
 
 export const adminCourseOfferingTypeKeys = {
   all: ['admin', 'courseOfferingTypes'] as const,
@@ -19,6 +20,7 @@ export function useAdminCourseOfferingTypes(tenantId: number, organizationId: nu
   return useQuery({
     queryKey: adminCourseOfferingTypeKeys.settings(tenantId, organizationId),
     queryFn: () => adminApi.getCourseOfferingTypes(tenantId, organizationId),
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -28,6 +30,7 @@ export function useAdminCourseOfferingTypeCatalog(tenantId: number, enabled: boo
     queryFn: async () =>
       (await tenantTrainingCourseTypesApi.list(tenantId)).filter((t) => !t.archived),
     enabled,
+    staleTime: STALE_TIME.STANDARD,
   });
 }
 

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CheckboxControl } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/ui/loading';
@@ -17,14 +17,16 @@ import { SwitchField } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { tenantCertificationsApi } from '@/lib/api/tenantCertifications';
-import { tenantDrivingLicenseDefinitionsApi } from '@/lib/api/tenantDrivingLicenseDefinitions';
 import {
   type QualificationRequirementMode,
   type TenantQualificationDefinitionDto,
   tenantQualificationsApi,
 } from '@/lib/api/tenantQualifications';
-import { tenantTrainingCourseTypesApi } from '@/lib/api/tenantTrainingCourseTypes';
+import {
+  useTenantCertifications,
+  useTenantDrivingLicenseDefinitions,
+  useTenantTrainingCourseTypes,
+} from '@/lib/store';
 import { formBlockers } from '@/lib/utils';
 import { cn } from '@/lib/utils/cn';
 
@@ -59,17 +61,6 @@ function AdminTenantQualificationEditModalBody({
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
   const [busy, setBusy] = useState(false);
-  const [loadingCatalog, setLoadingCatalog] = useState(true);
-  const [trainingCourses, setTrainingCourses] = useState<
-    { configKey: string; abbreviation: string; name: string }[]
-  >([]);
-  const [certifications, setCertifications] = useState<
-    { configKey: string; abbreviation: string; name: string }[]
-  >([]);
-  const [drivingLicenses, setDrivingLicenses] = useState<
-    { configKey: string; abbreviation: string; name: string }[]
-  >([]);
-
   const [name, setName] = useState(() => definition?.name ?? '');
   const [abbreviation, setAbbreviation] = useState(() => definition?.abbreviation ?? '');
   const [description, setDescription] = useState(() => definition?.description ?? '');
@@ -96,42 +87,22 @@ function AdminTenantQualificationEditModalBody({
   );
   const [active, setActive] = useState(() => definition?.active ?? true);
 
-  const loadCatalog = useCallback(async () => {
-    setLoadingCatalog(true);
-    try {
-      const [courses, certs, licenses] = await Promise.all([
-        tenantTrainingCourseTypesApi.list(tenantId),
-        tenantCertificationsApi.list(tenantId),
-        tenantDrivingLicenseDefinitionsApi.list(tenantId),
-      ]);
-      setTrainingCourses(
-        courses
-          .filter((c) => !c.archived)
-          .map((c) => ({ configKey: c.configKey, abbreviation: c.abbreviation, name: c.name })),
-      );
-      setCertifications(
-        certs
-          .filter((c) => !c.archived)
-          .map((c) => ({ configKey: c.configKey, abbreviation: c.abbreviation, name: c.name })),
-      );
-      setDrivingLicenses(
-        licenses
-          .filter((c) => !c.archived)
-          .map((c) => ({ configKey: c.configKey, abbreviation: c.abbreviation, name: c.name })),
-      );
-    } catch {
-      setTrainingCourses([]);
-      setCertifications([]);
-    } finally {
-      setLoadingCatalog(false);
-    }
-  }, [tenantId]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadCatalog();
-    });
-  }, [loadCatalog]);
+  const coursesQuery = useTenantTrainingCourseTypes(tenantId);
+  const certsQuery = useTenantCertifications(tenantId);
+  const licensesQuery = useTenantDrivingLicenseDefinitions(tenantId);
+  const loadingCatalog = coursesQuery.isPending || certsQuery.isPending || licensesQuery.isPending;
+  const trainingCourses = useMemo(
+    () => (coursesQuery.data ?? []).filter((c) => !c.archived),
+    [coursesQuery.data],
+  );
+  const certifications = useMemo(
+    () => (certsQuery.data ?? []).filter((c) => !c.archived),
+    [certsQuery.data],
+  );
+  const drivingLicenses = useMemo(
+    () => (licensesQuery.data ?? []).filter((c) => !c.archived),
+    [licensesQuery.data],
+  );
 
   const toggleSet = (set: Set<string>, key: string, checked: boolean) => {
     const next = new Set(set);

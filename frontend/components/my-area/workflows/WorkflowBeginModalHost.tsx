@@ -56,9 +56,9 @@ export function WorkflowBeginModalHost({
   modalKey = 0,
   presetCatalogId = null,
 }: WorkflowBeginModalHostProps) {
-  const { data: certStatus } = useMyCertificationStatus();
   const catalogDefinitionsEnabled =
     workflowTypeId === WORKFLOW_TYPE_IDS.CERTIFICATION_RECORD && isOpen;
+  const { data: certStatus } = useMyCertificationStatus(catalogDefinitionsEnabled);
   const { data: catalogDefinitions = [] } =
     useMyRequestableCertificationDefinitions(catalogDefinitionsEnabled);
   const { data: certOpenKeys = [] } = useWorkflowOpenConcurrencyKeys(

@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -49,6 +50,19 @@ public interface WorkflowRepository
     boolean existsActiveByOpenedByUserIdAndWorkflowTypeId(
             @Param("openedByUserId") Long openedByUserId,
             @Param("workflowTypeId") Long workflowTypeId);
+
+    /** Workflow types for which the user has an active instance (one query for all types). */
+    @Query(
+            """
+            SELECT DISTINCT w.workflowTypeId FROM Workflow w
+            WHERE w.openedByUserId = :openedByUserId
+              AND w.status IN (
+                  com.emberone.workflow.domain.WorkflowStatus.OPEN,
+                  com.emberone.workflow.domain.WorkflowStatus.AWAITING_INPUT_CHANGE
+              )
+            """)
+    Set<Long> findActiveWorkflowTypeIdsByOpenedByUserId(
+            @Param("openedByUserId") Long openedByUserId);
 
     @Query(
             """

@@ -6,8 +6,9 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   defaultOnboardingStepConfig,
   type LocalOnboardingStep,
@@ -31,7 +32,13 @@ import { SectionActions } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type OnboardingStepType, standardsApi } from '@/lib/api/standards';
-import { tenantOnboardingDocumentsApi } from '@/lib/api/tenantOnboardingDocuments';
+import {
+  adminTenantCatalogKeys,
+  useQueryErrorToast,
+  useStandardOnboardingStepTypes,
+  useStandardOnboardingSteps,
+  useTenantOnboardingDocuments,
+} from '@/lib/store';
 import { getAdminStandardOnboardingStepPath } from '@/lib/navigation/adminWorkspace';
 import { cn } from '@/lib/utils/cn';
 
@@ -45,63 +52,45 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
   const { showError, showSuccess } = useToast();
   const { tenantId, standardId, editable } = state;
 
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [steps, setSteps] = useState<LocalOnboardingStep[]>([]);
-  const [availableTypes, setAvailableTypes] = useState<OnboardingStepType[]>([]);
-  const [catalog, setCatalog] = useState<
-    Awaited<ReturnType<typeof tenantOnboardingDocumentsApi.list>>
-  >([]);
-  const [catalogReady, setCatalogReady] = useState(false);
+  const [catalogRequested, setCatalogRequested] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [configDraft, setConfigDraft] = useState<OnboardingStepConfigDraft | null>(null);
   const [pendingAddType, setPendingAddType] = useState<OnboardingStepType | null>(null);
 
-  const loadCatalog = useCallback(async () => {
-    try {
-      const documents = await tenantOnboardingDocumentsApi.list(tenantId);
-      setCatalog(
-        documents.filter(
-          (document) => !document.archived && document.active && document.hasTemplate,
-        ),
-      );
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.standards.onboardingSteps.loadCatalogFailed'),
-      );
-      setCatalog([]);
-    } finally {
-      setCatalogReady(true);
-    }
-  }, [showError, t, tenantId]);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [stepsResponse, typesResponse] = await Promise.all([
-        standardsApi.getOnboardingSteps(tenantId, standardId),
-        standardsApi.listOnboardingStepTypes(tenantId),
-      ]);
-      const loaded = normalizeOnboardingSteps(
-        [...stepsResponse.steps].sort((a, b) => a.sortOrder - b.sortOrder),
-      );
-      setSteps(loaded);
-      setAvailableTypes(typesResponse.stepTypes.map((item) => item.stepType));
-      if (loaded.some((step) => step.stepType === 'ENTRY_DOCUMENTS')) {
-        await loadCatalog();
-      }
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.standards.errors.saveFailed'));
-      setSteps([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [loadCatalog, showError, standardId, t, tenantId]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const queryClient = useQueryClient();
+  const stepsQuery = useStandardOnboardingSteps(tenantId, standardId);
+  const typesQuery = useStandardOnboardingStepTypes(tenantId);
+  useQueryErrorToast(stepsQuery.error ?? typesQuery.error, {
+    messageKey: 'admin.standards.errors.saveFailed',
+  });
+  const loading = stepsQuery.isPending || typesQuery.isPending;
+  const steps = useMemo(
+    () =>
+      normalizeOnboardingSteps(
+        [...(stepsQuery.data?.steps ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
+      ),
+    [stepsQuery.data],
+  );
+  const availableTypes = useMemo(
+    () => (typesQuery.data?.stepTypes ?? []).map((item) => item.stepType),
+    [typesQuery.data],
+  );
+  const catalogWanted =
+    catalogRequested || steps.some((step) => step.stepType === 'ENTRY_DOCUMENTS');
+  const catalogQuery = useTenantOnboardingDocuments(tenantId, catalogWanted);
+  useQueryErrorToast(catalogQuery.error, {
+    messageKey: 'admin.standards.onboardingSteps.loadCatalogFailed',
+  });
+  const catalog = useMemo(
+    () =>
+      (catalogQuery.data ?? []).filter(
+        (document) => !document.archived && document.active && document.hasTemplate,
+      ),
+    [catalogQuery.data],
+  );
+  const catalogReady = catalogWanted && !catalogQuery.isPending;
 
   const persistSteps = useCallback(
     async (nextSteps: LocalOnboardingStep[]): Promise<boolean> => {
@@ -112,8 +101,9 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
         const saved = await standardsApi.replaceOnboardingSteps(tenantId, standardId, {
           steps: normalized,
         });
-        setSteps(
-          normalizeOnboardingSteps([...saved.steps].sort((a, b) => a.sortOrder - b.sortOrder)),
+        queryClient.setQueryData(
+          adminTenantCatalogKeys.standardOnboardingSteps(tenantId, standardId),
+          saved,
         );
         return true;
       } catch (e) {
@@ -123,7 +113,7 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
         setSaving(false);
       }
     },
-    [editable, showError, standardId, t, tenantId],
+    [editable, queryClient, showError, standardId, t, tenantId],
   );
 
   const unusedTypes = useMemo(
@@ -148,8 +138,8 @@ export function StandardOnboardingStepManagement({ state, embedded = false }: Pr
     if (!editable) return;
     if (onboardingStepHasConfig(type)) {
       setAddOpen(false);
-      if (type === 'ENTRY_DOCUMENTS' && !catalogReady) {
-        await loadCatalog();
+      if (type === 'ENTRY_DOCUMENTS') {
+        setCatalogRequested(true);
       }
       setConfigDraft({
         stepType: type,

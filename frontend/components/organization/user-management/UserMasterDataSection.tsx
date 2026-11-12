@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { SectionEditAction, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useUpdatePersonalData, useUsersForOrganization } from '@/lib/store';
+import { useOrganizationUser, useUpdatePersonalData } from '@/lib/store';
 import { formatDateLong } from '@/lib/utils';
 import { Salutation } from '@/types/enums/salutation';
 import type { UpdatePersonalDataRequest } from '@/types/user';
@@ -31,13 +31,12 @@ export function UserMasterDataSection({
 }: UserMasterDataSectionProps) {
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
-  const { data: users = [] } = useUsersForOrganization(organizationId);
+  const { data: user } = useOrganizationUser(organizationId, userId);
   const updateUser = useUpdatePersonalData();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const user = users.find((item) => item.id === userId);
   if (!user) {
     return null;
   }

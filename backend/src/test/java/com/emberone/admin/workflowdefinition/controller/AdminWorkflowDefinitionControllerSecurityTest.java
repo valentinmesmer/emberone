@@ -39,6 +39,32 @@ class AdminWorkflowDefinitionControllerSecurityTest {
     @MockitoBean WorkflowDefinitionService definitionService;
 
     @Test
+    void workflowDefinitionListRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/admin/tenants/7/workflow-definitions"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void workflowDefinitionListForbiddenForForeignTenant() throws Exception {
+        mockMvc.perform(
+                        get("/api/v1/auth/admin/tenants/8/workflow-definitions")
+                                .with(SecurityTestFixtures.tenantAdminJwt()))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(definitionService);
+    }
+
+    @Test
+    void workflowDefinitionListAllowedForOwnTenant() throws Exception {
+        when(definitionService.listTenantDefaults(SecurityTestFixtures.TENANT_ID))
+                .thenReturn(List.of());
+
+        mockMvc.perform(
+                        get("/api/v1/auth/admin/tenants/7/workflow-definitions")
+                                .with(SecurityTestFixtures.tenantAdminJwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void workflowDefinitionRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/auth/admin/tenants/7/workflow-definitions/1"))
                 .andExpect(status().isUnauthorized());

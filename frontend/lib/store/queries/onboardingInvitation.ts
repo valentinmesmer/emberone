@@ -22,7 +22,7 @@ export const onboardingInvitationKeys = {
   byOrganization: (organizationId: number) =>
     [...onboardingInvitationKeys.all, 'organization', organizationId] as const,
   self: () => [...onboardingInvitationKeys.all, 'self'] as const,
-  selfOpen: () => [...onboardingInvitationKeys.self(), 'open'] as const,
+  selfList: () => [...onboardingInvitationKeys.self(), 'list'] as const,
   selfDetail: (invitationId: number) =>
     [...onboardingInvitationKeys.self(), 'detail', invitationId] as const,
   organizationUserDetail: (organizationId: number, userId: number) =>
@@ -81,29 +81,27 @@ export function useOnboardingInvitationList(
     listQuery,
     queryFn: (query) => onboardingInvitationApi.listForOrganization(organizationId ?? 0, query),
     enabled: !!organizationId,
-    staleTime: STALE_TIME.STANDARD,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
 export function useSelfOnboardingInvitations(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: onboardingInvitationKeys.self(),
+    queryKey: onboardingInvitationKeys.selfList(),
     queryFn: () => onboardingInvitationApi.listForSelf(),
     enabled: options?.enabled ?? true,
-    staleTime: STALE_TIME.STANDARD,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
 /** Open invitations only - for session reminders, not history lists. */
 export function useSelfPendingOnboardingInvitations(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: onboardingInvitationKeys.selfOpen(),
-    queryFn: async () => {
-      const invitations = await onboardingInvitationApi.listForSelf();
-      return invitations.filter((invitation) => invitation.status === 'OPEN');
-    },
+    queryKey: onboardingInvitationKeys.selfList(),
+    queryFn: () => onboardingInvitationApi.listForSelf(),
     enabled: options?.enabled ?? true,
-    staleTime: STALE_TIME.STANDARD,
+    staleTime: STALE_TIME.LIST,
+    select: (invitations) => invitations.filter((invitation) => invitation.status === 'OPEN'),
   });
 }
 
@@ -175,7 +173,7 @@ export function useSaveOnboardingStep(access: OnboardingInvitationAccess | null 
       if (!access) return;
       queryClient.setQueryData(detailQueryKey(access), detail);
       if (access.kind === 'self') {
-        queryClient.invalidateQueries({ queryKey: onboardingInvitationKeys.self() });
+        void queryClient.invalidateQueries({ queryKey: onboardingInvitationKeys.selfList() });
       }
     },
   });

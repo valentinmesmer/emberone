@@ -218,7 +218,7 @@ export function useUnreadNotificationCount(options?: { enabled?: boolean }) {
     queryKey: notificationKeys.unreadCount(),
     queryFn: () => notificationsApi.getUnreadCount(),
     enabled: hasEmberOneUserId && (options?.enabled ?? true),
-    staleTime: STALE_TIME.REALTIME,
+    staleTime: STALE_TIME.LIVE,
     refetchInterval,
   });
 }

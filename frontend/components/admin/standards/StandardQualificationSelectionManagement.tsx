@@ -15,10 +15,7 @@ import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
-import {
-  type TenantQualificationDefinitionDto,
-  tenantQualificationsApi,
-} from '@/lib/api/tenantQualifications';
+import { useQueryErrorToast, useTenantQualifications } from '@/lib/store';
 
 interface Props {
   state: StandardContentState;
@@ -40,8 +37,6 @@ export function StandardQualificationSelectionManagement({ state, embedded = fal
   const { showError } = useToast();
   const { tenantId, standardId, items, editable } = state;
 
-  const [loading, setLoading] = useState(true);
-  const [catalog, setCatalog] = useState<TenantQualificationDefinitionDto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const selectedRef = useRef(selected);
@@ -60,27 +55,18 @@ export function StandardQualificationSelectionManagement({ state, embedded = fal
     [items],
   );
 
-  const loadCatalog = useCallback(async () => {
-    setLoading(true);
-    try {
-      setCatalog(
-        (await tenantQualificationsApi.list(tenantId)).filter((definition) => !definition.archived),
-      );
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.standards.qualifications.loadCatalogFailed'),
-      );
-      setCatalog([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadCatalog();
-    });
-  }, [loadCatalog]);
+  const {
+    data: catalogData,
+    isPending: loading,
+    error: catalogError,
+  } = useTenantQualifications(tenantId);
+  useQueryErrorToast(catalogError, {
+    messageKey: 'admin.standards.qualifications.loadCatalogFailed',
+  });
+  const catalog = useMemo(
+    () => (catalogData ?? []).filter((definition) => !definition.archived),
+    [catalogData],
+  );
 
   useEffect(() => {
     if (setsEqual(selectedFromStandard, lastSavedRef.current)) return;

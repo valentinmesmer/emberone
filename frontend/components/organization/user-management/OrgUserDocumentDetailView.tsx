@@ -23,9 +23,12 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useViewAttachment } from '@/hooks/useViewAttachment';
 import { userDocumentApi } from '@/lib/api/userDocument';
-import { collectUserDocumentTags } from '@/lib/my-area/userDocumentTags';
 import { usePermissions } from '@/lib/permission/PermissionContext';
-import { useOrganizationUserDocuments, useUpdateOrganizationUserDocument } from '@/lib/store';
+import {
+  useOrganizationUserDocument,
+  useOrganizationUserDocumentTags,
+  useUpdateOrganizationUserDocument,
+} from '@/lib/store';
 import { downloadBlob } from '@/lib/utils/downloadBlob';
 import { resolveGatedAppNavigationHref } from '@/lib/utils/sourceLink';
 import { formatFileSize, formatUserDocumentTag } from '@/lib/utils/userDocumentFormat';
@@ -47,17 +50,20 @@ export function OrgUserDocumentDetailView({
   const t = useTranslation();
   const { hasPermission } = usePermissions();
   const { showError, showSuccess } = useToast();
-  const { data: documents = [], isLoading } = useOrganizationUserDocuments(organizationId, userId);
+  const { data: doc, isLoading } = useOrganizationUserDocument(organizationId, userId, documentId);
   const navigationContext = { scope: 'org' as const, organizationId, userId };
   const updateDocument = useUpdateOrganizationUserDocument(organizationId, userId);
 
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const { data: availableTags = [] } = useOrganizationUserDocumentTags(
+    organizationId,
+    userId,
+    canWrite && isEditOpen,
+  );
   const [downloading, setDownloading] = useState(false);
   const { view, viewingKey } = useViewAttachment();
 
-  const doc = documents.find((d) => d.id === documentId);
   const viewing = viewingKey === String(documentId);
-  const availableTags = collectUserDocumentTags(documents);
 
   const handleDownload = async () => {
     if (!doc) return;

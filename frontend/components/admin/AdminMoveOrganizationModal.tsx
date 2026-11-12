@@ -6,13 +6,13 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LoadingState } from '@/components/ui/loading';
 import { Modal } from '@/components/ui/modal';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { Select } from '@/components/ui/select';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type AdminOrganizationTreeNodeDto, adminApi } from '@/lib/api/admin';
+import { useAdminOrganizationTree } from '@/lib/store';
 import {
   collectAdminOrgSubtreeIds,
   flattenAdminOrgTreeForParentPicker,
@@ -40,30 +40,17 @@ export function AdminMoveOrganizationModal({
   onMove,
 }: AdminMoveOrganizationModalProps) {
   const t = useTranslation();
-  const [treeRoots, setTreeRoots] = useState<AdminOrganizationTreeNodeDto[]>([]);
-  const [loadingTree, setLoadingTree] = useState(false);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [parentValue, setParentValue] = useState<string>(ROOT_VALUE);
-
-  const loadTree = useCallback(async () => {
-    setLoadingTree(true);
-    setLoadFailed(false);
-    try {
-      const tree = await adminApi.getAdminOrganizationTree(tenantId);
-      setTreeRoots(tree.roots);
-    } catch {
-      setLoadFailed(true);
-      setTreeRoots([]);
-    } finally {
-      setLoadingTree(false);
-    }
-  }, [tenantId]);
+  const {
+    data: tree,
+    isPending: loadingTree,
+    isError: loadFailed,
+  } = useAdminOrganizationTree(tenantId, isOpen);
+  const treeRoots = useMemo(() => tree?.roots ?? [], [tree]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    setParentValue(ROOT_VALUE);
-    void loadTree();
-  }, [isOpen, loadTree]);
+    if (isOpen) setParentValue(ROOT_VALUE);
+  }, [isOpen]);
 
   const excludedIds = useMemo(
     () => collectAdminOrgSubtreeIds(treeRoots, organizationId),

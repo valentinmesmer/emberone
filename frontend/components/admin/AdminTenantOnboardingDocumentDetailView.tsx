@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Download, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantOnboardingDocumentEditModal } from '@/components/admin/AdminTenantOnboardingDocumentEditModal';
 import {
   StandardDetailAction,
@@ -24,10 +25,12 @@ import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { tenantOnboardingDocumentsApi } from '@/lib/api/tenantOnboardingDocuments';
 import {
-  type TenantOnboardingDocumentDefinitionDto,
-  tenantOnboardingDocumentsApi,
-} from '@/lib/api/tenantOnboardingDocuments';
+  invalidateAdminTenantCatalog,
+  markAdminTenantCatalogStale,
+  useTenantOnboardingDocument,
+} from '@/lib/store';
 import { downloadBlob } from '@/lib/utils/downloadBlob';
 import { formatFileSize } from '@/lib/utils/userDocumentFormat';
 import { getAdminTenantStandardsPath } from '@/lib/utils/adminPaths';
@@ -45,33 +48,22 @@ export function AdminTenantOnboardingDocumentDetailView({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [item, setItem] = useState<TenantOnboardingDocumentDefinitionDto | null>(null);
   const [busy, setBusy] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      setItem(await tenantOnboardingDocumentsApi.get(tenantId, configKey));
-    } catch {
-      setLoadFailed(true);
-      setItem(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, configKey]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: item = null,
+    isPending: loading,
+    isError: loadFailed,
+  } = useTenantOnboardingDocument(tenantId, configKey);
+  const reload = () =>
+    void invalidateAdminTenantCatalog(queryClient, 'onboardingDocuments', tenantId);
+  const staleOnLeave = () =>
+    void markAdminTenantCatalogStale(queryClient, 'onboardingDocuments', tenantId);
 
   const navigateBack = () => {
     router.push(getAdminTenantStandardsPath(tenantId));
@@ -82,6 +74,7 @@ export function AdminTenantOnboardingDocumentDetailView({
     setBusy(true);
     try {
       await tenantOnboardingDocumentsApi.delete(tenantId, item.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.onboardingDocuments.deleted'));
       navigateBack();
     } catch (e) {
@@ -100,6 +93,7 @@ export function AdminTenantOnboardingDocumentDetailView({
     setBusy(true);
     try {
       await tenantOnboardingDocumentsApi.archive(tenantId, item.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.onboardingDocuments.archived'));
       navigateBack();
     } catch (e) {
@@ -118,9 +112,9 @@ export function AdminTenantOnboardingDocumentDetailView({
     setBusy(true);
     try {
       await tenantOnboardingDocumentsApi.unarchive(tenantId, item.configKey);
+      reload();
       showSuccess(t('admin.tenantStandards.onboardingDocuments.unarchived'));
       setUnarchiveOpen(false);
-      await loadData();
     } catch (e) {
       showError(
         e instanceof Error
@@ -259,7 +253,7 @@ export function AdminTenantOnboardingDocumentDetailView({
         onClose={() => setEditOpen(false)}
         onSaved={() => {
           setEditOpen(false);
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         document={item}

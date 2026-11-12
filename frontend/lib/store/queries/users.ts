@@ -34,8 +34,8 @@ export const userKeys = {
     [...userKeys.all, 'self', 'operation-alarm-attendance-stats'] as const,
   byOrganization: (organizationId: number) =>
     [...userKeys.all, 'organization', organizationId] as const,
-  byOrganizationIncludingChildren: (organizationId: number) =>
-    [...userKeys.all, 'organization', organizationId, 'including-children'] as const,
+  organizationUser: (organizationId: number, userId: number) =>
+    [...userKeys.byOrganization(organizationId), 'detail', userId] as const,
 };
 
 // Hooks
@@ -119,6 +119,21 @@ export function useUsersForOrganization(organizationId: number | null | undefine
   });
 }
 
+/** One member of the organization (detail pages), instead of the whole member list. */
+export function useOrganizationUser(
+  organizationId: number | null | undefined,
+  userId: number | null | undefined,
+) {
+  const orgId = organizationId ?? 0;
+  const uid = userId ?? 0;
+  return useQuery({
+    queryKey: userKeys.organizationUser(orgId, uid),
+    queryFn: () => userApi.getUserForOrganization(orgId, uid),
+    enabled: orgId > 0 && uid > 0,
+    staleTime: STALE_TIME.LIST,
+  });
+}
+
 export function useOrganizationMemberList(
   organizationId: number | null | undefined,
   listQuery: ListQuery,
@@ -137,6 +152,10 @@ export function useOrganizationMemberList(
 }
 
 /** Organization members for searchable pickers (always loads all result pages). */
+/**
+ * Server-side member search for pickers. An empty search is the plain member list, which
+ * `useUsersForOrganization` already holds, so no request is made for it.
+ */
 export function useOrganizationMembersForPicker(
   organizationId: number | null | undefined,
   debouncedSearch: string,
@@ -158,7 +177,7 @@ export function useOrganizationMembersForPicker(
         organizationId ?? 0,
         toOrganizationMemberApiListQuery(query),
       ),
-    enabled: !!organizationId,
+    enabled: !!organizationId && trimmed.length > 0,
     fetchAll: true,
     staleTime: STALE_TIME.STANDARD,
   });
@@ -166,10 +185,9 @@ export function useOrganizationMembersForPicker(
 
 // Mutations
 
+/** Only the profile record changes; `self()` is also the prefix of tree, history and statistics. */
 function invalidateSelfQueries(queryClient: ReturnType<typeof useQueryClient>) {
-  void queryClient.invalidateQueries({ queryKey: userKeys.self() });
-  void queryClient.invalidateQueries({ queryKey: userKeys.organizationTree() });
-  void queryClient.invalidateQueries({ queryKey: userKeys.membershipHistory() });
+  void queryClient.invalidateQueries({ queryKey: userKeys.self(), exact: true });
 }
 
 /**
@@ -232,13 +250,10 @@ export function useCreateUserForOrganization() {
     mutationFn: ({ organizationId, data }: { organizationId: number; data: CreateUserRequest }) =>
       userApi.createUserForOrganization(organizationId, data),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: userKeys.byOrganization(variables.organizationId),
       });
-      queryClient.invalidateQueries({
-        queryKey: userKeys.byOrganizationIncludingChildren(variables.organizationId),
-      });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: onboardingInvitationKeys.byOrganization(variables.organizationId),
       });
     },
@@ -262,13 +277,10 @@ export function useUpdatePersonalData() {
       data: UpdatePersonalDataRequest;
     }) => userApi.updatePersonalData(organizationId, userId, data),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: userKeys.byOrganization(variables.organizationId),
       });
-      queryClient.invalidateQueries({
-        queryKey: userKeys.byOrganizationIncludingChildren(variables.organizationId),
-      });
-      void queryClient.invalidateQueries({ queryKey: userKeys.self() });
+      void queryClient.invalidateQueries({ queryKey: userKeys.self(), exact: true });
     },
   });
 }

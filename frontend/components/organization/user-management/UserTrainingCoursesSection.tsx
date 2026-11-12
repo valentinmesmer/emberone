@@ -327,7 +327,8 @@ export function UserTrainingCoursesSection({
   });
   const { data: pendingSubmissions = [], isLoading: pendingLoading } =
     useUserTrainingCoursePendingSubmissions(organizationId, userId);
-  const { data: catalog } = useOrgTrainingCourseCatalog(organizationId, userId);
+  // The catalog only feeds the add dialog.
+  const { data: catalog } = useOrgTrainingCourseCatalog(organizationId, userId, isAddOpen);
   const canReadWorkflows = hasPermission(organizationId, PermissionTypeEnum.WORKFLOW_READ);
   const deleteRecord = useDeleteTrainingCourseRecord(organizationId, userId);
 

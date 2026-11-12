@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.emberone.platform.security.SecurityService;
 import com.emberone.testsupport.SecurityTestFixtures;
 import com.emberone.testsupport.SecurityWebMvcTestConfig;
+import com.emberone.user.dto.UserDto;
 import com.emberone.user.dto.UserPageDto;
 import com.emberone.user.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,37 @@ class UserControllerSecurityTest {
 
         mockMvc.perform(
                         get("/api/v1/auth/users/organizations/10")
+                                .with(SecurityTestFixtures.tenantUserJwt()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void organizationUserRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/users/organizations/10/users/42"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void organizationUserForbiddenWithoutPermission() throws Exception {
+        when(coreSecurityService.hasUserReadPermission(SecurityTestFixtures.ORG_ID))
+                .thenReturn(false);
+
+        mockMvc.perform(
+                        get("/api/v1/auth/users/organizations/10/users/42")
+                                .with(SecurityTestFixtures.tenantUserJwt()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void organizationUserAllowedWithPermission() throws Exception {
+        when(coreSecurityService.hasUserReadPermission(SecurityTestFixtures.ORG_ID))
+                .thenReturn(true);
+        when(userService.getUserForOrganization(
+                        SecurityTestFixtures.ORG_ID, SecurityTestFixtures.USER_ID))
+                .thenReturn(UserDto.builder().id(SecurityTestFixtures.USER_ID).build());
+
+        mockMvc.perform(
+                        get("/api/v1/auth/users/organizations/10/users/42")
                                 .with(SecurityTestFixtures.tenantUserJwt()))
                 .andExpect(status().isOk());
     }

@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.emberone.courseoffering.dto.UserCourseRegistrationDto;
 import com.emberone.courseoffering.dto.UserCourseRegistrationPageDto;
 import com.emberone.courseoffering.service.CourseRegistrationQueryService;
 import com.emberone.platform.security.SecurityService;
@@ -77,5 +78,32 @@ class UserCourseRegistrationOrganizationControllerSecurityTest {
         // Checked by the path interceptor and again by the controller itself.
         verify(userService, atLeastOnce())
                 .assertUserBelongsToOrganization(3L, SecurityTestFixtures.ORG_ID);
+    }
+
+    @Test
+    void singleRegistrationRequiresAuthentication() throws Exception {
+        mockMvc.perform(get(URL + "/9")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void singleRegistrationForbiddenWithoutTrainingCourseRead() throws Exception {
+        when(coreSecurityService.hasTrainingCourseReadPermission(SecurityTestFixtures.ORG_ID))
+                .thenReturn(false);
+        when(coreSecurityService.hasCourseOfferingReadPermission(SecurityTestFixtures.ORG_ID))
+                .thenReturn(true);
+
+        mockMvc.perform(get(URL + "/9").with(SecurityTestFixtures.tenantUserJwt()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void singleRegistrationAllowedWithTrainingCourseRead() throws Exception {
+        when(coreSecurityService.hasTrainingCourseReadPermission(SecurityTestFixtures.ORG_ID))
+                .thenReturn(true);
+        when(queryService.getForUser(3L, 9L))
+                .thenReturn(UserCourseRegistrationDto.builder().id(9L).build());
+
+        mockMvc.perform(get(URL + "/9").with(SecurityTestFixtures.tenantUserJwt()))
+                .andExpect(status().isOk());
     }
 }

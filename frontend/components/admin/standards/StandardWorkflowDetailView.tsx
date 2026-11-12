@@ -6,8 +6,9 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Pencil, Power } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   StandardDetailAction,
   StandardDetailCardHeader,
@@ -28,9 +29,9 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ListContainer, ListRow, ListRowMeta, ListRowMetaItem } from '@/components/ui/list';
 import { NotFoundState } from '@/components/ui/message-cards';
 import { SectionHeader } from '@/components/ui/section-header';
-import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type StandardWorkflowDto, standardsApi } from '@/lib/api/standards';
+import { standardsApi } from '@/lib/api/standards';
+import { adminTenantCatalogKeys, useQueryErrorToast, useStandardWorkflow } from '@/lib/store';
 import { workflowSlotRoleHint, workflowSlotRoleLabel } from '@/lib/workflows/slotRoles';
 
 interface StandardWorkflowDetailViewProps {
@@ -40,7 +41,6 @@ interface StandardWorkflowDetailViewProps {
 
 export function StandardWorkflowDetailView({ state, configKey }: StandardWorkflowDetailViewProps) {
   const t = useTranslation();
-  const { showError } = useToast();
   const { tenantId, standardId, items, editable, busy, runMutation } = state;
 
   const item = useMemo(
@@ -53,23 +53,17 @@ export function StandardWorkflowDetailView({ state, configKey }: StandardWorkflo
   const [editOpen, setEditOpen] = useState(false);
   const closeEdit = useCallback(() => setEditOpen(false), []);
   const [toggleOpen, setToggleOpen] = useState(false);
-  const [workflow, setWorkflow] = useState<StandardWorkflowDto | null>(null);
   const hasItem = item != null;
 
   // The content items only summarize the CONTEXT role; the detail needs every role.
-  const loadWorkflow = useCallback(async () => {
-    try {
-      setWorkflow(await standardsApi.getWorkflow(tenantId, standardId, configKey));
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.standards.detail.loadFailed'));
-    }
-  }, [tenantId, standardId, configKey, showError, t]);
-
-  useEffect(() => {
-    if (!hasItem) return;
-    const id = window.setTimeout(() => void loadWorkflow(), 0);
-    return () => window.clearTimeout(id);
-  }, [hasItem, loadWorkflow]);
+  const queryClient = useQueryClient();
+  const workflowQuery = useStandardWorkflow(tenantId, standardId, configKey, hasItem);
+  useQueryErrorToast(workflowQuery.error, { messageKey: 'admin.standards.detail.loadFailed' });
+  const workflow = workflowQuery.data ?? null;
+  const reloadWorkflow = () =>
+    void queryClient.invalidateQueries({
+      queryKey: adminTenantCatalogKeys.standardWorkflow(tenantId, standardId, configKey),
+    });
 
   if (!item) {
     return <NotFoundState message={t('organizationManagement.errors.notFound')} />;
@@ -92,7 +86,7 @@ export function StandardWorkflowDetailView({ state, configKey }: StandardWorkflo
     );
     if (ok) {
       setToggleOpen(false);
-      void loadWorkflow();
+      reloadWorkflow();
     }
   };
 
@@ -170,7 +164,7 @@ export function StandardWorkflowDetailView({ state, configKey }: StandardWorkflo
           typeKey={typeKey}
           orgGroupItems={orgGroupItems}
           onClose={closeEdit}
-          onSaved={() => void loadWorkflow()}
+          onSaved={reloadWorkflow}
         />
       ) : null}
 

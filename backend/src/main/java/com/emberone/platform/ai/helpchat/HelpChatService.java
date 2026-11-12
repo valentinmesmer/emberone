@@ -30,7 +30,6 @@ import com.emberone.workflow.domain.WorkflowOpenScope;
 import com.emberone.workflow.domain.WorkflowType;
 import com.emberone.workflow.dto.WorkflowTypeCatalogDto;
 import com.emberone.workflow.service.BeginnableWorkflowTypeService;
-import com.emberone.workflow.service.WorkflowService;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -98,7 +97,6 @@ public class HelpChatService {
     private final AiAvailabilityGuard guard;
     private final TokenService tokenService;
     private final BeginnableWorkflowTypeService beginnableWorkflowTypeService;
-    private final WorkflowService workflowService;
     private final HelpTextProvider helpTextProvider;
     private final HelpChatActionValidator actionValidator;
     private final CertificationCatalogService certificationCatalogService;
@@ -123,9 +121,7 @@ public class HelpChatService {
                     || !helpTextProvider.has(type.getWorkflowTypeKey())) {
                 continue;
             }
-            if (workflowService
-                    .getOpenStateForCurrentUser(type.getWorkflowTypeId())
-                    .isTypeBlocked()) {
+            if (type.isTypeBlocked()) {
                 blockedTypes.add(type.getWorkflowTypeKey());
             } else {
                 allowedTypes.put(type.getWorkflowTypeKey(), type);

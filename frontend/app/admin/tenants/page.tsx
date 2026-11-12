@@ -32,7 +32,15 @@ import type { FederalState } from '@/lib/federal-state';
 import { useUrlSyncedListState } from '@/lib/list';
 import { adminTenantListDefinition } from '@/lib/list/adminTenantList';
 import { getAdminTenantDetailPath } from '@/lib/navigation/adminWorkspace';
-import { invalidateAdminTenantList, useAdminTenants } from '@/lib/store';
+import {
+  fetchAdminTenant,
+  invalidateAdminTenantList,
+  setAdminTenantData,
+  useAdminTenants,
+  useConfiguredFederalStates,
+} from '@/lib/store';
+
+const DEFAULT_FEDERAL_STATES: FederalState[] = ['BAYERN'];
 
 export default function AdminTenantsPage() {
   return (
@@ -68,9 +76,6 @@ function AdminTenantsListPage() {
   });
 
   const [addTenantOpen, setAddTenantOpen] = useState(false);
-  const [configuredFederalStates, setConfiguredFederalStates] = useState<FederalState[]>([
-    'BAYERN',
-  ]);
   const [isSubmittingTenant, setIsSubmittingTenant] = useState(false);
 
   const [editDetail, setEditDetail] = useState<TenantAdminDetailDto | null>(null);
@@ -92,23 +97,14 @@ function AdminTenantsListPage() {
     router.replace(getAdminTenantDetailPath(authTenantId));
   }, [authLoading, authTenantId, canAccessAdministration, isGlobalAdmin, router]);
 
-  useEffect(() => {
-    if (!canAccessAdministration || authLoading || !isGlobalAdmin) {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      void adminApi
-        .listConfiguredFederalStates()
-        .then(setConfiguredFederalStates)
-        .catch(() => undefined);
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [canAccessAdministration, authLoading, isGlobalAdmin]);
+  const { data: configuredFederalStates = DEFAULT_FEDERAL_STATES } = useConfiguredFederalStates(
+    canAccessAdministration && !authLoading && isGlobalAdmin,
+  );
 
   async function openEditTenant(tenant: TenantDto) {
     setEditDetailLoadingId(tenant.id);
     try {
-      const detail = await adminApi.getTenant(tenant.id);
+      const detail = await fetchAdminTenant(queryClient, tenant.id);
       setEditDetail(detail);
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.errors.tenantLoadFailed'));
@@ -194,10 +190,9 @@ function AdminTenantsListPage() {
             onPatch={async (id, patch) => {
               setIsUpdatingTenant(true);
               try {
-                await adminApi.patchTenant(id, patch);
+                setAdminTenantData(queryClient, await adminApi.patchTenant(id, patch));
                 showSuccess(t('admin.tenantUpdated'));
                 setEditDetail(null);
-                await invalidateAdminTenantList(queryClient);
               } catch (e) {
                 showError(e instanceof Error ? e.message : t('admin.errors.updateTenantFailed'));
                 throw e;

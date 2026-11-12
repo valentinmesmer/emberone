@@ -41,7 +41,7 @@ import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useCreateDrivingLicense,
   useDeleteDrivingLicense,
-  useOrganizationUserDocuments,
+  useOrganizationUserDocumentsByIds,
   useOrgDrivingLicenseCatalog,
   useUpdateDrivingLicense,
   useUploadOrganizationUserDocument,
@@ -301,10 +301,6 @@ export function UserDrivingLicensesSection({
     userId,
   );
   const { data: catalog } = useOrgDrivingLicenseCatalog(organizationId, userId);
-  const { data: documents = [], isLoading: documentsLoading } = useOrganizationUserDocuments(
-    organizationId,
-    userId,
-  );
   const canReadWorkflows = hasPermission(organizationId, PermissionTypeEnum.WORKFLOW_READ);
   const deleteLicense = useDeleteDrivingLicense(organizationId, userId);
 
@@ -319,10 +315,11 @@ export function UserDrivingLicensesSection({
   const resolveClassLabel = (definitionId: number) =>
     classOptions.find((definition) => definition.id === definitionId)?.name ?? `#${definitionId}`;
 
-  const linkedDocuments = useMemo(() => {
-    const documentIds = new Set(license?.userDocumentIds ?? []);
-    return documents.filter((doc) => documentIds.has(doc.id));
-  }, [documents, license?.userDocumentIds]);
+  const { data: linkedDocuments = [] } = useOrganizationUserDocumentsByIds(
+    organizationId,
+    userId,
+    license?.userDocumentIds ?? [],
+  );
 
   const handleDelete = async () => {
     try {
@@ -334,7 +331,7 @@ export function UserDrivingLicensesSection({
     }
   };
 
-  if (licenseLoading || pendingLoading || documentsLoading) {
+  if (licenseLoading || pendingLoading) {
     return <LoadingState />;
   }
 

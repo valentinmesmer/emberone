@@ -5,7 +5,6 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchAllPageContent } from '@/lib/api/paged';
 import { type UserDocumentListRequest, userDocumentApi } from '@/lib/api/userDocument';
 import type { ListQuery } from '@/lib/list/types';
 import { useUrlSyncedListState } from '@/lib/list/useListState';
@@ -23,6 +22,12 @@ export const organizationUserDocumentKeys = {
   all: ['organization-user-documents'] as const,
   listRoot: (organizationId: number, userId: number) =>
     [...organizationUserDocumentKeys.all, organizationId, userId, 'list'] as const,
+  byIds: (organizationId: number, userId: number, ids: readonly number[]) =>
+    [...organizationUserDocumentKeys.listRoot(organizationId, userId), 'by-ids', ...ids] as const,
+  detailRoot: (organizationId: number, userId: number) =>
+    [...organizationUserDocumentKeys.all, organizationId, userId, 'detail'] as const,
+  detail: (organizationId: number, userId: number, documentId: number) =>
+    [...organizationUserDocumentKeys.detailRoot(organizationId, userId), documentId] as const,
   tags: (organizationId: number, userId: number) =>
     [...organizationUserDocumentKeys.all, organizationId, userId, 'tags'] as const,
 };
@@ -55,21 +60,35 @@ export function useOrganizationUserDocumentList({
   });
 }
 
-/** Loads all pages (document pickers, detail lookups). */
-export function useOrganizationUserDocuments(
+export function useOrganizationUserDocument(
   organizationId: number | null | undefined,
   userId: number | null | undefined,
+  documentId: number,
+  enabled = true,
 ) {
+  const orgId = organizationId ?? 0;
+  const uid = userId ?? 0;
   return useQuery({
-    queryKey: [
-      ...organizationUserDocumentKeys.listRoot(organizationId ?? 0, userId ?? 0),
-      'all',
-    ] as const,
-    queryFn: () =>
-      fetchAllPageContent((page) =>
-        userDocumentApi.listForOrganizationUser(organizationId ?? 0, userId ?? 0, { page }),
-      ),
-    enabled: !!organizationId && !!userId,
+    queryKey: organizationUserDocumentKeys.detail(orgId, uid, documentId),
+    queryFn: () => userDocumentApi.getForOrganizationUser(orgId, uid, documentId),
+    enabled: !!organizationId && !!userId && enabled && documentId > 0,
+    staleTime: STALE_TIME.LIST,
+  });
+}
+
+/** Metadata of the documents linked to a record (ids come from the record's `userDocumentIds`). */
+export function useOrganizationUserDocumentsByIds(
+  organizationId: number | null | undefined,
+  userId: number | null | undefined,
+  ids: readonly number[],
+  enabled = true,
+) {
+  const orgId = organizationId ?? 0;
+  const uid = userId ?? 0;
+  return useQuery({
+    queryKey: organizationUserDocumentKeys.byIds(orgId, uid, ids),
+    queryFn: () => userDocumentApi.listByIdsForOrganizationUser(orgId, uid, ids),
+    enabled: !!organizationId && !!userId && enabled && ids.length > 0,
     staleTime: STALE_TIME.LIST,
   });
 }
@@ -115,6 +134,9 @@ export function useUpdateOrganizationUserDocument(organizationId: number, userId
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: organizationUserDocumentKeys.listRoot(organizationId, userId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: organizationUserDocumentKeys.detailRoot(organizationId, userId),
       });
       void queryClient.invalidateQueries({
         queryKey: organizationUserDocumentKeys.tags(organizationId, userId),

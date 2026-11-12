@@ -334,6 +334,25 @@ class TrainingCourseRecordServiceTest {
     }
 
     @Test
+    void getRecordReturnsOwnRecordAndHidesForeignRecord() {
+        TrainingCourseUserSubmission submission =
+                TrainingCourseUserSubmission.builder()
+                        .id(55L)
+                        .tenantId(TENANT_ID)
+                        .userId(USER_ID)
+                        .name("Gruppenführer")
+                        .startDate(LocalDate.of(2026, 4, 13))
+                        .endDate(LocalDate.of(2026, 5, 21))
+                        .build();
+        when(submissionRepository.findById(55L)).thenReturn(Optional.of(submission));
+        when(submissionDocumentRepository.findBySubmission_IdIn(any())).thenReturn(List.of());
+
+        assertThat(service.getRecord(USER_ID, 55L).getId()).isEqualTo(55L);
+        assertThatThrownBy(() -> service.getRecord(USER_ID + 1, 55L))
+                .isInstanceOf(com.emberone.platform.exception.ResourceNotFoundException.class);
+    }
+
+    @Test
     void deleteManualRemovesSubmission() {
         TrainingCourseUserSubmission submission =
                 TrainingCourseUserSubmission.builder()

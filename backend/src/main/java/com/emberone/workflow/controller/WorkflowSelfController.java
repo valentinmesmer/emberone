@@ -9,7 +9,6 @@ package com.emberone.workflow.controller;
 import com.emberone.platform.web.list.BoundedList;
 import com.emberone.platform.web.list.ListQuery;
 import com.emberone.platform.web.list.options.ListFilterOptionsDto;
-import com.emberone.workflow.dto.WorkflowOpenConcurrencyKeysDto;
 import com.emberone.workflow.dto.WorkflowOpenStateDto;
 import com.emberone.workflow.dto.WorkflowPageDto;
 import com.emberone.workflow.dto.WorkflowTypeCatalogDto;
@@ -84,15 +83,6 @@ public class WorkflowSelfController {
     public ResponseEntity<List<WorkflowTypeCatalogDto>> getBeginnableTypes() {
         List<WorkflowTypeCatalogDto> types = beginnableWorkflowTypeService.listForCurrentUser();
         return ResponseEntity.ok(types);
-    }
-
-    /** Active concurrency keys the current user already holds for one or all workflow types. */
-    @GetMapping("/open-concurrency-keys")
-    @BoundedList("Open workflow concurrency keys for current user")
-    public ResponseEntity<List<WorkflowOpenConcurrencyKeysDto>> getOpenConcurrencyKeys(
-            @RequestParam(required = false) Long workflowTypeId) {
-        return ResponseEntity.ok(
-                workflowService.getOpenConcurrencyKeysForCurrentUser(workflowTypeId));
     }
 
     /**

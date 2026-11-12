@@ -6,7 +6,6 @@
 
 import { type InfiniteData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHasEmberOneUserId } from '@/hooks/useHasEmberOneUserId';
-import { fetchAllPageContent } from '@/lib/api/paged';
 import {
   type UserDocumentListRequest,
   type UserDocumentPageDto,
@@ -21,6 +20,9 @@ import type { UnreadDocumentCountDto, UserDocumentDto } from '@/types/userDocume
 export const userDocumentKeys = {
   all: ['user-documents'] as const,
   listRoot: () => [...userDocumentKeys.all, 'list'] as const,
+  byIds: (ids: readonly number[]) => [...userDocumentKeys.listRoot(), 'by-ids', ...ids] as const,
+  detailRoot: () => [...userDocumentKeys.all, 'detail'] as const,
+  detail: (documentId: number) => [...userDocumentKeys.detailRoot(), documentId] as const,
   tags: () => [...userDocumentKeys.all, 'tags'] as const,
   unreadCount: () => [...userDocumentKeys.all, 'unread-count'] as const,
 };
@@ -41,13 +43,23 @@ export function useUserDocumentList({ listQuery, enabled = true }: UseUserDocume
   });
 }
 
-/** Loads all pages (document pickers, detail lookups). */
-export function useUserDocuments(enabled = true) {
+export function useUserDocument(documentId: number, enabled = true) {
   const hasEmberOneUserId = useHasEmberOneUserId();
   return useQuery({
-    queryKey: [...userDocumentKeys.listRoot(), 'all'] as const,
-    queryFn: () => fetchAllPageContent((page) => userDocumentApi.list({ page })),
-    enabled: hasEmberOneUserId && enabled,
+    queryKey: userDocumentKeys.detail(documentId),
+    queryFn: () => userDocumentApi.get(documentId),
+    enabled: hasEmberOneUserId && enabled && documentId > 0,
+    staleTime: STALE_TIME.LIST,
+  });
+}
+
+/** Metadata of the documents linked to a record (ids come from the record's `userDocumentIds`). */
+export function useUserDocumentsByIds(ids: readonly number[], enabled = true) {
+  const hasEmberOneUserId = useHasEmberOneUserId();
+  return useQuery({
+    queryKey: userDocumentKeys.byIds(ids),
+    queryFn: () => userDocumentApi.listByIds(ids),
+    enabled: hasEmberOneUserId && enabled && ids.length > 0,
     staleTime: STALE_TIME.LIST,
   });
 }
@@ -109,6 +121,7 @@ export function useMarkAllDocumentsViewed() {
         count: 0,
       });
       void queryClient.invalidateQueries({ queryKey: userDocumentKeys.listRoot() });
+      void queryClient.invalidateQueries({ queryKey: userDocumentKeys.detailRoot() });
     },
   });
 }
@@ -119,6 +132,7 @@ export function useMarkDocumentViewed() {
     mutationFn: (documentId: number) => userDocumentApi.markViewed(documentId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: userDocumentKeys.listRoot() });
+      void queryClient.invalidateQueries({ queryKey: userDocumentKeys.detailRoot() });
       void queryClient.invalidateQueries({ queryKey: userDocumentKeys.unreadCount() });
     },
   });

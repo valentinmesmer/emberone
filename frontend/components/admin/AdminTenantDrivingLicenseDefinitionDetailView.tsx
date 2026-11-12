@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantDrivingLicenseDefinitionEditModal } from '@/components/admin/AdminTenantDrivingLicenseDefinitionEditModal';
 import {
   StandardDetailAction,
@@ -24,10 +25,12 @@ import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { tenantDrivingLicenseDefinitionsApi } from '@/lib/api/tenantDrivingLicenseDefinitions';
 import {
-  type TenantDrivingLicenseDefinitionDto,
-  tenantDrivingLicenseDefinitionsApi,
-} from '@/lib/api/tenantDrivingLicenseDefinitions';
+  invalidateAdminTenantCatalog,
+  markAdminTenantCatalogStale,
+  useTenantDrivingLicenseDefinition,
+} from '@/lib/store';
 import {
   getAdminTenantDrivingLicenseDefinitionDetailPath,
   getAdminTenantStandardsPath,
@@ -46,33 +49,21 @@ export function AdminTenantDrivingLicenseDefinitionDetailView({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [definition, setDefinition] = useState<TenantDrivingLicenseDefinitionDto | null>(null);
   const [busy, setBusy] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      setDefinition(await tenantDrivingLicenseDefinitionsApi.get(tenantId, configKey));
-    } catch {
-      setLoadFailed(true);
-      setDefinition(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, configKey]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: definition = null,
+    isPending: loading,
+    isError: loadFailed,
+  } = useTenantDrivingLicenseDefinition(tenantId, configKey);
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'drivingLicenses', tenantId);
+  const staleOnLeave = () =>
+    void markAdminTenantCatalogStale(queryClient, 'drivingLicenses', tenantId);
 
   const navigateBack = () => {
     router.push(getAdminTenantStandardsPath(tenantId));
@@ -83,6 +74,7 @@ export function AdminTenantDrivingLicenseDefinitionDetailView({
     setBusy(true);
     try {
       await tenantDrivingLicenseDefinitionsApi.delete(tenantId, definition.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.drivingLicenses.deleted'));
       navigateBack();
     } catch (e) {
@@ -99,6 +91,7 @@ export function AdminTenantDrivingLicenseDefinitionDetailView({
     setBusy(true);
     try {
       await tenantDrivingLicenseDefinitionsApi.archive(tenantId, definition.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.drivingLicenses.archived'));
       navigateBack();
     } catch (e) {
@@ -115,9 +108,9 @@ export function AdminTenantDrivingLicenseDefinitionDetailView({
     setBusy(true);
     try {
       await tenantDrivingLicenseDefinitionsApi.unarchive(tenantId, definition.configKey);
+      reload();
       showSuccess(t('admin.tenantStandards.drivingLicenses.unarchived'));
       setUnarchiveOpen(false);
-      await loadData();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.drivingLicenses.unarchiveFailed'),
@@ -208,12 +201,13 @@ export function AdminTenantDrivingLicenseDefinitionDetailView({
         onSaved={(savedConfigKey) => {
           setEditOpen(false);
           if (savedConfigKey !== configKey) {
+            staleOnLeave();
             router.replace(
               getAdminTenantDrivingLicenseDefinitionDetailPath(tenantId, savedConfigKey),
             );
             return;
           }
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         definition={definition}

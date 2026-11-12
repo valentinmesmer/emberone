@@ -96,6 +96,12 @@ export const userApi = {
     return apiClient.get<UserPageDto>(qs ? `${path}?${qs}` : path);
   },
 
+  async getUserForOrganization(organizationId: number, userId: number): Promise<UserDto> {
+    return apiClient.get<UserDto>(
+      `/api/v1/auth/users/organizations/${organizationId}/users/${userId}`,
+    );
+  },
+
   /**
    * Create a user for an organization
    */

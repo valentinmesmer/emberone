@@ -40,7 +40,6 @@ export function UserDocumentListView() {
     isFetchingNextPage,
     fetchNextPage,
   } = useUserDocumentList({ listQuery: listState.listQuery });
-  const { data: tagSuggestions = [] } = useUserDocumentTags();
   const { data: beginnableTypes = [] } = useMyBeginnableWorkflowTypes();
   const canSubmitDocument = useMemo(
     () =>
@@ -50,6 +49,7 @@ export function UserDocumentListView() {
     [beginnableTypes],
   );
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+  const { data: tagSuggestions = [] } = useUserDocumentTags(canSubmitDocument && isSubmitOpen);
 
   useQueryErrorToast(error, { messageKey: 'myArea.error.loadFailed' });
 

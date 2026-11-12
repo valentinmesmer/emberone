@@ -21,6 +21,11 @@ export const qualificationKeys = {
     [...qualificationKeys.all, 'status-overview', orgId] as const,
   statusOverview: (orgId: number, search = '') =>
     [...qualificationKeys.all, 'status-overview', orgId, search] as const,
+  userDetail: (orgId: number, userId: number, definitionId: number) =>
+    [...qualificationKeys.all, 'status', orgId, userId, 'detail', definitionId] as const,
+  selfAll: () => [...qualificationKeys.all, 'self'] as const,
+  selfDetail: (definitionId: number) =>
+    [...qualificationKeys.all, 'self', 'detail', definitionId] as const,
   selfStatus: () => [...qualificationKeys.all, 'self', 'status'] as const,
 };
 
@@ -34,6 +39,30 @@ export function useUserQualificationStatus(organizationId: number, userId: numbe
       return { userId, organizationId, items };
     },
     enabled: enabled && organizationId > 0 && userId > 0,
+    staleTime: STALE_TIME.LIST,
+  });
+}
+
+export function useUserQualificationDetail(
+  organizationId: number,
+  userId: number,
+  definitionId: number,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: qualificationKeys.userDetail(organizationId, userId, definitionId),
+    queryFn: () => qualificationsApi.getUserDetail(organizationId, userId, definitionId),
+    enabled: enabled && organizationId > 0 && userId > 0 && definitionId > 0,
+    staleTime: STALE_TIME.LIST,
+  });
+}
+
+export function useSelfQualificationDetail(definitionId: number, enabled = true) {
+  return useQuery({
+    queryKey: qualificationKeys.selfDetail(definitionId),
+    queryFn: () => qualificationsApi.getSelfDetail(definitionId),
+    enabled: enabled && definitionId > 0,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -63,6 +92,7 @@ export function useSelfQualificationStatus(enabled = true) {
       return userQualificationStatusesFromSelfRows(rows);
     },
     enabled,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -76,7 +106,7 @@ export function invalidateQualificationStatusForOrganization(
   void queryClient.invalidateQueries({
     queryKey: qualificationKeys.statusOverviewAll(organizationId),
   });
-  void queryClient.invalidateQueries({ queryKey: qualificationKeys.selfStatus() });
+  void queryClient.invalidateQueries({ queryKey: qualificationKeys.selfAll() });
 }
 
 export function useGrantQualificationOrgDecision(organizationId: number, userId: number) {

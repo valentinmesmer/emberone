@@ -10,6 +10,7 @@ import com.emberone.platform.security.TokenService;
 import com.emberone.platform.web.list.BoundedList;
 import com.emberone.platform.web.list.ListQuery;
 import com.emberone.trainingcourse.dto.TrainingCourseTypeDto;
+import com.emberone.trainingcourse.dto.TrainingCourseUserRecordDto;
 import com.emberone.trainingcourse.dto.TrainingCourseUserRecordPageDto;
 import com.emberone.trainingcourse.list.TrainingCourseRecordListFilter;
 import com.emberone.trainingcourse.service.TrainingCourseCatalogService;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,6 +44,11 @@ public class UserTrainingCourseSelfController {
             ListQuery query, TrainingCourseRecordListFilter filter) {
         return ResponseEntity.ok(
                 recordService.listRecords(tokenService.requireUserId(), query, filter));
+    }
+
+    @GetMapping("/records/{recordId}")
+    public ResponseEntity<TrainingCourseUserRecordDto> getMyRecord(@PathVariable Long recordId) {
+        return ResponseEntity.ok(recordService.getRecord(tokenService.requireUserId(), recordId));
     }
 
     /** Catalog types for the caller's membership organization (for Nachweis einreichen). */

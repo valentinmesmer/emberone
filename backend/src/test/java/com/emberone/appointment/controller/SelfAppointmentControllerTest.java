@@ -11,9 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.emberone.appointment.dto.AppointmentDto;
-import com.emberone.appointment.dto.MyAppointmentResponseDto;
 import com.emberone.appointment.dto.UpcomingAppointmentsDto;
-import com.emberone.appointment.service.AppointmentResponseService;
 import com.emberone.appointment.service.AppointmentService;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +27,6 @@ import org.springframework.http.ResponseEntity;
 class SelfAppointmentControllerTest {
 
     @Mock AppointmentService appointmentService;
-    @Mock AppointmentResponseService appointmentResponseService;
 
     @InjectMocks SelfAppointmentController controller;
 
@@ -47,19 +44,6 @@ class SelfAppointmentControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(page);
         verify(appointmentService).listUpcomingAcrossOrganizations(5);
-    }
-
-    @Test
-    void getMyResponsesDelegatesAppointmentIds() {
-        List<Long> appointmentIds = List.of(1L, 2L);
-        List<MyAppointmentResponseDto> responses =
-                List.of(MyAppointmentResponseDto.builder().appointmentId(1L).build());
-        when(appointmentResponseService.getMyResponses(appointmentIds)).thenReturn(responses);
-
-        ResponseEntity<List<MyAppointmentResponseDto>> response =
-                controller.getMyResponses(appointmentIds);
-
-        assertThat(response.getBody()).isEqualTo(responses);
     }
 
     @Test

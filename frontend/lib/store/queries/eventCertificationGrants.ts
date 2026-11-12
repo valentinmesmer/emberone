@@ -16,15 +16,15 @@ import type { EventType } from '@/types/event';
 
 export const eventCertificationGrantKeys = {
   all: ['eventCertificationGrants'] as const,
+  /** Lists and details of the grants of one event. */
+  event: (organizationId: number, eventType: EventType, eventId: number) =>
+    [...eventCertificationGrantKeys.all, organizationId, eventType, eventId] as const,
   list: (organizationId: number, eventType: EventType, eventId: number) =>
-    [...eventCertificationGrantKeys.all, 'list', organizationId, eventType, eventId] as const,
+    [...eventCertificationGrantKeys.event(organizationId, eventType, eventId), 'list'] as const,
   detail: (organizationId: number, eventType: EventType, eventId: number, grantId: number) =>
     [
-      ...eventCertificationGrantKeys.all,
+      ...eventCertificationGrantKeys.event(organizationId, eventType, eventId),
       'detail',
-      organizationId,
-      eventType,
-      eventId,
       grantId,
     ] as const,
 };
@@ -51,10 +51,7 @@ export function useEventCertificationGrantDetail(
   options?: { enabled?: boolean },
 ) {
   return useQuery({
-    queryKey:
-      grantId != null
-        ? eventCertificationGrantKeys.detail(organizationId, eventType, eventId, grantId)
-        : eventCertificationGrantKeys.all,
+    queryKey: eventCertificationGrantKeys.detail(organizationId, eventType, eventId, grantId ?? 0),
     queryFn: () =>
       eventCertificationGrantsApi.get(organizationId, eventType, eventId, grantId ?? 0),
     enabled: (options?.enabled ?? true) && grantId != null,
@@ -68,13 +65,10 @@ function invalidateEventCertificationGrantQueries(
   eventType: EventType,
   eventId: number,
 ) {
-  queryClient.invalidateQueries({
-    queryKey: eventCertificationGrantKeys.list(organizationId, eventType, eventId),
+  void queryClient.invalidateQueries({
+    queryKey: eventCertificationGrantKeys.event(organizationId, eventType, eventId),
   });
-  queryClient.invalidateQueries({
-    queryKey: [...eventCertificationGrantKeys.all, 'detail', organizationId, eventType, eventId],
-  });
-  queryClient.invalidateQueries({ queryKey: certificationKeys.all });
+  void queryClient.invalidateQueries({ queryKey: certificationKeys.all });
 }
 
 export function useCreateEventCertificationGrant(

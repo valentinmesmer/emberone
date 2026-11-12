@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantRankEditModal } from '@/components/admin/AdminTenantRankEditModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import { SectionActions, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type TenantRankDto, tenantRanksApi } from '@/lib/api/tenantRanks';
+import { invalidateAdminTenantCatalog, useQueryErrorToast, useTenantRanks } from '@/lib/store';
 import { getAdminTenantRankDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminTenantRankManagementProps {
@@ -35,31 +37,16 @@ export function AdminTenantRankManagement({
   const t = useTranslation();
   const router = useRouter();
   const { showError, showSuccess } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [ranks, setRanks] = useState<TenantRankDto[]>([]);
   const [busy, setBusy] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TenantRankDto | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<TenantRankDto | null>(null);
   const [unarchiveTarget, setUnarchiveTarget] = useState<TenantRankDto | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      setRanks(await tenantRanksApi.list(tenantId));
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.tenantStandards.ranks.loadFailed'));
-      setRanks([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const { data: ranks = [], isPending: loading, error: loadError } = useTenantRanks(tenantId);
+  useQueryErrorToast(loadError, { messageKey: 'admin.tenantStandards.ranks.loadFailed' });
+  const reload = () => void invalidateAdminTenantCatalog(queryClient, 'ranks', tenantId);
 
   const handleArchive = async () => {
     if (!archiveTarget) return;
@@ -68,7 +55,7 @@ export function AdminTenantRankManagement({
       await tenantRanksApi.archive(tenantId, archiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.ranks.archived'));
       setArchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.tenantStandards.ranks.archiveFailed'));
     } finally {
@@ -83,7 +70,7 @@ export function AdminTenantRankManagement({
       await tenantRanksApi.unarchive(tenantId, unarchiveTarget.configKey);
       showSuccess(t('admin.tenantStandards.ranks.unarchived'));
       setUnarchiveTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.tenantStandards.ranks.unarchiveFailed'));
     } finally {
@@ -200,7 +187,7 @@ export function AdminTenantRankManagement({
           editing={editing}
           isOpen
           onClose={() => setFormOpen(false)}
-          onSaved={() => void loadData()}
+          onSaved={reload}
         />
       ) : null}
 

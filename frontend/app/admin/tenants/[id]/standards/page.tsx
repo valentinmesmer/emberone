@@ -8,6 +8,7 @@
 
 import { AlertCircle, CheckCircle2, Circle, Copy, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminMobileLayout } from '@/components/admin';
 import { Badge } from '@/components/ui/badge';
@@ -36,14 +37,19 @@ import {
   formatStandardSwitchImpactMessage,
   switchImpactRequiresConfirmation,
 } from '@/lib/admin/standardImpact';
-import { type AdminOrganizationTreeNodeDto, adminApi } from '@/lib/api/admin';
-import { type OrganizationTypeDto, organizationTypesApi } from '@/lib/api/organizationTypes';
+import type { AdminOrganizationTreeNodeDto } from '@/lib/api/admin';
+import { type StandardDto, standardsApi } from '@/lib/api/standards';
 import {
-  type OrganizationStandardOverrideDto,
-  type StandardAssignmentDto,
-  type StandardDto,
-  standardsApi,
-} from '@/lib/api/standards';
+  adminTenantCatalogKeys,
+  invalidateAdminTenant,
+  invalidateAdminTenantCatalogList,
+  useAdminOrganizationTree,
+  useQueryErrorToast,
+  useStandardAssignments,
+  useStandardOrganizationOverrides,
+  useTenantOrganizationTypes,
+  useTenantStandards,
+} from '@/lib/store';
 import { compareText } from '@/lib/i18n/locale';
 import { hasCustomStandard, isStandardsReadyForOrgCreation } from '@/lib/standards/readiness';
 import { formBlockers } from '@/lib/utils';
@@ -106,11 +112,6 @@ function StandardsPageInner() {
   const t = useTranslation();
   const { showSuccess, showError } = useToast();
 
-  const [standards, setStandards] = useState<StandardDto[]>([]);
-  const [assignments, setAssignments] = useState<StandardAssignmentDto[]>([]);
-  const [overrides, setOverrides] = useState<OrganizationStandardOverrideDto[]>([]);
-  const [organizationTypes, setOrganizationTypes] = useState<OrganizationTypeDto[]>([]);
-  const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [assigningType, setAssigningType] = useState<number | null>(null);
   const [pendingAssign, setPendingAssign] = useState<{
@@ -122,8 +123,6 @@ function StandardsPageInner() {
   const [addOverrideOpen, setAddOverrideOpen] = useState(false);
   const [addOverrideOrgId, setAddOverrideOrgId] = useState('');
   const [addOverrideStandardId, setAddOverrideStandardId] = useState('');
-  const [addOverrideOrgs, setAddOverrideOrgs] = useState<AdminOrganizationTreeNodeDto[]>([]);
-  const [addOverrideOrgsLoading, setAddOverrideOrgsLoading] = useState(false);
   const [pendingOverrideAdd, setPendingOverrideAdd] = useState<{
     organizationId: number;
     standardId: number;
@@ -138,6 +137,59 @@ function StandardsPageInner() {
   const tenantOutOfScope =
     !isGlobalAdmin && idValid && (authTenantId == null || tenantId !== authTenantId);
 
+  const queryClient = useQueryClient();
+  const queriesEnabled = canAccessAdministration && !authLoading && idValid && !tenantOutOfScope;
+  const standardsQuery = useTenantStandards(tenantId, queriesEnabled);
+  const assignmentsQuery = useStandardAssignments(tenantId, queriesEnabled);
+  const overridesQuery = useStandardOrganizationOverrides(tenantId, queriesEnabled);
+  const typesQuery = useTenantOrganizationTypes(tenantId, queriesEnabled);
+  useQueryErrorToast(
+    standardsQuery.error ?? assignmentsQuery.error ?? overridesQuery.error ?? typesQuery.error,
+    { messageKey: 'admin.standards.errors.loadFailed' },
+  );
+  const loading =
+    standardsQuery.isLoading ||
+    assignmentsQuery.isLoading ||
+    overridesQuery.isLoading ||
+    typesQuery.isLoading;
+  const standards = useMemo(() => standardsQuery.data ?? [], [standardsQuery.data]);
+  const assignments = useMemo(() => assignmentsQuery.data ?? [], [assignmentsQuery.data]);
+  const overrides = useMemo(() => overridesQuery.data ?? [], [overridesQuery.data]);
+  const organizationTypes = useMemo(() => typesQuery.data ?? [], [typesQuery.data]);
+
+  const addOverrideTreeQuery = useAdminOrganizationTree(tenantId, addOverrideOpen);
+  const addOverrideOrgsLoading = addOverrideOpen && addOverrideTreeQuery.isPending;
+  const addOverrideOrgs = useMemo(
+    () => addOverrideTreeQuery.data?.roots ?? [],
+    [addOverrideTreeQuery.data],
+  );
+  const addOverrideTreeFailed = addOverrideOpen && addOverrideTreeQuery.isError;
+  useEffect(() => {
+    if (!addOverrideTreeFailed) return;
+    showError(t('admin.standards.overridesSection.loadOrgsFailed'));
+    setAddOverrideOpen(false);
+  }, [addOverrideTreeFailed, showError, t]);
+
+  // Standards, assignments and overrides feed the tenant setup state (standards configured).
+  const reloadStandards = () => {
+    void invalidateAdminTenantCatalogList(queryClient, 'standards', tenantId);
+    void invalidateAdminTenant(queryClient, tenantId);
+  };
+  const reloadAssignments = () => {
+    void queryClient.invalidateQueries({
+      queryKey: adminTenantCatalogKeys.standardAssignments(tenantId),
+    });
+    void invalidateAdminTenant(queryClient, tenantId);
+  };
+  const reloadOverrides = () => {
+    void queryClient.invalidateQueries({
+      queryKey: adminTenantCatalogKeys.standardOrganizationOverrides(tenantId),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: adminTenantCatalogKeys.organizations(tenantId),
+    });
+  };
+
   const assignedStandardIds = useMemo(
     () => new Set(assignments.map((assignment) => assignment.standardId)),
     [assignments],
@@ -147,37 +199,6 @@ function StandardsPageInner() {
     () => new Map(organizationTypes.map((type) => [type.id, type.name])),
     [organizationTypes],
   );
-
-  const load = useCallback(async () => {
-    if (!idValid) return;
-    setLoading(true);
-    try {
-      const [std, asg, ovr, types] = await Promise.all([
-        standardsApi.listStandards(tenantId),
-        standardsApi.listAssignments(tenantId),
-        standardsApi.listOrganizationOverrides(tenantId),
-        organizationTypesApi.list(tenantId),
-      ]);
-      setStandards(std);
-      setAssignments(asg);
-      setOverrides(ovr);
-      setOrganizationTypes(types);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.standards.errors.loadFailed'));
-    } finally {
-      setLoading(false);
-    }
-  }, [idValid, tenantId, showError, t]);
-
-  useEffect(() => {
-    if (!canAccessAdministration || authLoading || !idValid || tenantOutOfScope) {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      void load();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [canAccessAdministration, authLoading, idValid, tenantOutOfScope, load]);
 
   function openDetail(standard: StandardDto) {
     router.push(`/admin/tenants/${tenantId}/standards/${standard.id}`);
@@ -202,7 +223,7 @@ function StandardsPageInner() {
       });
       setCloneSource(null);
       showSuccess(t('admin.standards.created'));
-      await load();
+      reloadStandards();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.standards.errors.cloneFailed'));
     } finally {
@@ -217,7 +238,7 @@ function StandardsPageInner() {
       await standardsApi.deleteStandard(tenantId, deleteTarget.id);
       setDeleteTarget(null);
       showSuccess(t('admin.standards.deleted'));
-      await load();
+      reloadStandards();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.standards.errors.deleteFailed'));
     } finally {
@@ -231,7 +252,7 @@ function StandardsPageInner() {
     try {
       await standardsApi.assignStandard(tenantId, organizationTypeId, { standardId });
       showSuccess(t('admin.standards.assigned'));
-      await load();
+      reloadAssignments();
     } catch (e) {
       const message = e instanceof Error ? e.message : '';
       if (message.includes('cannot be assigned')) {
@@ -239,7 +260,7 @@ function StandardsPageInner() {
       } else {
         showError(message || t('admin.standards.errors.assignFailed'));
       }
-      await load();
+      reloadAssignments();
     } finally {
       setBusy(false);
       setAssigningType(null);
@@ -263,7 +284,7 @@ function StandardsPageInner() {
       await applyAssign(organizationTypeId, standardId);
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.standards.errors.assignFailed'));
-      await load();
+      reloadAssignments();
     } finally {
       setAssigningType(null);
       setBusy(false);
@@ -302,29 +323,16 @@ function StandardsPageInner() {
     [addOverrideOrgs, overrideOrgIds, flattenOrgTree],
   );
 
-  async function openAddOverride() {
+  function openAddOverride() {
     setAddOverrideOpen(true);
     setAddOverrideOrgId('');
     setAddOverrideStandardId(customStandards[0] ? String(customStandards[0].id) : '');
-    setAddOverrideOrgsLoading(true);
-    try {
-      const tree = await adminApi.getAdminOrganizationTree(tenantId);
-      setAddOverrideOrgs(tree.roots);
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.standards.overridesSection.loadOrgsFailed'),
-      );
-      setAddOverrideOpen(false);
-    } finally {
-      setAddOverrideOrgsLoading(false);
-    }
   }
 
   function closeAddOverride() {
     setAddOverrideOpen(false);
     setAddOverrideOrgId('');
     setAddOverrideStandardId('');
-    setAddOverrideOrgs([]);
   }
 
   async function applyAddOverride(organizationId: number, standardId: number) {
@@ -333,7 +341,7 @@ function StandardsPageInner() {
       await standardsApi.setOrganizationStandard(tenantId, organizationId, { standardId });
       closeAddOverride();
       showSuccess(t('admin.standards.orgOverride.saved'));
-      await load();
+      reloadOverrides();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.standards.orgOverride.saveFailed'));
     } finally {

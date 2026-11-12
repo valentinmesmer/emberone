@@ -22,7 +22,7 @@ import {
   useUserDrivingLicense,
   useUserDrivingLicensePendingWorkflow,
   useUserMembershipOverview,
-  useUsersForOrganization,
+  useOrganizationUser,
 } from '@/lib/store';
 import { partitionOrganizationMemberships } from '@/lib/utils/membershipPartition';
 import { UserAbsencesSection } from './UserAbsencesSection';
@@ -213,7 +213,7 @@ export function UserManagementSectionView({
   sectionId,
 }: UserManagementSectionViewProps) {
   const t = useTranslation();
-  const { data: users = [], isLoading } = useUsersForOrganization(organizationId);
+  const { data: user, isLoading } = useOrganizationUser(organizationId, userId);
   const isRankSection = sectionId === 'rank';
   const isCertificationsSection = sectionId === 'certifications';
   const isDrivingLicensesSection = sectionId === 'driving-licenses';
@@ -245,7 +245,6 @@ export function UserManagementSectionView({
   const addDisabled =
     isCertificationsSection && (canAssignLoading || canAssignCertifications === false);
   const section = USER_MANAGEMENT_SECTIONS.find((item) => item.id === sectionId);
-  const user = users.find((item) => item.id === userId);
   const [prevSectionId, setPrevSectionId] = useState(sectionId);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSetRankOpen, setIsSetRankOpen] = useState(false);

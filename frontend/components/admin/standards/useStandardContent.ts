@@ -6,7 +6,8 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,6 +17,13 @@ import {
   type StandardDto,
   standardsApi,
 } from '@/lib/api/standards';
+import {
+  adminTenantCatalogKeys,
+  invalidateAdminTenantCatalogList,
+  useQueryErrorToast,
+  useStandardContentQuery,
+  useStandardEnabledModules,
+} from '@/lib/store';
 import { Module } from '@/types/permission';
 
 export interface StandardContentState {
@@ -60,33 +68,36 @@ export function useStandardContent(tenantId: number, standardId: number): Standa
   const tenantOutOfScope =
     !isGlobalAdmin && idsValid && (authTenantId == null || tenantId !== authTenantId);
 
-  const [standard, setStandard] = useState<StandardDto | null>(null);
-  const [items, setItems] = useState<StandardContentItemDto[]>([]);
-  const [enabledModules, setEnabledModules] = useState<Set<Module>>(new Set([Module.CORE]));
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const queriesEnabled = canAccessAdministration && !authLoading && idsValid && !tenantOutOfScope;
+  const contentQuery = useStandardContentQuery(tenantId, standardId, queriesEnabled);
+  const modulesQuery = useStandardEnabledModules(tenantId, standardId, queriesEnabled);
+  useQueryErrorToast(contentQuery.error ?? modulesQuery.error, {
+    messageKey: 'admin.standards.detail.loadFailed',
+  });
+  const standard = contentQuery.data?.standard ?? null;
+  const items = useMemo(() => contentQuery.data?.items ?? [], [contentQuery.data]);
+  const enabledModules = useMemo(
+    () =>
+      new Set<Module>([Module.CORE, ...(modulesQuery.data?.modules ?? []).map((m) => m as Module)]),
+    [modulesQuery.data],
+  );
+  const loading = contentQuery.isLoading || modulesQuery.isLoading;
   const [busy, setBusy] = useState(false);
 
-  const applyContent = useCallback((content: StandardContentDto) => {
-    setStandard(content.standard);
-    setItems(content.items);
-  }, []);
+  const applyContent = useCallback(
+    (content: StandardContentDto) => {
+      queryClient.setQueryData(
+        adminTenantCatalogKeys.standardContent(tenantId, standardId),
+        content,
+      );
+    },
+    [queryClient, tenantId, standardId],
+  );
 
   const reload = useCallback(async () => {
-    if (!idsValid) return;
-    setLoading(true);
-    try {
-      const [content, modules] = await Promise.all([
-        standardsApi.getContent(tenantId, standardId),
-        standardsApi.getEnabledModules(tenantId, standardId),
-      ]);
-      applyContent(content);
-      setEnabledModules(new Set([Module.CORE, ...modules.modules.map((m) => m as Module)]));
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.standards.detail.loadFailed'));
-    } finally {
-      setLoading(false);
-    }
-  }, [idsValid, tenantId, standardId, showError, t, applyContent]);
+    await Promise.all([contentQuery.refetch(), modulesQuery.refetch()]);
+  }, [contentQuery, modulesQuery]);
 
   const updateEnabledModules = useCallback(
     async (modules: Set<Module>) => {
@@ -94,25 +105,22 @@ export function useStandardContent(tenantId: number, standardId: number): Standa
         const result = await standardsApi.updateEnabledModules(tenantId, standardId, {
           modules: Array.from(modules).filter((m) => m !== Module.CORE),
         });
-        setEnabledModules(new Set([Module.CORE, ...result.modules.map((m) => m as Module)]));
+        queryClient.setQueryData(
+          adminTenantCatalogKeys.standardModules(tenantId, standardId),
+          result,
+        );
         // Permission lists are clipped to enabled modules — refresh after the toggle.
-        applyContent(await standardsApi.getContent(tenantId, standardId));
+        await queryClient.invalidateQueries({
+          queryKey: adminTenantCatalogKeys.standardContent(tenantId, standardId),
+        });
         return true;
       } catch (e) {
         showError(e instanceof Error ? e.message : t('admin.standards.modules.saveFailed'));
         return false;
       }
     },
-    [tenantId, standardId, showError, t, applyContent],
+    [tenantId, standardId, showError, t, queryClient],
   );
-
-  useEffect(() => {
-    if (!canAccessAdministration || authLoading || !idsValid || tenantOutOfScope) {
-      return;
-    }
-    const id = window.setTimeout(() => void reload(), 0);
-    return () => window.clearTimeout(id);
-  }, [canAccessAdministration, authLoading, idsValid, tenantOutOfScope, reload]);
 
   const runMutation = useCallback(
     async (action: () => Promise<StandardContentDto>, successKey: string, errorKey: string) => {
@@ -133,9 +141,16 @@ export function useStandardContent(tenantId: number, standardId: number): Standa
     [applyContent, showError, showSuccess, t],
   );
 
-  const updateStandardMeta = useCallback((updated: StandardDto) => {
-    setStandard(updated);
-  }, []);
+  const updateStandardMeta = useCallback(
+    (updated: StandardDto) => {
+      queryClient.setQueryData<StandardContentDto>(
+        adminTenantCatalogKeys.standardContent(tenantId, standardId),
+        (prev) => (prev ? { ...prev, standard: updated } : prev),
+      );
+      void invalidateAdminTenantCatalogList(queryClient, 'standards', tenantId);
+    },
+    [queryClient, tenantId, standardId],
+  );
 
   return {
     tenantId,

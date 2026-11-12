@@ -48,6 +48,16 @@ public class UserTrainingCourseOrganizationController {
         return ResponseEntity.ok(recordService.listRecords(userId, query, filter));
     }
 
+    @GetMapping("/records/{recordId}")
+    @PreAuthorize("@securityService.hasTrainingCourseReadPermission(#organizationId)")
+    public ResponseEntity<TrainingCourseUserRecordDto> getRecord(
+            @PathVariable Long organizationId,
+            @PathVariable Long userId,
+            @PathVariable Long recordId) {
+        userService.assertUserBelongsToOrganization(userId, organizationId);
+        return ResponseEntity.ok(recordService.getRecord(userId, recordId));
+    }
+
     @GetMapping("/pending-submissions")
     @BoundedList("Open training-course workflow submissions per user")
     @PreAuthorize("@securityService.hasTrainingCourseReadPermission(#organizationId)")

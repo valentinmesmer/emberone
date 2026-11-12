@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminOrganizationTypeEditModal } from '@/components/admin/AdminOrganizationTypeEditModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,11 @@ import { SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { type OrganizationTypeDto, organizationTypesApi } from '@/lib/api/organizationTypes';
+import {
+  invalidateAdminTenantCatalog,
+  useQueryErrorToast,
+  useTenantOrganizationTypes,
+} from '@/lib/store';
 import { getAdminOrganizationTypeDetailPath } from '@/lib/utils/adminPaths';
 
 interface AdminOrganizationTypeManagementProps {
@@ -36,31 +42,21 @@ export function AdminOrganizationTypeManagement({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [types, setTypes] = useState<OrganizationTypeDto[]>([]);
   const [busy, setBusy] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<OrganizationTypeDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<OrganizationTypeDto | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      setTypes(await organizationTypesApi.list(tenantId));
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.organizationTypes.errors.loadFailed'));
-      setTypes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: types = [],
+    isPending: loading,
+    error: loadError,
+  } = useTenantOrganizationTypes(tenantId);
+  useQueryErrorToast(loadError, { messageKey: 'admin.organizationTypes.errors.loadFailed' });
+  const reload = () =>
+    void invalidateAdminTenantCatalog(queryClient, 'organizationTypes', tenantId);
 
   const openCreate = () => {
     setEditing(null);
@@ -83,7 +79,7 @@ export function AdminOrganizationTypeManagement({
       await organizationTypesApi.remove(tenantId, deleteTarget.id);
       showSuccess(t('admin.organizationTypes.deleted'));
       setDeleteTarget(null);
-      await loadData();
+      reload();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.organizationTypes.errors.deleteFailed'));
     } finally {
@@ -157,7 +153,7 @@ export function AdminOrganizationTypeManagement({
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           setFormOpen(false);
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         organizationType={editing}

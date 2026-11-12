@@ -76,6 +76,11 @@ function listQueryToHttpParams(query: UserDocumentListRequest): Record<string, Q
   };
 }
 
+/** Documents of one record are resolved by id; an empty id list must never load the whole archive. */
+function idsQuery(ids: readonly number[]): string {
+  return buildQuery({ ids, size: Math.min(ids.length, 200) });
+}
+
 function organizationDocumentsPath(organizationId: number, userId: number): string {
   return `/api/v1/auth/organizations/${organizationId}/users/${userId}/documents`;
 }
@@ -98,6 +103,18 @@ export const userDocumentApi = {
     return apiClient.get<UserDocumentPageDto>(qs ? `${SELF_BASE_PATH}?${qs}` : SELF_BASE_PATH);
   },
 
+  async get(documentId: number): Promise<UserDocumentDto> {
+    return apiClient.get<UserDocumentDto>(`${SELF_BASE_PATH}/${documentId}`);
+  },
+
+  async listByIds(ids: readonly number[]): Promise<UserDocumentDto[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    const page = await apiClient.get<UserDocumentPageDto>(`${SELF_BASE_PATH}?${idsQuery(ids)}`);
+    return page.content;
+  },
+
   async listTags(): Promise<string[]> {
     return apiClient.get<string[]>(`${SELF_BASE_PATH}/tags`);
   },
@@ -110,6 +127,30 @@ export const userDocumentApi = {
     const qs = buildQuery(listQueryToHttpParams(query));
     const base = organizationDocumentsPath(organizationId, userId);
     return apiClient.get<UserDocumentPageDto>(qs ? `${base}?${qs}` : base);
+  },
+
+  async getForOrganizationUser(
+    organizationId: number,
+    userId: number,
+    documentId: number,
+  ): Promise<UserDocumentDto> {
+    return apiClient.get<UserDocumentDto>(
+      `${organizationDocumentsPath(organizationId, userId)}/${documentId}`,
+    );
+  },
+
+  async listByIdsForOrganizationUser(
+    organizationId: number,
+    userId: number,
+    ids: readonly number[],
+  ): Promise<UserDocumentDto[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    const page = await apiClient.get<UserDocumentPageDto>(
+      `${organizationDocumentsPath(organizationId, userId)}?${idsQuery(ids)}`,
+    );
+    return page.content;
   },
 
   async listTagsForOrganizationUser(organizationId: number, userId: number): Promise<string[]> {

@@ -6,6 +6,7 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { WorkflowDefinitionExclusiveSwitch } from '@/components/admin/WorkflowDefinitionExclusiveSwitch';
 import { WorkflowDefinitionOrgField } from '@/components/admin/WorkflowDefinitionOrgField';
@@ -18,6 +19,7 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { workflowsApi } from '@/lib/api/workflows';
+import { invalidateAdminTenantCatalog } from '@/lib/store';
 import type { FlatAdminOrganization } from '@/lib/utils/adminOrgTree';
 import { workflowTypeTranslationKey } from '@/lib/utils/workflowLabels';
 import type { TenantWorkflowDefinitionDto, WorkflowTypeCatalogDto } from '@/types/workflow';
@@ -43,6 +45,7 @@ export function AdminTenantWorkflowDefinitionEditModal({
 }: AdminTenantWorkflowDefinitionEditModalProps) {
   const t = useTranslation();
   const { showError, showSuccess } = useToast();
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
 
   const initial = definitionToFormState(tenantDefault);
@@ -63,6 +66,7 @@ export function AdminTenantWorkflowDefinitionEditModal({
         catalogEntry.workflowTypeId,
         formStateToRequest({ staticApproversExclusive: exclusive, staticOrgIds }),
       );
+      await invalidateAdminTenantCatalog(queryClient, 'workflows', tenantId);
       showSuccess(t('admin.workflowDefinitions.success.tenantDefaultSaved'));
       onSaved();
     } catch (e) {

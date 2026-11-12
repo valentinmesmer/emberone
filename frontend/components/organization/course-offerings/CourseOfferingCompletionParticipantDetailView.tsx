@@ -68,7 +68,7 @@ export function CourseOfferingCompletionParticipantDetailView({
     data: completion,
     isPending,
     error,
-  } = useCourseOfferingCompletion(organizationId, offeringId);
+  } = useCourseOfferingCompletion(organizationId, offeringId, canRead);
   const setResult = useSetCourseFinalResult(organizationId, offeringId);
 
   if (isPending || offeringPending) {

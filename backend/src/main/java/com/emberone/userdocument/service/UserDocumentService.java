@@ -84,6 +84,7 @@ public class UserDocumentService {
                         UserDocumentListSpecs.tagFilter(filter.tag()),
                         UserDocumentListSpecs.viewedFilter(filter.viewed()),
                         UserDocumentListSpecs.contentTypeFilter(filter.contentType()),
+                        UserDocumentListSpecs.idsFilter(filter.ids()),
                         UserDocumentListDefinition.INSTANCE.searchSpecification(query));
         Page<UserDocument> entityPage = userDocumentRepository.findAll(spec, pageable);
         List<Long> ids = entityPage.getContent().stream().map(UserDocument::getId).toList();
@@ -92,6 +93,11 @@ public class UserDocumentService {
         List<UserDocument> ordered = PageReorder.reorderByIds(ids, hydrated, UserDocument::getId);
         Page<UserDocument> page = PageReorder.pageOf(ordered, entityPage);
         return toPageDto(page);
+    }
+
+    @Transactional(readOnly = true)
+    public UserDocumentDto getDocument(Long userId, Long documentId) {
+        return toDto(findOwnedDocument(userId, documentId));
     }
 
     @Transactional(readOnly = true)

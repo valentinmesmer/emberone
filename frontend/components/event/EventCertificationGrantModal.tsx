@@ -58,15 +58,16 @@ export function EventCertificationGrantModal({
     grantId,
     { enabled: isOpen && isEdit },
   );
-  const { data: attendances = [] } = useEventAttendances(organizationId, eventType, eventId, {
-    enabled: isOpen,
-  });
   const createGrant = useCreateEventCertificationGrant(organizationId, eventType, eventId);
   const updateGrant = useUpdateEventCertificationGrant(organizationId, eventType, eventId);
   const saving = createGrant.isPending || updateGrant.isPending;
 
   const [definitionId, setDefinitionId] = useState<number | ''>('');
   const [recipientMode, setRecipientMode] = useState<CertGrantRecipientMode>('ALL_ATTENDEES');
+  // The attendees are only needed to pick specific recipients.
+  const { data: attendances = [] } = useEventAttendances(organizationId, eventType, eventId, {
+    enabled: isOpen && recipientMode === 'SPECIFIC',
+  });
   const [notes, setNotes] = useState('');
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);

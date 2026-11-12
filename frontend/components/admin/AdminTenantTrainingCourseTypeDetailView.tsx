@@ -6,9 +6,10 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { Archive, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminTenantTrainingCourseTypeEditModal } from '@/components/admin/AdminTenantTrainingCourseTypeEditModal';
 import {
   StandardDetailAction,
@@ -24,10 +25,12 @@ import { LoadingState } from '@/components/ui/loading';
 import { NoticeCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { tenantTrainingCourseTypesApi } from '@/lib/api/tenantTrainingCourseTypes';
 import {
-  type TenantTrainingCourseTypeDto,
-  tenantTrainingCourseTypesApi,
-} from '@/lib/api/tenantTrainingCourseTypes';
+  invalidateAdminTenantCatalog,
+  markAdminTenantCatalogStale,
+  useTenantTrainingCourseType,
+} from '@/lib/store';
 import {
   getAdminTenantStandardsPath,
   getAdminTenantTrainingCourseTypeDetailPath,
@@ -46,33 +49,22 @@ export function AdminTenantTrainingCourseTypeDetailView({
   const router = useRouter();
   const { showError, showSuccess } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [type, setType] = useState<TenantTrainingCourseTypeDto | null>(null);
   const [busy, setBusy] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      setType(await tenantTrainingCourseTypesApi.get(tenantId, configKey));
-    } catch {
-      setLoadFailed(true);
-      setType(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, configKey]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
-  }, [loadData]);
+  const queryClient = useQueryClient();
+  const {
+    data: type = null,
+    isPending: loading,
+    isError: loadFailed,
+  } = useTenantTrainingCourseType(tenantId, configKey);
+  const reload = () =>
+    void invalidateAdminTenantCatalog(queryClient, 'trainingCourseTypes', tenantId);
+  const staleOnLeave = () =>
+    void markAdminTenantCatalogStale(queryClient, 'trainingCourseTypes', tenantId);
 
   const navigateBack = () => {
     router.push(getAdminTenantStandardsPath(tenantId));
@@ -83,6 +75,7 @@ export function AdminTenantTrainingCourseTypeDetailView({
     setBusy(true);
     try {
       await tenantTrainingCourseTypesApi.delete(tenantId, type.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.trainingCourses.deleted'));
       navigateBack();
     } catch (e) {
@@ -99,6 +92,7 @@ export function AdminTenantTrainingCourseTypeDetailView({
     setBusy(true);
     try {
       await tenantTrainingCourseTypesApi.archive(tenantId, type.configKey);
+      staleOnLeave();
       showSuccess(t('admin.tenantStandards.trainingCourses.archived'));
       navigateBack();
     } catch (e) {
@@ -115,9 +109,9 @@ export function AdminTenantTrainingCourseTypeDetailView({
     setBusy(true);
     try {
       await tenantTrainingCourseTypesApi.unarchive(tenantId, type.configKey);
+      reload();
       showSuccess(t('admin.tenantStandards.trainingCourses.unarchived'));
       setUnarchiveOpen(false);
-      await loadData();
     } catch (e) {
       showError(
         e instanceof Error ? e.message : t('admin.tenantStandards.trainingCourses.unarchiveFailed'),
@@ -208,10 +202,11 @@ export function AdminTenantTrainingCourseTypeDetailView({
         onSaved={(savedConfigKey) => {
           setEditOpen(false);
           if (savedConfigKey !== configKey) {
+            staleOnLeave();
             router.replace(getAdminTenantTrainingCourseTypeDetailPath(tenantId, savedConfigKey));
             return;
           }
-          void loadData();
+          reload();
         }}
         tenantId={tenantId}
         type={type}

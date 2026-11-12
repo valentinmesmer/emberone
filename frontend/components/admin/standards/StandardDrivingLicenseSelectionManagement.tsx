@@ -15,10 +15,7 @@ import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
-import {
-  type TenantDrivingLicenseDefinitionDto,
-  tenantDrivingLicenseDefinitionsApi,
-} from '@/lib/api/tenantDrivingLicenseDefinitions';
+import { useQueryErrorToast, useTenantDrivingLicenseDefinitions } from '@/lib/store';
 
 interface Props {
   state: StandardContentState;
@@ -40,8 +37,6 @@ export function StandardDrivingLicenseSelectionManagement({ state, embedded = fa
   const { showError } = useToast();
   const { tenantId, standardId, items, editable } = state;
 
-  const [loading, setLoading] = useState(true);
-  const [catalog, setCatalog] = useState<TenantDrivingLicenseDefinitionDto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const selectedRef = useRef(selected);
@@ -60,26 +55,18 @@ export function StandardDrivingLicenseSelectionManagement({ state, embedded = fa
     [items],
   );
 
-  const loadCatalog = useCallback(async () => {
-    setLoading(true);
-    try {
-      const definitions = await tenantDrivingLicenseDefinitionsApi.list(tenantId);
-      setCatalog(definitions.filter((definition) => !definition.archived));
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.standards.drivingLicenses.loadCatalogFailed'),
-      );
-      setCatalog([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadCatalog();
-    });
-  }, [loadCatalog]);
+  const {
+    data: catalogData,
+    isPending: loading,
+    error: catalogError,
+  } = useTenantDrivingLicenseDefinitions(tenantId);
+  useQueryErrorToast(catalogError, {
+    messageKey: 'admin.standards.drivingLicenses.loadCatalogFailed',
+  });
+  const catalog = useMemo(
+    () => (catalogData ?? []).filter((definition) => !definition.archived),
+    [catalogData],
+  );
 
   useEffect(() => {
     if (setsEqual(selectedFromStandard, lastSavedRef.current)) return;

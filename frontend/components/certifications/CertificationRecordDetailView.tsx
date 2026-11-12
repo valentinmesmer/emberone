@@ -24,9 +24,9 @@ import { getOrganizationUserDocumentDetailPath } from '@/lib/navigation/userMana
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useMyCertificationRecords,
-  useOrganizationUserDocuments,
+  useOrganizationUserDocumentsByIds,
   useUserCertificationRecords,
-  useUserDocuments,
+  useUserDocumentsByIds,
 } from '@/lib/store';
 import { formatDateLong } from '@/lib/utils';
 import type { AppNavigationContext } from '@/lib/utils/appLink';
@@ -59,23 +59,15 @@ export function CertificationRecordDetailView(props: CertificationRecordDetailVi
     ? { scope: 'self' }
     : { scope: 'org', organizationId: props.organizationId, userId: props.userId };
 
-  const { data: myRecords = [], isLoading: myRecordsLoading } = useMyCertificationRecords();
+  const { data: myRecords = [], isLoading: myRecordsLoading } = useMyCertificationRecords(isSelf);
   const { data: orgRecords = [], isLoading: orgRecordsLoading } = useUserCertificationRecords(
     isSelf ? 0 : props.organizationId,
     isSelf ? 0 : props.userId,
     !isSelf,
   );
-  const { data: myDocuments = [], isLoading: myDocumentsLoading } = useUserDocuments();
-  const { data: orgDocuments = [], isLoading: orgDocumentsLoading } = useOrganizationUserDocuments(
-    isSelf ? null : props.organizationId,
-    isSelf ? null : props.userId,
-  );
 
   const records = isSelf ? myRecords : orgRecords;
-  const documents = isSelf ? myDocuments : orgDocuments;
-  const loading = isSelf
-    ? myRecordsLoading || myDocumentsLoading
-    : orgRecordsLoading || orgDocumentsLoading;
+  const loading = isSelf ? myRecordsLoading : orgRecordsLoading;
 
   const record = useMemo(
     () =>
@@ -86,10 +78,15 @@ export function CertificationRecordDetailView(props: CertificationRecordDetailVi
     [props.definitionId, props.recordId, records],
   );
 
-  const linkedDocuments = useMemo(() => {
-    const documentIds = new Set(record?.userDocumentIds ?? []);
-    return documents.filter((doc) => documentIds.has(doc.id));
-  }, [documents, record?.userDocumentIds]);
+  const documentIds = record?.userDocumentIds ?? [];
+  const { data: myDocuments = [] } = useUserDocumentsByIds(documentIds, isSelf);
+  const { data: orgDocuments = [] } = useOrganizationUserDocumentsByIds(
+    isSelf ? null : props.organizationId,
+    isSelf ? null : props.userId,
+    documentIds,
+    !isSelf,
+  );
+  const linkedDocuments = isSelf ? myDocuments : orgDocuments;
 
   if (loading) {
     return <LoadingState variant="embedded" size="sm" />;

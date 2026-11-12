@@ -17,6 +17,7 @@ import com.emberone.appointment.domain.*;
 import com.emberone.appointment.dto.AppointmentDto;
 import com.emberone.appointment.dto.CreateAppointmentRequest;
 import com.emberone.appointment.dto.RecurrenceRequest;
+import com.emberone.appointment.dto.UpcomingAppointmentsDto;
 import com.emberone.appointment.dto.UpdateAppointmentRequest;
 import com.emberone.appointment.event.AppointmentChangeType;
 import com.emberone.appointment.event.AppointmentChangedEvent;
@@ -29,7 +30,10 @@ import com.emberone.appointment.mapper.AppointmentDtoAssembler;
 import com.emberone.appointment.mapper.AppointmentMapper;
 import com.emberone.appointment.repository.AppointmentReadRepository;
 import com.emberone.appointment.repository.AppointmentRepository;
+import com.emberone.appointment.repository.AppointmentResponseRepository;
 import com.emberone.appointment.repository.AppointmentSeriesRepository;
+import com.emberone.attachment.domain.EntityAttachmentType;
+import com.emberone.attachment.service.EntityAttachmentService;
 import com.emberone.event.domain.EventType;
 import com.emberone.organization.domain.Organization;
 import com.emberone.organization.repository.OrganizationRepository;
@@ -62,6 +66,8 @@ class AppointmentServiceTest {
     @Mock AppointmentRepository appointmentRepository;
     @Mock AppointmentSeriesRepository seriesRepository;
     @Mock AppointmentReadRepository readRepository;
+    @Mock AppointmentResponseRepository responseRepository;
+    @Mock EntityAttachmentService entityAttachmentService;
     @Mock OrganizationRepository organizationRepository;
     @Mock UserOrganizationMembershipRepository membershipRepository;
     @Mock UserOrganizationGroupMembershipRepository groupMembershipRepository;
@@ -83,6 +89,8 @@ class AppointmentServiceTest {
                         appointmentRepository,
                         seriesRepository,
                         readRepository,
+                        responseRepository,
+                        entityAttachmentService,
                         organizationRepository,
                         membershipRepository,
                         groupMembershipRepository,
@@ -297,6 +305,50 @@ class AppointmentServiceTest {
     }
 
     @Test
+    void getAppointmentEmbedsOwnResponseAndAttachmentCountForMembers() {
+        Appointment appointment = Appointment.builder().id(5L).archived(false).build();
+        AppointmentDto dto = AppointmentDto.builder().id(5L).build();
+        when(tokenService.requireUserId()).thenReturn(3L);
+        when(appointmentRepository.findByIdAndOrganization_IdAndArchivedIsFalse(5L, 10L))
+                .thenReturn(Optional.of(appointment));
+        when(mapper.toDto(appointment)).thenReturn(dto);
+        when(organizationAccessService.isActiveOrganizationMember(10L)).thenReturn(true);
+        when(responseRepository.findByUserIdAndAppointmentIdIn(3L, List.of(5L)))
+                .thenReturn(
+                        List.of(
+                                AppointmentResponse.builder()
+                                        .appointment(appointment)
+                                        .value(AppointmentResponseValue.YES)
+                                        .comment("bin dabei")
+                                        .build()));
+        when(entityAttachmentService.countByEntityIds(
+                        EntityAttachmentType.APPOINTMENT, List.of(5L)))
+                .thenReturn(Map.of(5L, 2L));
+
+        AppointmentDto result = service.getAppointment(10L, 5L);
+
+        assertThat(result.getMyResponse().getValue()).isEqualTo(AppointmentResponseValue.YES);
+        assertThat(result.getMyResponse().getComment()).isEqualTo("bin dabei");
+        assertThat(result.getAttachmentCount()).isEqualTo(2L);
+    }
+
+    @Test
+    void getAppointmentSkipsOwnResponseForNonMembersButCountsAttachments() {
+        Appointment appointment = Appointment.builder().id(5L).archived(false).build();
+        AppointmentDto dto = AppointmentDto.builder().id(5L).build();
+        when(tokenService.requireUserId()).thenReturn(3L);
+        when(appointmentRepository.findByIdAndOrganization_IdAndArchivedIsFalse(5L, 10L))
+                .thenReturn(Optional.of(appointment));
+        when(mapper.toDto(appointment)).thenReturn(dto);
+
+        AppointmentDto result = service.getAppointment(10L, 5L);
+
+        assertThat(result.getMyResponse()).isNull();
+        assertThat(result.getAttachmentCount()).isZero();
+        verify(responseRepository, never()).findByUserIdAndAppointmentIdIn(any(), any());
+    }
+
+    @Test
     void getAppointmentThrowsWhenMissing() {
         when(tokenService.requireUserId()).thenReturn(3L);
         when(appointmentRepository.findByIdAndOrganization_IdAndArchivedIsFalse(5L, 10L))
@@ -353,10 +405,24 @@ class AppointmentServiceTest {
         when(mapper.toDto(upcoming))
                 .thenReturn(AppointmentDto.builder().id(1L).start(upcoming.getStart()).build());
 
-        assertThat(service.listUpcomingAcrossOrganizations(5).getContent())
-                .extracting(AppointmentDto::getId)
-                .containsExactly(1L);
-        assertThat(service.listUpcomingAcrossOrganizations(5).getTotalCount()).isEqualTo(1);
+        when(responseRepository.findByUserIdAndAppointmentIdIn(3L, List.of(1L)))
+                .thenReturn(
+                        List.of(
+                                AppointmentResponse.builder()
+                                        .appointment(upcoming)
+                                        .value(AppointmentResponseValue.NO)
+                                        .build()));
+        when(entityAttachmentService.countByEntityIds(
+                        EntityAttachmentType.APPOINTMENT, List.of(1L)))
+                .thenReturn(Map.of(1L, 3L));
+
+        UpcomingAppointmentsDto upcomingDto = service.listUpcomingAcrossOrganizations(5);
+
+        assertThat(upcomingDto.getContent()).extracting(AppointmentDto::getId).containsExactly(1L);
+        assertThat(upcomingDto.getContent().getFirst().getMyResponse().getValue())
+                .isEqualTo(AppointmentResponseValue.NO);
+        assertThat(upcomingDto.getContent().getFirst().getAttachmentCount()).isEqualTo(3L);
+        assertThat(upcomingDto.getTotalCount()).isEqualTo(1);
     }
 
     @Test

@@ -84,9 +84,9 @@ export function WorkflowEditInputModalHost({
   onClose,
 }: WorkflowEditInputModalHostProps) {
   const { data: selfUser } = useSelf();
-  const { data: certStatus } = useMyCertificationStatus();
   const catalogDefinitionsEnabled =
     workflow.workflowTypeId === WORKFLOW_TYPE_IDS.CERTIFICATION_RECORD && isOpen;
+  const { data: certStatus } = useMyCertificationStatus(catalogDefinitionsEnabled);
   const { data: catalogDefinitions = [] } =
     useMyRequestableCertificationDefinitions(catalogDefinitionsEnabled);
   const { data: certOpenKeys = [] } = useWorkflowOpenConcurrencyKeys(

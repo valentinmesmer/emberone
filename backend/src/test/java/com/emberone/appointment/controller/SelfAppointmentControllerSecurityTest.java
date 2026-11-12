@@ -11,7 +11,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.emberone.appointment.dto.UpcomingAppointmentsDto;
-import com.emberone.appointment.service.AppointmentResponseService;
 import com.emberone.appointment.service.AppointmentService;
 import com.emberone.testsupport.SecurityTestFixtures;
 import com.emberone.testsupport.SecurityWebMvcTestConfig;
@@ -31,7 +30,6 @@ class SelfAppointmentControllerSecurityTest {
     @Autowired MockMvc mockMvc;
 
     @MockitoBean AppointmentService appointmentService;
-    @MockitoBean AppointmentResponseService appointmentResponseService;
 
     @Test
     void upcomingAppointmentsRequireAuthentication() throws Exception {

@@ -9,7 +9,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRightLeft, Pencil, Power } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import {
   AdminDeactivateOrganizationModal,
   AdminMobileLayout,
@@ -39,13 +39,22 @@ import { SectionActions, SectionHeader } from '@/components/ui/section-header';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type AdminOrganizationDetailDto, adminApi } from '@/lib/api/admin';
-import { type OrganizationTypeDto, organizationTypesApi } from '@/lib/api/organizationTypes';
+import { adminApi } from '@/lib/api/admin';
 import { useRegisterAdminOrgBackHref } from '@/lib/navigation/backHrefOverride';
 import {
   adminCourseOfferingTypeKeys,
   adminManagementAudienceKeys,
+  adminOrganizationOnboardingAvailableQueryOptions,
+  adminTenantCatalogKeys,
   invalidateAdminLeadershipGroupMemberships,
+  invalidateAdminOrganizationOnboardingDocuments,
+  invalidateAdminTenant,
+  invalidateAdminOrganizations,
+  useAdminChildOrganizations,
+  useAdminOrganization,
+  useAdminTenant,
+  useQueryErrorToast,
+  useTenantOrganizationTypes,
 } from '@/lib/store';
 import { getAdminRecordedOnboardingPath } from '@/lib/utils/adminPaths';
 import type {
@@ -76,13 +85,6 @@ function TenantOrganizationDetailInner() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const [org, setOrg] = useState<AdminOrganizationDetailDto | null>(null);
-  const [children, setChildren] = useState<AdminOrganizationDetailDto[]>([]);
-  const [organizationTypes, setOrganizationTypes] = useState<OrganizationTypeDto[]>([]);
-  const [standardsConfiguredForOrgCreation, setStandardsConfiguredForOrgCreation] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [loadFailed, setLoadFailed] = useState(false);
-
   const [editOpen, setEditOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
@@ -98,52 +100,38 @@ function TenantOrganizationDetailInner() {
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [deactivateLoading, setDeactivateLoading] = useState(false);
 
-  const isDeactivated = Boolean(org?.deactivatedAt);
-
   const tenantOutOfScope =
     !isGlobalAdmin && idsValid && (authTenantId == null || tenantId !== authTenantId);
 
-  const loadPage = useCallback(async () => {
-    if (!idsValid) return;
-    setLoading(true);
-    setLoadFailed(false);
-    try {
-      const [orgData, childList, tenantData, orgTypes] = await Promise.all([
-        adminApi.getAdminOrganization(tenantId, orgId),
-        adminApi.getAdminChildOrganizations(tenantId, orgId),
-        adminApi.getTenant(tenantId),
-        organizationTypesApi.list(tenantId),
-      ]);
-      setOrg(orgData);
-      setChildren(childList);
-      setStandardsConfiguredForOrgCreation(tenantData.standardsConfiguredForOrgCreation);
-      setOrganizationTypes(orgTypes);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.errors.orgDetailLoadFailed'));
-      setOrg(null);
-      setChildren([]);
-      setLoadFailed(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [idsValid, tenantId, orgId, showError, t]);
+  const queriesEnabled = idsValid && canAccessAdministration && !authLoading && !tenantOutOfScope;
+  const orgQuery = useAdminOrganization(tenantId, orgId, queriesEnabled);
+  const childrenQuery = useAdminChildOrganizations(tenantId, orgId, queriesEnabled);
+  const tenantQuery = useAdminTenant(tenantId, queriesEnabled);
+  const typesQuery = useTenantOrganizationTypes(tenantId, queriesEnabled);
+  useQueryErrorToast(
+    orgQuery.error ?? childrenQuery.error ?? tenantQuery.error ?? typesQuery.error,
+    { messageKey: 'admin.errors.orgDetailLoadFailed' },
+  );
+  const org = orgQuery.data ?? null;
+  const children = childrenQuery.data ?? [];
+  const organizationTypes = typesQuery.data ?? [];
+  const standardsConfiguredForOrgCreation =
+    tenantQuery.data?.standardsConfiguredForOrgCreation ?? true;
+  const loading =
+    orgQuery.isLoading || childrenQuery.isLoading || tenantQuery.isLoading || typesQuery.isLoading;
+  const loadFailed =
+    orgQuery.isError || childrenQuery.isError || tenantQuery.isError || typesQuery.isError;
+  const isDeactivated = Boolean(org?.deactivatedAt);
 
-  useEffect(() => {
-    if (!canAccessAdministration || authLoading || !idsValid || tenantOutOfScope) {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      void loadPage();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [canAccessAdministration, authLoading, idsValid, loadPage, tenantOutOfScope]);
+  const reloadOrganizations = () => void invalidateAdminOrganizations(queryClient, tenantId);
 
   const handleEdit = async (data: UpdateOrganizationRequest) => {
     if (!org) return;
     setEditLoading(true);
     try {
       const updated = await adminApi.updateAdminOrganization(tenantId, org.id, data);
-      setOrg(updated);
+      queryClient.setQueryData(adminTenantCatalogKeys.organization(tenantId, org.id), updated);
+      reloadOrganizations();
       setEditOpen(false);
       showSuccess(t('organizationManagement.success.organizationUpdated'));
     } catch (e) {
@@ -158,9 +146,8 @@ function TenantOrganizationDetailInner() {
     if (!org) return;
     setCreateChildLoading(true);
     try {
-      const created = await adminApi.createAdminChildOrganization(tenantId, org.id, data);
-      setChildren((prev) => [...prev, created]);
-      setOrg((prev) => (prev ? { ...prev, hasChildren: true } : prev));
+      await adminApi.createAdminChildOrganization(tenantId, org.id, data);
+      reloadOrganizations();
       setCreateChildOpen(false);
       showSuccess(t('organizationManagement.success.childCreated'));
     } catch (e) {
@@ -184,12 +171,14 @@ function TenantOrganizationDetailInner() {
       setCreateLeaderOpen(false);
       showSuccess(t('admin.tenantUpdated'));
       invalidateAdminLeadershipGroupMemberships(queryClient, tenantId, org.id);
-      await loadPage();
+      reloadOrganizations();
 
       const leaderUserId = updated.leader?.id ?? null;
       if (leaderUserId == null) return;
 
-      const availability = await adminApi.getOnboardingAvailable(tenantId, org.id);
+      const availability = await queryClient.fetchQuery(
+        adminOrganizationOnboardingAvailableQueryOptions(tenantId, org.id),
+      );
       if (!availability.available) return;
 
       setPendingLeaderUserId(leaderUserId);
@@ -209,10 +198,10 @@ function TenantOrganizationDetailInner() {
       const updated = await adminApi.moveAdminOrganization(tenantId, org.id, {
         newParentOrganizationId,
       });
-      setOrg(updated);
+      queryClient.setQueryData(adminTenantCatalogKeys.organization(tenantId, org.id), updated);
       setMoveOpen(false);
       showSuccess(t('admin.orgMove.success'));
-      await loadPage();
+      reloadOrganizations();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.errors.orgUpdateFailed'));
       throw e;
@@ -230,7 +219,7 @@ function TenantOrganizationDetailInner() {
       });
       setDeactivateOpen(false);
       showSuccess(t('admin.orgDeactivate.success'));
-      await loadPage();
+      reloadOrganizations();
     } catch (e) {
       showError(e instanceof Error ? e.message : t('admin.errors.orgDeactivateFailed'));
       throw e;
@@ -264,7 +253,9 @@ function TenantOrganizationDetailInner() {
     setOrganizationStandardRevision((value) => value + 1);
     void queryClient.invalidateQueries({ queryKey: adminCourseOfferingTypeKeys.all });
     void queryClient.invalidateQueries({ queryKey: adminManagementAudienceKeys.all });
-    void loadPage();
+    void invalidateAdminOrganizationOnboardingDocuments(queryClient, tenantId, orgId);
+    void invalidateAdminTenant(queryClient, tenantId);
+    reloadOrganizations();
   };
 
   const backHrefActive = idsValid && canAccessAdministration && !authLoading && !tenantOutOfScope;
@@ -306,7 +297,7 @@ function TenantOrganizationDetailInner() {
 
   return (
     <AdminMobileLayout>
-      {loading && !org ? (
+      {loading ? (
         <LoadingState variant="embedded" size="sm" />
       ) : loadFailed || !org ? (
         <NoticeCard>{t('admin.errors.orgDetailLoadFailed')}</NoticeCard>
@@ -346,9 +337,7 @@ function TenantOrganizationDetailInner() {
             tenantId={tenantId}
             organizationId={org.id}
             onCreateUser={() => setCreateLeaderOpen(true)}
-            onChanged={() => {
-              void loadPage();
-            }}
+            onChanged={reloadOrganizations}
           />
 
           <OrganizationStandardCard

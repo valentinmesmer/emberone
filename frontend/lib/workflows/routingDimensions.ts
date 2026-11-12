@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: Elastic-2.0
  */
 
-import { tenantCertificationsApi } from '@/lib/api/tenantCertifications';
-import { tenantDrivingLicenseDefinitionsApi } from '@/lib/api/tenantDrivingLicenseDefinitions';
-import { tenantRanksApi } from '@/lib/api/tenantRanks';
-import { tenantTrainingCourseTypesApi } from '@/lib/api/tenantTrainingCourseTypes';
+import { useMemo } from 'react';
+import {
+  useTenantCertifications,
+  useTenantDrivingLicenseDefinitions,
+  useTenantRanks,
+  useTenantTrainingCourseTypes,
+} from '@/lib/store';
 import type { WorkflowRoutingDimension } from '@/types/workflow';
 
 export interface RoutingSubjectOption {
@@ -21,7 +24,6 @@ interface RoutingDimensionConfig {
   singularKey: string;
   /** i18n key of the plural noun, used in "Gilt für alle …" and the subject picker. */
   pluralKey: string;
-  loadOptions: (tenantId: number) => Promise<RoutingSubjectOption[]>;
 }
 
 function toOption(item: { id: number; name: string; archived: boolean }): RoutingSubjectOption {
@@ -30,30 +32,25 @@ function toOption(item: { id: number; name: string; archived: boolean }): Routin
 
 /**
  * One entry per routing dimension of a workflow type (see backend WorkflowRoutingDimension).
- * A new dimension needs its singular/plural keys in locales/de.json and a catalog loader here.
+ * A new dimension needs its singular/plural keys in locales/de.json and a catalog query in
+ * {@link useRoutingSubjectOptions}.
  */
 export const ROUTING_DIMENSIONS: Record<WorkflowRoutingDimension, RoutingDimensionConfig> = {
   CERTIFICATION_DEFINITION: {
     singularKey: 'admin.workflowDefinitions.routing.dimension.CERTIFICATION_DEFINITION.singular',
     pluralKey: 'admin.workflowDefinitions.routing.dimension.CERTIFICATION_DEFINITION.plural',
-    loadOptions: async (tenantId) => (await tenantCertificationsApi.list(tenantId)).map(toOption),
   },
   TRAINING_COURSE_TYPE: {
     singularKey: 'admin.workflowDefinitions.routing.dimension.TRAINING_COURSE_TYPE.singular',
     pluralKey: 'admin.workflowDefinitions.routing.dimension.TRAINING_COURSE_TYPE.plural',
-    loadOptions: async (tenantId) =>
-      (await tenantTrainingCourseTypesApi.list(tenantId)).map(toOption),
   },
   DRIVING_LICENSE_DEFINITION: {
     singularKey: 'admin.workflowDefinitions.routing.dimension.DRIVING_LICENSE_DEFINITION.singular',
     pluralKey: 'admin.workflowDefinitions.routing.dimension.DRIVING_LICENSE_DEFINITION.plural',
-    loadOptions: async (tenantId) =>
-      (await tenantDrivingLicenseDefinitionsApi.list(tenantId)).map(toOption),
   },
   RANK: {
     singularKey: 'admin.workflowDefinitions.routing.dimension.RANK.singular',
     pluralKey: 'admin.workflowDefinitions.routing.dimension.RANK.plural',
-    loadOptions: async (tenantId) => (await tenantRanksApi.list(tenantId)).map(toOption),
   },
 };
 
@@ -64,4 +61,31 @@ export function routingDimensionLabels(
 ): { singular: string; plural: string } {
   const config = ROUTING_DIMENSIONS[dimension];
   return { singular: t(config.singularKey), plural: t(config.pluralKey) };
+}
+
+/** Subjects (catalog entries) of a routing dimension; empty while loading or without dimension. */
+export function useRoutingSubjectOptions(
+  tenantId: number,
+  dimension: WorkflowRoutingDimension | null,
+): RoutingSubjectOption[] {
+  const certifications = useTenantCertifications(
+    tenantId,
+    dimension === 'CERTIFICATION_DEFINITION',
+  );
+  const trainingCourseTypes = useTenantTrainingCourseTypes(
+    tenantId,
+    dimension === 'TRAINING_COURSE_TYPE',
+  );
+  const drivingLicenses = useTenantDrivingLicenseDefinitions(
+    tenantId,
+    dimension === 'DRIVING_LICENSE_DEFINITION',
+  );
+  const ranks = useTenantRanks(tenantId, dimension === 'RANK');
+  const items = {
+    CERTIFICATION_DEFINITION: certifications.data,
+    TRAINING_COURSE_TYPE: trainingCourseTypes.data,
+    DRIVING_LICENSE_DEFINITION: drivingLicenses.data,
+    RANK: ranks.data,
+  }[dimension ?? 'RANK'];
+  return useMemo(() => (dimension && items ? items.map(toOption) : []), [dimension, items]);
 }

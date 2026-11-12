@@ -88,6 +88,8 @@ export interface WorkflowTypeCatalogDto {
   openScope: WorkflowOpenScope;
   /** When false, start only from a dedicated UI - omitted from Anträge → Hinzufügen. */
   listedInBeginnableCatalog: boolean;
+  /** True when the type allows one open instance only and the user already has one. */
+  typeBlocked: boolean;
   /** Catalog the type can be split by in routing rules; null when only the default rule exists. */
   routingDimension?: WorkflowRoutingDimension | null;
   /** Approver slot roles in display order (CONTEXT first, ADDITIONAL last). */
@@ -96,13 +98,7 @@ export interface WorkflowTypeCatalogDto {
 
 export interface WorkflowOpenStateDto {
   workflowTypeId: number;
-  typeBlocked: boolean;
   openConcurrencyKeys: string[];
-}
-
-export interface WorkflowOpenConcurrencyKeysDto {
-  workflowTypeId: number;
-  keys: string[];
 }
 
 /** Routing rule for a set of subtypes (catalog ids of the type's routing dimension). */

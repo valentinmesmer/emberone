@@ -12,6 +12,7 @@ import com.emberone.platform.web.list.BoundedList;
 import com.emberone.platform.web.list.ListQuery;
 import com.emberone.platform.web.list.options.ListFilterOptionsDto;
 import com.emberone.userdocument.dto.UnreadDocumentCountDto;
+import com.emberone.userdocument.dto.UserDocumentDto;
 import com.emberone.userdocument.dto.UserDocumentPageDto;
 import com.emberone.userdocument.list.UserDocumentListFilter;
 import com.emberone.userdocument.list.UserDocumentSelfListFilterOptions;
@@ -64,6 +65,12 @@ public class UserDocumentSelfController {
             ListQuery query, UserDocumentListFilter filter) {
         return ResponseEntity.ok(
                 userDocumentService.listDocuments(tokenService.requireUserId(), query, filter));
+    }
+
+    @GetMapping("/{documentId}")
+    public ResponseEntity<UserDocumentDto> getDocument(@PathVariable Long documentId) {
+        return ResponseEntity.ok(
+                userDocumentService.getDocument(tokenService.requireUserId(), documentId));
     }
 
     @GetMapping("/tags")

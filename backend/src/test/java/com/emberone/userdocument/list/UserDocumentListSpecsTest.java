@@ -56,4 +56,18 @@ class UserDocumentListSpecsTest {
 
         verify(cb).isNull(viewedAt);
     }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void idsFilterRestrictsToGivenIds() {
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        Root<UserDocument> root = mock(Root.class);
+        Path<Object> id = mock(Path.class);
+        when(root.get("id")).thenReturn(id);
+        when(id.in(any(java.util.Collection.class))).thenReturn(mock(Predicate.class));
+
+        apply(UserDocumentListSpecs.idsFilter(java.util.List.of(1L, 2L)), cb, root);
+
+        verify(id).in(java.util.List.of(1L, 2L));
+    }
 }

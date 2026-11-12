@@ -142,6 +142,24 @@ public class QualificationStatusService {
                 .build();
     }
 
+    /** Status of one catalog qualification for a user, or empty when not in the org catalog. */
+    @Transactional(readOnly = true)
+    public Optional<QualificationStatusItemDto> findStatusItem(
+            Long organizationId,
+            Long userId,
+            Long definitionId,
+            PrerequisiteEvaluationService.Holdings holdings) {
+        boolean inCatalog =
+                catalogService.resolveCatalogForOrganization(organizationId).stream()
+                        .anyMatch(item -> definitionId.equals(item.getId()));
+        if (!inCatalog) {
+            return Optional.empty();
+        }
+        return definitionRepository
+                .findById(definitionId)
+                .map(definition -> evaluateItem(definition, organizationId, userId, holdings));
+    }
+
     @Transactional(readOnly = true)
     public OrganizationQualificationStatusOverviewDto getStatusOverview(
             Long organizationId, String search) {

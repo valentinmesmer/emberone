@@ -28,7 +28,6 @@ import type {
   AppointmentDto,
   AppointmentParticipationStatsDto,
   CreateAppointmentRequest,
-  MyAppointmentResponseDto,
   SeriesEditScope,
   SubmitAppointmentResponseRequest,
   UpdateAppointmentRequest,
@@ -36,16 +35,25 @@ import type {
 
 export const appointmentKeys = {
   all: ['appointments'] as const,
+  lists: () => [...appointmentKeys.all, 'list'] as const,
   list: (orgId: number, listQuery: ListQuery) =>
-    [...appointmentKeys.all, 'list', orgId, listQuery] as const,
-  detail: (orgId: number, id: number) => [...appointmentKeys.all, 'detail', orgId, id] as const,
-  upcoming: (limit: number) => [...appointmentKeys.all, 'upcoming', limit] as const,
+    [...appointmentKeys.lists(), orgId, listQuery] as const,
+  details: () => [...appointmentKeys.all, 'detail'] as const,
+  detail: (orgId: number, id: number) => [...appointmentKeys.details(), orgId, id] as const,
+  upcomingRoot: () => [...appointmentKeys.all, 'upcoming'] as const,
+  upcoming: (limit: number) => [...appointmentKeys.upcomingRoot(), limit] as const,
   participationStats: (orgId: number, appointmentId: number) =>
     [...appointmentKeys.all, 'participation-stats', orgId, appointmentId] as const,
-  myResponses: (appointmentIds: number[]) =>
-    [...appointmentKeys.all, 'my-responses', appointmentIds] as const,
   unreadCounts: () => [...appointmentKeys.all, 'unread-counts'] as const,
 };
+
+/** Lists, details, upcoming and unread counts; the records themselves (incl. embedded response and attachment count). */
+export function invalidateAppointmentRecords(queryClient: QueryClient) {
+  void queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+  void queryClient.invalidateQueries({ queryKey: appointmentKeys.details() });
+  void queryClient.invalidateQueries({ queryKey: appointmentKeys.upcomingRoot() });
+  void queryClient.invalidateQueries({ queryKey: appointmentKeys.unreadCounts() });
+}
 
 function isAppointmentListQueryKey(queryKey: readonly unknown[]): boolean {
   return (
@@ -111,6 +119,7 @@ export function useAppointmentList({
     listQuery: listQuery as AppointmentListRequest,
     queryFn: (query) => appointmentApi.list(orgId, query),
     enabled: organizationId != null && enabled,
+    staleTime: STALE_TIME.LIST,
     fetchAll,
   });
 }
@@ -142,6 +151,8 @@ export function useUpcomingAppointments(limit = 5) {
     queryKey: appointmentKeys.upcoming(limit),
     queryFn: () => appointmentApi.getUpcoming(limit),
     enabled: hasEmberOneUserId,
+    // Carries the unread badge total; realtime events refresh it.
+    staleTime: STALE_TIME.LIVE,
   });
 }
 
@@ -150,15 +161,7 @@ export function useAppointment(organizationId: number | null, appointmentId: num
     queryKey: appointmentKeys.detail(organizationId ?? 0, appointmentId ?? 0),
     queryFn: () => appointmentApi.get(organizationId ?? 0, appointmentId ?? 0),
     enabled: organizationId != null && appointmentId != null,
-  });
-}
-
-export function useMyAppointmentResponses(appointmentIds: number[]) {
-  const hasEmberOneUserId = useHasEmberOneUserId();
-  return useQuery<MyAppointmentResponseDto[]>({
-    queryKey: appointmentKeys.myResponses(appointmentIds),
-    queryFn: () => appointmentApi.getMyResponses(appointmentIds),
-    enabled: hasEmberOneUserId && appointmentIds.length > 0,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -172,6 +175,7 @@ export function useAppointmentParticipationStats(
     queryKey: appointmentKeys.participationStats(organizationId, appointmentId ?? 0),
     queryFn: () => appointmentApi.getParticipationStats(organizationId, appointmentId ?? 0),
     enabled,
+    staleTime: STALE_TIME.LIST,
   });
 }
 
@@ -185,7 +189,7 @@ export function useAppointmentUnreadCount(
     queryKey: appointmentKeys.unreadCounts(),
     queryFn: () => appointmentApi.getUnreadCounts(),
     enabled: hasEmberOneUserId && organizationId != null && (options?.enabled ?? true),
-    staleTime: STALE_TIME.LIST,
+    staleTime: STALE_TIME.LIVE,
     refetchInterval,
     select: (data) => ({
       count: organizationId != null ? Number(data[String(organizationId)] ?? 0) : 0,
@@ -200,7 +204,7 @@ export function useAppointmentUnreadCountsByOrganization(organizationIds: number
     queryKey: appointmentKeys.unreadCounts(),
     queryFn: () => appointmentApi.getUnreadCounts(),
     enabled: hasEmberOneUserId && organizationIds.length > 0,
-    staleTime: STALE_TIME.LIST,
+    staleTime: STALE_TIME.LIVE,
     refetchInterval,
   });
 
@@ -272,7 +276,10 @@ export function useMarkAppointmentRead() {
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      // Read state only shows in lists and counters; the detail is already patched optimistically.
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.upcomingRoot() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.unreadCounts() });
     },
   });
 }
@@ -293,7 +300,10 @@ export function useMarkAllAppointmentsRead(organizationId: number) {
           [String(organizationId)]: 0,
         }),
       );
-      void queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.details() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.upcomingRoot() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.unreadCounts() });
     },
   });
 }
@@ -303,7 +313,9 @@ export function useCreateAppointment(organizationId: number) {
   return useMutation({
     mutationFn: (data: CreateAppointmentRequest) => appointmentApi.create(organizationId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.upcomingRoot() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.unreadCounts() });
     },
   });
 }
@@ -321,7 +333,7 @@ export function useUpdateAppointment(organizationId: number) {
       scope?: SeriesEditScope;
     }) => appointmentApi.update(organizationId, appointmentId, data, scope),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
     },
   });
 }
@@ -332,14 +344,12 @@ export function useDeleteAppointment(organizationId: number) {
     mutationFn: ({ appointmentId, scope }: { appointmentId: number; scope?: SeriesEditScope }) =>
       appointmentApi.delete(organizationId, appointmentId, scope),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      invalidateAppointmentRecords(queryClient);
     },
   });
 }
 
-/**
- * Submit RSVP / response; invalidates list, detail, stats, and upcoming so list colors stay in sync.
- */
+/** Submit RSVP / response; invalidates the records carrying `myResponse` and the participation stats. */
 export function useSubmitAppointmentResponse() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -352,8 +362,13 @@ export function useSubmitAppointmentResponse() {
       appointmentId: number;
       data: SubmitAppointmentResponseRequest;
     }) => appointmentApi.submitResponse(organizationId, appointmentId, data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+    onSuccess: (_data, { organizationId, appointmentId }) => {
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.details() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.upcomingRoot() });
+      void queryClient.invalidateQueries({
+        queryKey: appointmentKeys.participationStats(organizationId, appointmentId),
+      });
     },
   });
 }

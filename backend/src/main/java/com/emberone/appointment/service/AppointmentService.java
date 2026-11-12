@@ -22,7 +22,10 @@ import com.emberone.appointment.mapper.AppointmentDtoAssembler;
 import com.emberone.appointment.mapper.AppointmentMapper;
 import com.emberone.appointment.repository.AppointmentReadRepository;
 import com.emberone.appointment.repository.AppointmentRepository;
+import com.emberone.appointment.repository.AppointmentResponseRepository;
 import com.emberone.appointment.repository.AppointmentSeriesRepository;
+import com.emberone.attachment.domain.EntityAttachmentType;
+import com.emberone.attachment.service.EntityAttachmentService;
 import com.emberone.event.domain.EventType;
 import com.emberone.organization.domain.Organization;
 import com.emberone.organization.exception.OrganizationNotFoundException;
@@ -59,6 +62,8 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentSeriesRepository appointmentSeriesRepository;
     private final AppointmentReadRepository appointmentReadRepository;
+    private final AppointmentResponseRepository appointmentResponseRepository;
+    private final EntityAttachmentService entityAttachmentService;
     private final OrganizationRepository organizationRepository;
     private final UserOrganizationMembershipRepository userOrganizationMembershipRepository;
     private final UserOrganizationGroupMembershipRepository groupMembershipRepository;
@@ -132,7 +137,9 @@ public class AppointmentService {
         List<AppointmentDto> dtos = appointmentDtoAssembler.toDtos(page.getContent());
         if (member) {
             enrichUnread(userId, dtos);
+            enrichMyResponses(userId, dtos);
         }
+        enrichAttachmentCounts(dtos);
         return appointmentDtoAssembler.toPageDto(page, dtos);
     }
 
@@ -181,9 +188,12 @@ public class AppointmentService {
                                         Comparator.comparing(AppointmentDto::getStart)
                                                 .thenComparing(AppointmentDto::getId))
                                 .toList());
+        List<AppointmentDto> content = visible.stream().limit(limit).toList();
+        enrichMyResponses(userId, content);
+        enrichAttachmentCounts(content);
 
         return UpcomingAppointmentsDto.builder()
-                .content(visible.stream().limit(limit).toList())
+                .content(content)
                 .totalCount(visible.size())
                 .unreadCount(unreadCount)
                 .build();
@@ -222,7 +232,9 @@ public class AppointmentService {
             dto.setUnread(
                     !appointmentReadRepository.existsByAppointmentIdAndUserId(
                             appointmentId, userId));
+            enrichMyResponses(userId, List.of(dto));
         }
+        enrichAttachmentCounts(List.of(dto));
         return dto;
     }
 
@@ -853,6 +865,42 @@ public class AppointmentService {
             dto.setUnread(!readIds.contains(dto.getId()));
         }
         return dtos;
+    }
+
+    private void enrichMyResponses(Long userId, List<AppointmentDto> dtos) {
+        if (dtos.isEmpty()) {
+            return;
+        }
+        List<Long> appointmentIds = dtos.stream().map(AppointmentDto::getId).toList();
+        Map<Long, MyAppointmentResponseDto> byAppointmentId =
+                appointmentResponseRepository
+                        .findByUserIdAndAppointmentIdIn(userId, appointmentIds)
+                        .stream()
+                        .collect(
+                                Collectors.toMap(
+                                        r -> r.getAppointment().getId(),
+                                        r ->
+                                                MyAppointmentResponseDto.builder()
+                                                        .value(r.getValue())
+                                                        .comment(r.getComment())
+                                                        .lastRespondedAt(r.getLastRespondedAt())
+                                                        .build()));
+        for (AppointmentDto dto : dtos) {
+            dto.setMyResponse(byAppointmentId.get(dto.getId()));
+        }
+    }
+
+    private void enrichAttachmentCounts(List<AppointmentDto> dtos) {
+        if (dtos.isEmpty()) {
+            return;
+        }
+        Map<Long, Long> counts =
+                entityAttachmentService.countByEntityIds(
+                        EntityAttachmentType.APPOINTMENT,
+                        dtos.stream().map(AppointmentDto::getId).toList());
+        for (AppointmentDto dto : dtos) {
+            dto.setAttachmentCount(counts.getOrDefault(dto.getId(), 0L));
+        }
     }
 
     @Transactional

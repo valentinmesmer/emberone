@@ -8,7 +8,7 @@
 
 import { FileText, Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ActionRowIcon, ActionsSection } from '@/components/ui/actions-section';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -29,10 +29,10 @@ import {
 import { usePermissions } from '@/lib/permission/PermissionContext';
 import {
   useDeleteTrainingCourseRecord,
-  useMyTrainingCourseRecords,
-  useOrganizationUserDocuments,
-  useUserDocuments,
-  useUserTrainingCourseRecords,
+  useMyTrainingCourseRecord,
+  useOrganizationUserDocumentsByIds,
+  useUserDocumentsByIds,
+  useUserTrainingCourseRecord,
 } from '@/lib/store';
 import { formatDateLong } from '@/lib/utils';
 import type { AppNavigationContext } from '@/lib/utils/appLink';
@@ -71,33 +71,28 @@ export function TrainingCourseRecordDetailView(props: TrainingCourseRecordDetail
     isSelf ? 0 : props.userId,
   );
 
-  const { data: myRecords = [], isLoading: myRecordsLoading } = useMyTrainingCourseRecords();
-  const { data: orgRecords = [], isLoading: orgRecordsLoading } = useUserTrainingCourseRecords(
+  const { data: myRecord, isLoading: myRecordLoading } = useMyTrainingCourseRecord(
+    props.recordId,
+    isSelf,
+  );
+  const { data: orgRecord, isLoading: orgRecordLoading } = useUserTrainingCourseRecord(
     isSelf ? 0 : props.organizationId,
     isSelf ? 0 : props.userId,
+    props.recordId,
     !isSelf,
   );
-  const { data: myDocuments = [], isLoading: myDocumentsLoading } = useUserDocuments();
-  const { data: orgDocuments = [], isLoading: orgDocumentsLoading } = useOrganizationUserDocuments(
+  const record = isSelf ? myRecord : orgRecord;
+  const loading = isSelf ? myRecordLoading : orgRecordLoading;
+
+  const documentIds = record?.userDocumentIds ?? [];
+  const { data: myDocuments = [] } = useUserDocumentsByIds(documentIds, isSelf);
+  const { data: orgDocuments = [] } = useOrganizationUserDocumentsByIds(
     isSelf ? null : props.organizationId,
     isSelf ? null : props.userId,
+    documentIds,
+    !isSelf,
   );
-
-  const records = isSelf ? myRecords : orgRecords;
-  const documents = isSelf ? myDocuments : orgDocuments;
-  const loading = isSelf
-    ? myRecordsLoading || myDocumentsLoading
-    : orgRecordsLoading || orgDocumentsLoading;
-
-  const record = useMemo(
-    () => records.find((entry) => entry.id === props.recordId),
-    [props.recordId, records],
-  );
-
-  const linkedDocuments = useMemo(() => {
-    const documentIds = new Set(record?.userDocumentIds ?? []);
-    return documents.filter((doc) => documentIds.has(doc.id));
-  }, [documents, record?.userDocumentIds]);
+  const linkedDocuments = isSelf ? myDocuments : orgDocuments;
 
   if (loading) {
     return <LoadingState variant="embedded" size="sm" />;

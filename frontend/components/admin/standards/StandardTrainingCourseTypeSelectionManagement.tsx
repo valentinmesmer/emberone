@@ -15,10 +15,7 @@ import { EmptyStateCard } from '@/components/ui/message-cards';
 import { useToast } from '@/components/ui/toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { standardsApi } from '@/lib/api/standards';
-import {
-  type TenantTrainingCourseTypeDto,
-  tenantTrainingCourseTypesApi,
-} from '@/lib/api/tenantTrainingCourseTypes';
+import { useQueryErrorToast, useTenantTrainingCourseTypes } from '@/lib/store';
 
 interface Props {
   state: StandardContentState;
@@ -40,8 +37,6 @@ export function StandardTrainingCourseTypeSelectionManagement({ state, embedded 
   const { showError } = useToast();
   const { tenantId, standardId, items, editable } = state;
 
-  const [loading, setLoading] = useState(true);
-  const [catalog, setCatalog] = useState<TenantTrainingCourseTypeDto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const selectedRef = useRef(selected);
@@ -60,26 +55,18 @@ export function StandardTrainingCourseTypeSelectionManagement({ state, embedded 
     [items],
   );
 
-  const loadCatalog = useCallback(async () => {
-    setLoading(true);
-    try {
-      const types = await tenantTrainingCourseTypesApi.list(tenantId);
-      setCatalog(types.filter((type) => !type.archived));
-    } catch (e) {
-      showError(
-        e instanceof Error ? e.message : t('admin.standards.trainingCourses.loadCatalogFailed'),
-      );
-      setCatalog([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadCatalog();
-    });
-  }, [loadCatalog]);
+  const {
+    data: catalogData,
+    isPending: loading,
+    error: catalogError,
+  } = useTenantTrainingCourseTypes(tenantId);
+  useQueryErrorToast(catalogError, {
+    messageKey: 'admin.standards.trainingCourses.loadCatalogFailed',
+  });
+  const catalog = useMemo(
+    () => (catalogData ?? []).filter((definition) => !definition.archived),
+    [catalogData],
+  );
 
   useEffect(() => {
     if (setsEqual(selectedFromStandard, lastSavedRef.current)) return;

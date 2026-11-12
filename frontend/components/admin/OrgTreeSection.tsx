@@ -6,8 +6,9 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/loading';
@@ -15,13 +16,12 @@ import { EmptyState } from '@/components/ui/message-cards';
 import { SectionHeader } from '@/components/ui/section-header';
 import { useTranslation } from '@/hooks/useTranslation';
 import { summarizeLeaderIssuesFromTree, totalLeaderIssues } from '@/lib/admin/orgLeaderIssues';
+import type { RootOrganizationSummaryDto, SetupOrganizationRequest } from '@/lib/api/admin';
 import {
-  type AdminOrganizationTreeNodeDto,
-  adminApi,
-  type RootOrganizationSummaryDto,
-  type SetupOrganizationRequest,
-} from '@/lib/api/admin';
-import { type OrganizationTypeDto, organizationTypesApi } from '@/lib/api/organizationTypes';
+  invalidateAdminOrganizationTree,
+  useAdminOrganizationTree,
+  useTenantOrganizationTypes,
+} from '@/lib/store';
 import { AdminOrgTreeView } from './AdminOrgTreeView';
 import { CreateRootOrganizationModal } from './CreateRootOrganizationModal';
 
@@ -32,7 +32,6 @@ export interface OrgTreeSectionProps {
   standardsConfiguredForOrgCreation: boolean;
   onRootOrgCreated: (data: SetupOrganizationRequest) => Promise<void>;
   creatingRootOrg: boolean;
-  onTreeLoaded?: (roots: AdminOrganizationTreeNodeDto[]) => void;
   /** When false, leader issues are only indicated on tree rows (e.g. onboarding card above). */
   showLeaderIssueBanner?: boolean;
   /** Increment to open the create-root-organization modal from outside. */
@@ -46,55 +45,27 @@ export function OrgTreeSection({
   standardsConfiguredForOrgCreation,
   onRootOrgCreated,
   creatingRootOrg,
-  onTreeLoaded,
   showLeaderIssueBanner = true,
   openCreateSignal = 0,
 }: OrgTreeSectionProps) {
   const t = useTranslation();
   const [rootOrgOpen, setRootOrgOpen] = useState(false);
-  const [treeRoots, setTreeRoots] = useState<AdminOrganizationTreeNodeDto[] | null>(null);
-  const [treeLoading, setTreeLoading] = useState(false);
-  const [treeFailed, setTreeFailed] = useState(false);
-  const [organizationTypes, setOrganizationTypes] = useState<OrganizationTypeDto[]>([]);
+  const queryClient = useQueryClient();
 
   const hasRoots = rootOrganizations.length > 0;
   const canCreateRoot = isGlobalAdmin && standardsConfiguredForOrgCreation;
 
+  const {
+    data: tree,
+    isPending: treeLoading,
+    isError: treeFailed,
+  } = useAdminOrganizationTree(tenantId, hasRoots);
+  const treeRoots = tree?.roots ?? null;
+  const { data: organizationTypes = [] } = useTenantOrganizationTypes(tenantId);
+
   useEffect(() => {
     if (openCreateSignal > 0) setRootOrgOpen(true);
   }, [openCreateSignal]);
-
-  const loadTree = useCallback(async () => {
-    setTreeLoading(true);
-    setTreeFailed(false);
-    try {
-      const res = await adminApi.getAdminOrganizationTree(tenantId);
-      setTreeRoots(res.roots);
-      onTreeLoaded?.(res.roots);
-    } catch {
-      setTreeFailed(true);
-      setTreeRoots(null);
-    } finally {
-      setTreeLoading(false);
-    }
-  }, [tenantId, onTreeLoaded]);
-
-  useEffect(() => {
-    if (!hasRoots) {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      void loadTree();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [hasRoots, loadTree]);
-
-  useEffect(() => {
-    void organizationTypesApi
-      .list(tenantId)
-      .then(setOrganizationTypes)
-      .catch(() => setOrganizationTypes([]));
-  }, [tenantId]);
 
   const organizationTypeNames = useMemo(
     () => new Map(organizationTypes.map((type) => [type.id, type.name])),
@@ -104,7 +75,7 @@ export function OrgTreeSection({
   const handleRootOrgCreated = async (data: SetupOrganizationRequest) => {
     await onRootOrgCreated(data);
     setRootOrgOpen(false);
-    void loadTree();
+    void invalidateAdminOrganizationTree(queryClient, tenantId);
   };
 
   const leaderSummary = useMemo(

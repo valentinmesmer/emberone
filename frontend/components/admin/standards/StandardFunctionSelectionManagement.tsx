@@ -20,7 +20,7 @@ import {
   grantsByFunctionConfigKey,
 } from '@/lib/admin/standardFunctionGrants';
 import { standardsApi } from '@/lib/api/standards';
-import { type TenantFunctionDto, tenantFunctionsApi } from '@/lib/api/tenantFunctions';
+import { useQueryErrorToast, useTenantFunctions } from '@/lib/store';
 
 interface Props {
   state: StandardContentState;
@@ -42,8 +42,6 @@ export function StandardFunctionSelectionManagement({ state, embedded = false }:
   const { showError } = useToast();
   const { tenantId, standardId, items, editable, applyContent } = state;
 
-  const [loading, setLoading] = useState(true);
-  const [catalog, setCatalog] = useState<TenantFunctionDto[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const selectedRef = useRef(selected);
   const lastSavedRef = useRef<Set<string>>(new Set());
@@ -69,24 +67,16 @@ export function StandardFunctionSelectionManagement({ state, embedded = false }:
 
   const grantsByFunction = useMemo(() => grantsByFunctionConfigKey(items), [items]);
 
-  const loadCatalog = useCallback(async () => {
-    setLoading(true);
-    try {
-      const definitions = await tenantFunctionsApi.list(tenantId);
-      setCatalog(definitions.filter((definition) => !definition.archived));
-    } catch (e) {
-      showError(e instanceof Error ? e.message : t('admin.standards.functions.loadCatalogFailed'));
-      setCatalog([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, showError, t]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadCatalog();
-    });
-  }, [loadCatalog]);
+  const {
+    data: catalogData,
+    isPending: loading,
+    error: catalogError,
+  } = useTenantFunctions(tenantId);
+  useQueryErrorToast(catalogError, { messageKey: 'admin.standards.functions.loadCatalogFailed' });
+  const catalog = useMemo(
+    () => (catalogData ?? []).filter((definition) => !definition.archived),
+    [catalogData],
+  );
 
   useEffect(() => {
     if (setsEqual(selectedFromStandard, lastSavedRef.current)) return;

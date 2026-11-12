@@ -34,7 +34,6 @@ import type {
   WorkflowDocumentPromotionPreviewDto,
   WorkflowDocumentPromotionSelection,
   WorkflowDto,
-  WorkflowOpenConcurrencyKeysDto,
   WorkflowOpenStateDto,
   WorkflowPageDto,
   WorkflowRoutingRuleDto,
@@ -223,15 +222,6 @@ export const workflowsApi = {
     );
   },
 
-  async getWorkflowOpenConcurrencyKeys(
-    workflowTypeId?: WorkflowTypeId,
-  ): Promise<WorkflowOpenConcurrencyKeysDto[]> {
-    const query = workflowTypeId != null ? `?workflowTypeId=${workflowTypeId}` : '';
-    return apiClient.get<WorkflowOpenConcurrencyKeysDto[]>(
-      `/api/v1/self/workflows/open-concurrency-keys${query}`,
-    );
-  },
-
   async getWorkflow(workflowId: number): Promise<WorkflowDto> {
     return apiClient.get<WorkflowDto>(`/api/v1/auth/workflows/${workflowId}`);
   },
@@ -379,6 +369,12 @@ export const workflowsApi = {
   async getWorkflowTypeCatalog(tenantId: number): Promise<WorkflowTypeCatalogDto[]> {
     return apiClient.get<WorkflowTypeCatalogDto[]>(
       `/api/v1/auth/admin/tenants/${tenantId}/workflow-types`,
+    );
+  },
+
+  async listTenantWorkflowDefinitions(tenantId: number): Promise<TenantWorkflowDefinitionDto[]> {
+    return apiClient.get<TenantWorkflowDefinitionDto[]>(
+      `/api/v1/auth/admin/tenants/${tenantId}/workflow-definitions`,
     );
   },
 
