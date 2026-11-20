@@ -112,7 +112,7 @@ services:
       retries: 5
 
   authentik-server:
-    image: authentik/server:2026.8.5
+    image: authentik/server:2026.8.6
     container_name: emberone-authentik-server
     command: server
     environment:
@@ -138,7 +138,7 @@ services:
         condition: service_healthy
 
   authentik-worker:
-    image: authentik/server:2026.8.5
+    image: authentik/server:2026.8.6
     container_name: emberone-authentik-worker
     command: worker
     environment:
