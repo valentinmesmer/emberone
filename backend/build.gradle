@@ -9,7 +9,7 @@ plugins {
     id 'org.springframework.boot' version '4.1.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
-    id 'com.diffplug.spotless' version '8.11.0'
+    id 'com.diffplug.spotless' version '8.12.0'
 }
 
 group = 'com.emberone'
@@ -41,22 +41,22 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
-    implementation 'net.javacrumbs.shedlock:shedlock-spring:7.11.0'
-    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.11.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:7.12.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.12.0'
     implementation 'org.thymeleaf:thymeleaf-spring6'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
 
-    implementation 'software.amazon.awssdk:s3:2.59.1'
+    implementation 'software.amazon.awssdk:s3:2.59.10'
     implementation 'io.github.openfeign:feign-okhttp:13.18'
     implementation 'io.github.openfeign:feign-jackson3:13.18'
     implementation 'io.github.openfeign:feign-core:13.18'
 
     implementation 'org.mnode.ical4j:ical4j:4.4.0'
 
-    implementation 'com.googlecode.libphonenumber:libphonenumber:9.0.43'
+    implementation 'com.googlecode.libphonenumber:libphonenumber:9.0.44'
 
-    implementation 'com.github.librepdf:openpdf:3.0.5'
+    implementation 'com.github.librepdf:openpdf:3.0.6'
     implementation 'org.apache.pdfbox:pdfbox:3.0.8'
 
     compileOnly 'org.projectlombok:lombok:1.18.48'
@@ -66,7 +66,7 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.1'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
